@@ -1,0 +1,39 @@
+TrainWorld shall be a game based on following principles:
+
+ * City building and automatic growth similar to SimCity
+ * Transport flow estimation
+ * Transport network simulation similar to simutrans/transport tycoon
+
+The game shall be distinguished by following properites:
+
+ * Much larger worlds
+ * Very performant even in very crowded worlds
+ * Server-Client model
+
+This requires certain key aspects in the architecture of the game:
+
+ * Distributed simulation of the world
+ * Multicast based distribution of simulation changes
+ * Client based interpolation/partial simulation
+
+The basic components of the game are:
+
+ * Simulation Nodes
+ * Front Nodes
+ * Clients
+
+The front nodes are responsible for managing users and keeping data required for users in a single place.
+The front nodes accept the incoming requests for changes in the simulation world. It may reject or
+implement those changes based on the players resources, for example money.
+
+The Communication between the nodes is part of a distributed system and shall be either local IPC
+or a MPI (Message Passing Interface) like implementation.
+
+Clients receive a stream of changes and a stream of content from the simulation nodes by a multicast network.
+The client should cache node regions in order to stay responsive to the player.
+The simulation implemented on the client side should be simplified to an extended interpolation where
+for example trains keep traveling a certain track till their next decision point.
+The client should not attempt to predict the direction of a train afterwards and rather wait for
+change from the simulation node.
+
+Information in depth like route information should be transmitted only in content stream.

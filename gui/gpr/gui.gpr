@@ -1,0 +1,29 @@
+with "Core";
+
+project GUI is
+
+  Dir:=GUI'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  package Compiler is
+    for Default_Switches("Ada") use
+      ("-gnato",
+       "-gnatn",
+     "-g",
+     "-gnatf",
+     "-Wall",
+     "-O0",
+     "-fno-strict-aliasing");
+  end Compiler;
+
+  for Source_Dirs use
+    (Dir & "../src",
+     Dir & "../src/gui",
+     Dir & "../src/canvas",
+     Dir & "../src/graphics",
+     Dir & "../src/opengl",
+     Dir & "../src/bounds",
+     Dir & "../src/xlib");
+
+end GUI;
