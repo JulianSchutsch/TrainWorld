@@ -1,0 +1,27 @@
+project Core is
+
+  Dir:=Core'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  package Compiler is
+    for Default_Switches("Ada") use
+      ("-gnato",
+       "-gnatn",
+     "-g",
+     "-gnatf",
+     "-Wall",
+     "-O0",
+     "-fno-strict-aliasing");
+  end Compiler;
+
+  for Source_Dirs use
+    (Dir & "../src",
+     Dir & "../src/bytes",
+     Dir & "../src/config",
+     Dir & "../src/implementations",
+     Dir & "../src/refcounting",
+     Dir & "../src/bytes/littleendian",
+     Dir & "../src/win32");
+
+end Core;
