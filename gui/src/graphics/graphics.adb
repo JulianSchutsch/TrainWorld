@@ -1,10 +1,9 @@
 package body Graphics is
 
-   procedure Destructor
-     (Context : access Context_Type'Class) is
+   procedure dummy is
    begin
       null;
-   end Destructor;
+   end dummy;
    ---------------------------------------------------------------------------
 
 end Graphics;

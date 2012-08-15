@@ -21,84 +21,117 @@
 --   2.Aug 2012 Julian Schutsch
 --     - Original version
 
+pragma Ada_2012;
+
 with Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Config is
 
-   -- Raised if any Config_Pointer is left pointing to a finalized Config_Type
-   PointersLeft  : Exception;
-   PointerToNull : Exception;
-   ValueNotSet   : Exception;
+   type ConfigPath_Type is array (Integer range <>) of Unbounded_String;
 
-   type Config_Pointer is new Ada.Finalization.Controlled with private;
+   type Config_Type is tagged null record;
+   type Config_ClassAccess is access all Config_Type'Class;
+
+   type ConfigNode_Type is new Ada.Finalization.Limited_Controlled with private;
+   type ConfigNode_Access is access all ConfigNode_Type;
+
+   not overriding
+   function GetImplementation
+     (ConfigNode : ConfigNode_Type)
+      return Unbounded_String;
+
+   not overriding
+   procedure SetImplementation
+     (ConfigNode     : in out ConfigNode_Type;
+      Implementation : Unbounded_String);
+
+   not overriding
+   function GetConfig
+     (ConfigNode : ConfigNode_Type)
+      return Config_ClassAccess;
+
+   not overriding
+   function GetImplConfig
+     (ConfigNode     : ConfigNode_Type;
+      Implementation : Unbounded_String)
+      return Config_ClassAccess;
+
+   not overriding
+   function GetName
+     (ConfigNode : ConfigNode_Type)
+      return Unbounded_String;
+
+   not overriding
+   function GetChildNodeCount
+     (ConfigNode : ConfigNode_Type)
+      return Natural;
+
+   not overriding
+   function GetDeepChildNodeCount
+     (ConfigNode : ConfigNode_Type)
+      return Natural;
+
+   not overriding
+   procedure DebugTree
+     (ConfigNode : ConfigNode_Type);
 
    overriding
    procedure Finalize
-     (Pointer : in out Config_Pointer);
+     (ConfigNode : in out ConfigNode_Type)
+   with Post => (GetChildNodeCount(ConfigNode)=0);
 
-   overriding
-   procedure Adjust
-     (Pointer : in out Config_Pointer);
+   not overriding
+   procedure SetConfig
+     (ConfigNode : in out ConfigNode_Type;
+      Config     : Config_ClassAccess)
+   with Post => ConfigNode.GetConfig=Config;
 
-   procedure SetValue
-     (Pointer : in out Config_Pointer;
-      Value   : Unbounded_String);
+   not overriding
+   procedure SetImplConfig
+     (ConfigNode     : in out ConfigNode_Type;
+      Implementation : Unbounded_String;
+      Config         : Config_ClassAccess)
+   with Post => ConfigNode.GetImplConfig(Implementation)=Config;
 
-   function GetValue
-     (Pointer : in Config_Pointer)
-      return Unbounded_String;
+   not overriding
+   function GetPath
+     (ConfigNode : in out ConfigNode_Type;
+      Path       : ConfigPath_Type)
+      return ConfigNode_Access
+   with  Post => (GetPath'Result=null) or
+     (GetPath'Result.GetName=Path(Path'Last));
 
-   procedure GetNode
-     (Pointer : in Config_Pointer;
-      SubPath : Unbounded_String;
-      Result  : out Config_Pointer'Class);
+   not overriding
+   function CreatePath
+     (ConfigNode : in out ConfigNode_Type;
+      Path       : ConfigPath_Type)
+      return ConfigNode_Access
+   with Post => (GetChildNodeCount(ConfigNode)-GetChildNodeCount(ConfigNode)'Old>=0)
+     and (CreatePath'Result/=null);
 
-   function GetChildValue
-     (Pointer : in Config_Pointer;
-      Name    : Unbounded_String)
-      return Unbounded_String;
-
-   type Config_Type is new Ada.Finalization.Limited_Controlled with private;
-
-   overriding
-   procedure Finalize
-     (Config : in out Config_Type);
-
-   procedure GetNode
-     (Config : in out Config_Type;
-      Path   : Unbounded_String;
-      Result : out Config_Pointer'Class;
-      Create : Boolean := False);
-
-   procedure CreateNode
-     (Config : in out Config_Type;
-      Path   : Unbounded_String;
-      Value  : Unbounded_String);
+   -- ConfigNode --
+   ---------------------------------------------------------------------------
 
 private
 
-   type ConfigNode_Type;
-   type ConfigNode_Access is access all ConfigNode_Type;
-   type ConfigNode_Type is
+   type ImplConfig_Type;
+   type ImplConfig_Access is access all ImplConfig_Type;
+   type ImplConfig_Type is
       record
-         Name        : Unbounded_String;
-         Value       : Unbounded_String;
-         Childs      : ConfigNode_Access := null;
-         NextSibling : ConfigNode_Access := null;
+         Implementation : Unbounded_String;
+         Config         : Config_ClassAccess:=null;
+         Next           : ImplConfig_Access;
       end record;
 
-   type Config_Access is access all Config_Type;
-   type Config_Type is new Ada.Finalization.Limited_Controlled with
+   type ConfigNode_Type is new Ada.Finalization.Limited_Controlled with
       record
-         Root     : ConfigNode_Type;
-         Pointers : Natural           := 0;
-      end record;
-
-   type Config_Pointer is new Ada.Finalization.Controlled with
-      record
-         Config : Config_Access     := null;
-         Node   : ConfigNode_Access := null;
+         Name           : Unbounded_String;
+         Implementation : Unbounded_String;
+         Config         : Config_ClassAccess:=null;
+         ImplConfig     : ImplConfig_Access:=null;
+         ChildNodes     : ConfigNode_Access:=null;
+         Next           : ConfigNode_Access:=null;
       end record;
 
 end Config;

@@ -20,8 +20,9 @@ project Core is
      Dir & "../src/bytes",
      Dir & "../src/config",
      Dir & "../src/implementations",
-     Dir & "../src/refcounting",
      Dir & "../src/bytes/littleendian",
-     Dir & "../src/win32");
+     Dir & "../src/refcounting",
+     Dir & "../src/win32",
+     Dir & "../src/testframework");
 
 end Core;

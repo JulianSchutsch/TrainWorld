@@ -17,249 +17,300 @@
 --   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------------
 
+pragma Ada_2012;
+
 with Ada.Unchecked_Deallocation;
-with Basics; use Basics;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Config is
 
-   function SubSelect
-     (Node   : ConfigNode_Access;
-      Str    : Unbounded_String;
-      Create : Boolean)
-      return ConfigNode_Access is
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => Config_Type'Class,
+      Name   => Config_ClassAccess);
 
-      SubNode : ConfigNode_Access;
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => ImplConfig_Type,
+      Name   => ImplConfig_Access);
 
-   begin
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => ConfigNode_Type,
+      Name   => ConfigNode_Access);
 
-      if Node=null then
-         return null;
-      end if;
+   procedure DebugTree
+     (ConfigNode : ConfigNode_Type) is
 
-      SubNode:=Node.Childs;
+      procedure DebugSubTree
+        (Node   : ConfigNode_Access;
+         Prefix : String) is
 
-      while SubNode/=null loop
-         if SubNode.Name=Str then
-            return SubNode;
-         end if;
-         SubNode := SubNode.NextSibling;
-      end loop;
+         p : ConfigNode_Access:=Node.ChildNodes;
+         next : ConfigNode_Access:=Node.ChildNodes;
 
-      if Create then
-         SubNode             := new ConfigNode_Type;
-         SubNode.Name        := Str;
-         SubNode.NextSibling := Node.Childs;
-         Node.Childs         := SubNode;
-      end if;
-      return SubNode;
-
-   end SubSelect;
-   ------------------------------------------------------------------------
-
-   function GetSubNode
-     (Node   : ConfigNode_Access;
-      Path   : Unbounded_String;
-      Create : Boolean)
-      return ConfigNode_Access is
-
-      WordStart : Positive:=1;
-      CurrentNode : ConfigNode_Access;
+      begin
+         Put_Line(Prefix&To_String(Node.Name));
+         while p/=null loop
+            next := p.Next;
+            if next/=null then
+               DebugSubTree(p,Prefix&" | ");
+            else
+               DebugSubTree(p,Prefix&"   ");
+            end if;
+            p := next;
+         end loop;
+      end DebugSubTree;
 
    begin
-
-      CurrentNode:=Node;
-      for i in 1..Length(Path) loop
-         if Element(Path,i)='.' then
-            CurrentNode:=SubSelect(Node,Unbounded_Slice(Path,WordStart,i-1),Create);
-            WordStart := i+1;
-         end if;
-      end loop;
-
-      if WordStart<=Length(Path) then
-         CurrentNode:=SubSelect(Node,Unbounded_Slice(Path,WordStart,Length(Path)),Create);
-      end if;
-
-      return CurrentNode;
-
-   end;
-
+      DebugSubTree(ConfigNode'Unrestricted_Access," ");
+   end DebugTree;
    ---------------------------------------------------------------------------
-   -- Config_Pointer --
+
+   procedure SetImplementation
+     (ConfigNode     : in out ConfigNode_Type;
+      Implementation : Unbounded_String) is
+   begin
+      ConfigNode.Implementation:=Implementation;
+   end SetImplementation;
+   ---------------------------------------------------------------------------
+
+   function GetConfig
+     (ConfigNode : ConfigNode_Type)
+      return Config_ClassAccess is
+   begin
+      return ConfigNode.Config;
+   end GetConfig;
+   ---------------------------------------------------------------------------
+
+   function GetImplementation
+     (ConfigNode : ConfigNode_Type)
+      return Unbounded_String is
+   begin
+      return ConfigNode.Implementation;
+   end GetImplementation;
+   ---------------------------------------------------------------------------
+
+   function GetImplConfig
+     (ConfigNode     : ConfigNode_Type;
+      Implementation : Unbounded_String)
+      return Config_ClassAccess is
+
+      p : ImplConfig_Access:=ConfigNode.ImplConfig;
+
+   begin
+
+      while p/=null loop
+
+         if p.Implementation=Implementation then
+            return p.Config;
+         end if;
+
+         p:=p.Next;
+
+      end loop;
+
+      return null;
+
+   end GetImplConfig;
+   ---------------------------------------------------------------------------
+
+   function GetName
+     (ConfigNode : ConfigNode_Type)
+      return Unbounded_String is
+   begin
+      return ConfigNode.Name;
+   end GetName;
+   ---------------------------------------------------------------------------
+
+   function GetDeepChildNodeCount
+     (ConfigNode : ConfigNode_Type)
+      return Natural is
+
+      p     : ConfigNode_Access:=ConfigNode.ChildNodes;
+      Count : Natural:=0;
+
+   begin
+
+      while p/=null loop
+         Count:=Count+p.GetDeepChildNodeCount+1;
+         p:=p.Next;
+      end loop;
+
+      return Count;
+
+   end GetDeepChildNodeCount;
+   ---------------------------------------------------------------------------
+
+   function GetChildNodeCount
+     (ConfigNode : ConfigNode_Type)
+      return Natural is
+
+      p     : ConfigNode_Access:=ConfigNode.ChildNodes;
+      Count : Natural:=0;
+
+   begin
+
+      while p/=null loop
+         p:=p.Next;
+         Count:=Count+1;
+      end loop;
+
+      return Count;
+
+   end GetChildNodeCount;
+   ---------------------------------------------------------------------------
 
    procedure Finalize
-     (Pointer : in out Config_Pointer) is
+     (ConfigNode : in out ConfigNode_Type) is
    begin
-      if Pointer.Config/=null then
-         Pointer.Config.Pointers := Pointer.Config.Pointers - 1;
+
+      if ConfigNode.Config/=null then
+         Free(ConfigNode.Config);
       end if;
+
+      -- Remove all Implementation specific configurations
+      declare
+         p    : ImplConfig_Access;
+         next : ImplConfig_Access;
+      begin
+
+         p:=ConfigNode.ImplConfig;
+         while p/=null loop
+
+            next:=p.Next;
+
+            if p.Config/=null then
+               Free(p.Config);
+            end if;
+            Free(p);
+
+            p:=next;
+         end loop;
+
+      end;
+
+      -- Remove all children
+      declare
+         p : ConfigNode_Access;
+         next : ConfigNode_access;
+      begin
+
+         p:=ConfigNode.ChildNodes;
+         while p/=null loop
+            next:=p.Next;
+            Free(p);
+            p:=next;
+         end loop;
+
+      end;
+
    end Finalize;
    ---------------------------------------------------------------------------
 
-   procedure Adjust
-     (Pointer : in out Config_Pointer) is
-   begin
-      if Pointer.Config/=null then
-         Pointer.Config.Pointers := Pointer.Config.Pointers + 1;
-      end if;
-   end Adjust;
-   ---------------------------------------------------------------------------
-
-   procedure SetValue
-     (Pointer : in out Config_Pointer;
-      Value   : Unbounded_String) is
+   procedure SetConfig
+     (ConfigNode : in out ConfigNode_Type;
+      Config     : Config_ClassAccess) is
    begin
 
-      if Pointer.Node=null then
-         raise PointerToNull;
+      if ConfigNode.Config/=null then
+         Free(ConfigNode.Config);
       end if;
-      Pointer.Node.Value:=Value;
+      ConfigNode.Config:=Config;
 
-   end SetValue;
+   end SetConfig;
    ---------------------------------------------------------------------------
 
-   function GetValue
-     (Pointer : in Config_Pointer)
-      return Unbounded_String is
+   procedure SetImplConfig
+     (ConfigNode     : in out ConfigNode_Type;
+      Implementation : Unbounded_String;
+      Config         : Config_ClassAccess) is
    begin
+      -- Check if there is allready an entry for this implementation
+      -- If so, replace the entry.
+      declare
+         p : ImplConfig_Access:=ConfigNode.ImplConfig;
+      begin
 
-      if Pointer.Config=null then
-         raise PointerToNull;
-      end if;
-      if Pointer.Node=null then
-         return U("");
-      else
-         return Pointer.Node.Value;
-      end if;
+         while p/=null loop
 
-   end GetValue;
+            if p.Implementation=Implementation then
+               if p.Config/=null then
+                  Free(p.Config);
+               end if;
+               p.Config:=Config;
+               return;
+            end if;
+
+            p:=p.Next;
+
+         end loop;
+
+      end;
+
+      -- Append new Implementation
+      declare
+         n : constant ImplConfig_Access:=new ImplConfig_Type;
+      begin
+         n.Next                := ConfigNode.ImplConfig;
+         n.Implementation      := Implementation;
+         n.Config              := Config;
+         ConfigNode.ImplConfig := n;
+      end;
+
+   end SetImplConfig;
    ---------------------------------------------------------------------------
 
-   function GetChildValue
-     (Pointer : in Config_Pointer;
-      Name    : Unbounded_String)
-      return Unbounded_String is
+   function GetPath
+     (ConfigNode : in out ConfigNode_Type;
+      Path       : ConfigPath_Type)
+      return ConfigNode_Access is
 
       p : ConfigNode_Access;
 
    begin
 
-      if Pointer.Node=null then
-         raise ValueNotSet;
+      if Path'Length=0 then
+         return ConfigNode'Unrestricted_Access;
       end if;
 
-      p:=Pointer.Node.Childs;
+      p:=ConfigNode.ChildNodes;
+
       while p/=null loop
-         if p.Name=Name then
-            return p.Value;
+
+         if p.Name=Path(Path'First) then
+            return p.GetPath(Path(Path'First+1..Path'Last));
          end if;
-         p:=p.NextSibling;
+         p:=p.Next;
+
       end loop;
 
-      raise ValueNotSet;
+      return null;
 
-   end GetChildValue;
+   end GetPath;
    ---------------------------------------------------------------------------
 
-   procedure GetNode
-     (Pointer : in Config_Pointer;
-      SubPath : Unbounded_String;
-      Result  : out Config_Pointer'Class) is
-   begin
+   function CreatePath
+     (ConfigNode : in out ConfigNode_Type;
+      Path       : ConfigPath_Type)
+      return ConfigNode_Access is
 
-      Pointer.Config.Pointers:=Pointer.Config.Pointers+1;
-      Result.Config := Pointer.Config;
-      Result.Node   := GetSubNode(Pointer.Node,SubPath,False);
-
-   end GetNode;
-   ---------------------------------------------------------------------------
-
-   -- /Config_Pointer --
-   ---------------------------------------------------------------------------
-
-   ---------------------------------------------------------------------------
-   -- Config_Type --
-
-   procedure GetNode
-     (Config : in out Config_Type;
-      Path   : Unbounded_String;
-      Result : out Config_Pointer'Class;
-      Create : Boolean := False) is
+      First : ConfigNode_Access;
 
    begin
 
-      Config.Pointers := Config.Pointers+1;
-      Result.Config   := Config'Unrestricted_Access;
-      Result.Node     := GetSubNode
-        (Config.Root'Unrestricted_Access,
-         Path,Create);
-
-   end GetNode;
-   ---------------------------------------------------------------------------
-
-   procedure CreateNode
-     (Config : in out Config_Type;
-      Path   : Unbounded_String;
-      Value  : Unbounded_String) is
-
-      Pointer : Config_Pointer;
-
-   begin
-      Config.GetNode(Path,Pointer,True);
-      Pointer.SetValue(Value);
-   end CreateNode;
-   ---------------------------------------------------------------------------
-
-   procedure Finalize
-     (Config: in out Config_Type) is
-
-      procedure Clear(Node : in out ConfigNode_Access) is
-
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Object => ConfigNode_Type,
-            Name   => ConfigNode_Access);
-
-         next : ConfigNode_Access;
-         p    : ConfigNode_Access;
-
-      begin
-
-         if Node=null then
-            return;
-         end if;
-
-         p := Node.Childs;
-         while p/=null loop
-            next := p.NextSibling;
-            Clear(p);
-            p := next;
-         end loop;
-
-         Free(Node);
-
-      end Clear;
-      ------------------------------------------------------------------------
-
-      next : ConfigNode_Access;
-      p    : ConfigNode_Access;
-
-   begin
-
-      p:=Config.Root.Childs;
-      while p/=null loop
-         next := p.NextSibling;
-         Clear(next);
-         p := next;
-      end loop;
-
-
-      if Config.Pointers/=0 then
-         raise PointersLeft;
+      if Path'Length=0 then
+         return ConfigNode'Unrestricted_Access;
       end if;
 
-   end Finalize;
-   ---------------------------------------------------------------------------
+      First:=ConfigNode.GetPath(Path(Path'First..Path'First));
+      if First=null then
+         First      := new ConfigNode_Type;
+         First.Name := Path(Path'First);
+         First.Next := ConfigNode.ChildNodes;
+         ConfigNode.ChildNodes:=First;
+      end if;
 
-   -- /Config_Type --
+      return First.CreatePath(Path(Path'First+1..Path'Last));
+
+   end CreatePath;
    ---------------------------------------------------------------------------
 
 end Config;

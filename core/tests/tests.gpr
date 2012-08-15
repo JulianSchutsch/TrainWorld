@@ -10,13 +10,17 @@ project Tests is
 
   package Compiler is
     for Default_Switches("Ada") use
-      ("-gnato",
+      ("-gnat12",
+       "-gnato",
        "-gnatn",
        "-g",
        "-gnatf",
        "-Wall",
        "-O0",
-       "-fno-strict-aliasing");
+       "-fno-strict-aliasing",
+       "-gnatwa",
+       "-gnatVa",
+       "-gnata");
   end Compiler;
 
   package Linker is
@@ -27,6 +31,7 @@ project Tests is
   for Source_Dirs use
     (Dir & ".",
      Dir & "bytes",
-     Dir & "config");
+     Dir & "config",
+     Dir & "implementations");
 
 end Tests;

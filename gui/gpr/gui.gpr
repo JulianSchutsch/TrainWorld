@@ -24,6 +24,7 @@ project GUI is
      Dir & "../src/graphics",
      Dir & "../src/opengl",
      Dir & "../src/bounds",
-     Dir & "../src/xlib");
+     Dir & "../src/xlib",
+     Dir & "../src/opengl/win32");
 
 end GUI;

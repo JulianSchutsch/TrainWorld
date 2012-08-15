@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --   Copyright 2012 Julian Schutsch
 --
---   This file is part of ParallelSim
+--   This file is part of TrainWorld
 --
 --   ParallelSim is free software: you can redistribute it and/or modify
 --   it under the terms of the GNU Affero General Public License as published
@@ -25,7 +25,6 @@ pragma Ada_2005;
 
 with Interfaces.C;
 with Interfaces;
-with System;
 
 package OpenGL is
 
@@ -72,118 +71,19 @@ package OpenGL is
    GL_TEXTURE_WRAP_S     : constant GLenum_Type:=16#2802#;
    GL_TEXTURE_WRAP_T     : constant GLenum_Type:=16#2803#;
 
-   GL_NEAREST : constant GLint_Type:=16#2600#;
-   GL_CLAMP   : constant GLint_Type:=16#2900#;
-   GL_REPEAT  : constant GLint_Type:=16#2901#;
+   GL_NEAREST            : constant GLint_Type:=16#2600#;
+   GL_CLAMP              : constant GLint_Type:=16#2900#;
+   GL_REPEAT             : constant GLint_Type:=16#2901#;
 
-   procedure glFinish;
-   pragma Import(StdCall,glFinish,"glFinish");
+   GL_VERSION : constant GLenum_Type:=16#1F02#;
 
-   procedure glViewport
-     (x      : GLint_Type;
-      y      : GLint_Type;
-      width  : GLsizei_Type;
-      height : GLsizei_Type);
-   pragma Import(StdCall,glViewport,"glViewport");
-
-   procedure glMatrixMode
-     (mode : GLenum_Type);
-   pragma Import(StdCall,glMatrixMode,"glMatrixMode");
-
-   procedure glLoadIdentity;
-   pragma Import(StdCall,glLoadIdentity,"glLoadIdentity");
-
-   procedure glOrtho
-     (left    : GLdouble_Type;
-      right   : GLdouble_Type;
-      bottom  : GLdouble_Type;
-      top     : GLdouble_Type;
-      nearVal : GLdouble_Type;
-      farVal  : GLdouble_Type);
-   pragma Import(StdCall,glOrtho,"glOrtho");
-
-   procedure glClearColor
-     (red   : GLclampf_Type;
-      green : GLclampf_Type;
-      blue  : GLclampf_Type;
-      alpha : GLclampf_Type);
-   pragma Import(StdCall,glClearColor,"glClearColor");
-
-   procedure glClear
-     (mask : GLbitfield_Type);
-   pragma Import(StdCall,glClear,"glClear");
-
-   procedure glEnable
-     (cap : GLenum_Type);
-   pragma Import(StdCall,glEnable,"glEnable");
-
-   procedure glDisable
-     (cap : GLenum_Type);
-   pragma Import(StdCall,glDisable,"glDisable");
+   function glGetString
+     (name : GLenum_Type)
+     return String;
 
    function glGetError
      return GLenum_Type;
    pragma Import(StdCall,glGetError,"glGetError");
-
-   procedure glBlendFunc
-     (sfactor : GLenum_Type;
-      dfactor : GLenum_Type);
-   pragma Import(StdCall,glBlendFUnc,"glBlendFunc");
-
-   procedure glAlphaFunc
-     (func : GLenum_Type;
-      ref  : GLclampf_Type);
-   pragma Import(StdCall,glAlphaFunc,"glAlphaFunc");
-
-   procedure glTexImage2D
-     (target : GLenum_Type;
-      level  : GLint_Type;
-      internalFormat : GLint_Type;
-      width          : GLsizei_Type;
-      height         : GLsizei_Type;
-      border         : GLint_Type;
-      format         : GLenum_Type;
-      ttype          : GLenum_Type;
-      data           : System.Address);
-   pragma Import(StdCall,glTexImage2D,"glTexImage2D");
-
-   procedure glBegin
-     (mode : GLenum_Type);
-   pragma Import(StdCall,glBegin,"glBegin");
-
-   procedure glEnd;
-   pragma Import(StdCall,glEnd,"glEnd");
-
-   procedure glTexCoord2f
-     (s : GLfloat_Type;
-      t : GLfloat_Type);
-   pragma Import(StdCall,glTexCoord2f,"glTexCoord2f");
-
-   procedure glVertex2f
-     (x : GLfloat_Type;
-      y : GLfloat_Type);
-   pragma Import(StdCall,glVertex2f,"glVertex2f");
-
-   procedure glBindTexture
-     (target  : GLenum_Type;
-      texture : GLuint_Type);
-   pragma Import(StdCall,glBindTexture,"glBindTexture");
-
-   procedure glGenTextures
-     (n        : GLsizei_Type;
-      textures : access GLuint_Type);
-   pragma Import(StdCall,glGenTextures,"glGenTextures");
-
-   procedure glDeleteTextures
-     (n        : GLsizei_Type;
-      textures : access GLuint_Type);
-   pragma Import(StdCall,glDeleteTextures,"glDeleteTextures");
-
-   procedure glTexParameteri
-     (target : GLenum_Type;
-      pname  : GLenum_Type;
-      param  : GLint_Type);
-   pragma Import(StdCall,glTexParameteri,"glTexParameteri");
 
    procedure AssertError;
 

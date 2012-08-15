@@ -14,43 +14,41 @@ package body Implementations is
 
    List : List_Pack.List;
 
-   function FindImplementation
-     (Name : Unbounded_String)
+   function Utilize
+     (ConfigNode : Config.ConfigNode_Type)
       return Implementation_Type is
 
       use type List_Pack.Cursor;
 
-      Cursor  : List_Pack.Cursor;
+      Cursor         : List_Pack.Cursor;
+      Implementation : constant Unbounded_String:=ConfigNode.GetImplementation;
 
    begin
+
+      if Implementation="" then
+         if List.First=List_Pack.No_Element then
+            raise ImplementationNotFound;
+         end if;
+         return List_Pack.Element(List.First).Constructor
+           (ConfigNode.GetConfig,
+            ConfigNode.GetImplConfig(Implementation));
+      end if;
 
       Cursor:=List.First;
       while Cursor/=List_Pack.No_Element loop
-         if List_Pack.Element(Cursor).Name=Name then
-            return List_Pack.Element(Cursor).Constructor.all;
+         if List_Pack.Element(Cursor).Name=Implementation then
+            return List_Pack.Element(Cursor).Constructor
+              (ConfigNode.GetConfig,
+               ConfigNode.GetImplConfig(Implementation));
          end if;
+         Cursor:=List_Pack.Next(Cursor);
       end loop;
       raise ImplementationNotFound;
 
-   end FindImplementation;
+   end Utilize;
    ---------------------------------------------------------------------------
 
-   function FindAnyImplementation
-     return Implementation_Type is
-
-      use type List_Pack.Cursor;
-
-   begin
-
-      if List.First=List_Pack.No_Element then
-         raise ImplementationNotFound;
-      end if;
-      return List_Pack.Element(List.First).Constructor.all;
-
-   end FindAnyImplementation;
-   ---------------------------------------------------------------------------
-
-   function HasImplementation
+   function Has
      (Name : Unbounded_String)
       return Boolean is
 
@@ -69,22 +67,22 @@ package body Implementations is
       end loop;
       return False;
 
-   end HasImplementation;
+   end Has;
    ---------------------------------------------------------------------------
 
-   procedure RegisterImplementation
+   procedure Register
      (Name        : Unbounded_String;
       Constructor : Implementation_Constructor) is
    begin
 
-      if HasImplementation(Name) then
+      if Has(Name) then
          raise ImplementationRegisteredTwice;
       end if;
       List.Append
         ((Name        => Name,
           Constructor => Constructor));
 
-   end RegisterImplementation;
+   end Register;
    ---------------------------------------------------------------------------
 
 end Implementations;

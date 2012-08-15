@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --   Copyright 2012 Julian Schutsch
 --
---   This file is part of ParallelSim
+--   This file is part of TrainWorld
 --
 --   ParallelSim is free software: you can redistribute it and/or modify
 --   it under the terms of the GNU Affero General Public License as published
@@ -19,11 +19,36 @@
 
 pragma Ada_2005;
 
+with Interfaces.C.Strings; use Interfaces.C.Strings;
+
 package body OpenGL is
+
+   function glGetString
+     (name : GLenum_Type)
+      return String is
+
+      function extglGetString
+        (name : GLenum_Type)
+         return chars_ptr;
+      pragma import(StdCall,extglGetString,"glGetString");
+
+      Str : constant chars_ptr:=extglGetString(name);
+
+   begin
+
+      if Str/=Null_Ptr then
+         return Value(Str);
+      else
+         return "";
+      end if;
+
+   end glGetString;
+   ---------------------------------------------------------------------------
 
    procedure AssertError is
       Error : GLenum_Type;
    begin
+
       Error:=glGetError;
 
       if Error/=0 then
@@ -33,5 +58,6 @@ package body OpenGL is
       end if;
 
    end AssertError;
+   ---------------------------------------------------------------------------
 
 end OpenGL;

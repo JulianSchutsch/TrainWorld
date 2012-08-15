@@ -26,12 +26,14 @@ with TestFrameWork; use TestFrameWork;
 with Bytes.Test;
 with Endianess.Test;
 with Config.Test;
+with GImplementationsTest;
 
 procedure Test is
    Tests : constant TestFrameWork.Test_Array:=
      Bytes.Test.Tests&
      Endianess.Test.Tests&
-     Config.Test.Tests;
+     Config.Test.Tests&
+     GImplementationsTest.Tests;
 begin
    TestFrameWork.Run(Tests);
 end Test;
