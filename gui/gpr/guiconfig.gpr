@@ -1,0 +1,6 @@
+abstract project GUIConfig is
+
+   type Switch_Type is ("On","Off");
+   Win32OpenGLContext : Switch_Type:="On";
+
+end GUIConfig;
