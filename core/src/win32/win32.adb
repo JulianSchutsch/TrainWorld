@@ -21,6 +21,29 @@ pragma Ada_2005;
 
 package body Win32 is
 
+   function GUIDToString
+     (GUID : GUID_Type)
+      return String is
+   begin
+      return Interfaces.Unsigned_8'Image(GUID(0))&" "
+        &Interfaces.Unsigned_8'Image(GUID(1))&" "
+        &Interfaces.Unsigned_8'Image(GUID(2))&" "
+        &Interfaces.Unsigned_8'Image(GUID(3))&" "
+        &Interfaces.Unsigned_8'Image(GUID(4))&" "
+        &Interfaces.Unsigned_8'Image(GUID(5))&" "
+        &Interfaces.Unsigned_8'Image(GUID(6))&" "
+        &Interfaces.Unsigned_8'Image(GUID(7))&" "
+        &Interfaces.Unsigned_8'Image(GUID(8))&" "
+        &Interfaces.Unsigned_8'Image(GUID(9))&" "
+        &Interfaces.Unsigned_8'Image(GUID(10))&" "
+        &Interfaces.Unsigned_8'Image(GUID(11))&" "
+        &Interfaces.Unsigned_8'Image(GUID(12))&" "
+        &Interfaces.Unsigned_8'Image(GUID(13))&" "
+        &Interfaces.Unsigned_8'Image(GUID(14))&" "
+        &Interfaces.Unsigned_8'Image(GUID(15));
+   end GUIDToString;
+   ---------------------------------------------------------------------------
+
    function MAKEINTRESOURCE
      (wInteger : WORD_Type)
       return LPCTSTR_Type is

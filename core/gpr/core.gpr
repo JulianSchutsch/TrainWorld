@@ -1,18 +1,15 @@
+with "Config";
+
 project Core is
 
   Dir:=Core'Project_Dir & "/";
 
+  Linker_Switches:=();
+
   for Languages use ("Ada");
 
   package Compiler is
-    for Default_Switches("Ada") use
-      ("-gnato",
-       "-gnatn",
-     "-g",
-     "-gnatf",
-     "-Wall",
-     "-O0",
-     "-fno-strict-aliasing");
+    for Default_Switches("Ada") use Config.Compiler_Switches;
   end Compiler;
 
   for Source_Dirs use

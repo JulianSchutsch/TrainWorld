@@ -55,6 +55,9 @@ package Win32 is
    type BOOL_Type is new Interfaces.C.int;
    type BYTE_Type is new Interfaces.Unsigned_8;
    subtype HGLRC_Type is HANDLE_Type;
+   type GUID_Type is array(0..15) of Interfaces.Unsigned_8;
+   pragma Convention(C,GUID_Type);
+   type HRESULT_Type is new Interfaces.C.int;
 
    function HANDLEToInteger is new Ada.Unchecked_Conversion
      (Source => HANDLE_Type,
@@ -291,5 +294,11 @@ package Win32 is
    pragma Import(StdCall,GetLastError,"GetLastError");
 
    STARTF_USESTDHANDLES : constant:=16#100#;
+
+   S_OK : constant HRESULT_Type:=0;
+
+   function GUIDToString
+     (GUID : GUID_Type)
+      return String;
 
 end Win32;
