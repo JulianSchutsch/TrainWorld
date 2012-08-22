@@ -15,7 +15,7 @@ project GUI is
 
   case GUIConfig.Win32OpenGLContext is
      when "On" =>
-        Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32");
+        Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32","-lkernel32");
      when "Off" =>
   end case;
 

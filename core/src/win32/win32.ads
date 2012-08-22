@@ -43,6 +43,7 @@ package Win32 is
    type WPARAM_Type is new Interfaces.C.ptrdiff_t;
    subtype LPARAM_Type is LONG_PTR_Type;
    subtype HINSTANCE_Type is HANDLE_Type;
+   subtype HMODULE_Type is HANDLE_Type;
    subtype HICON_Type is HANDLE_Type;
    subtype HCURSOR_Type is HICON_Type;
    subtype HBRUSH_Type is HANDLE_Type;

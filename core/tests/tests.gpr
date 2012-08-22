@@ -22,6 +22,8 @@ project Tests is
     (Dir & ".",
      Dir & "bytes",
      Dir & "config",
-     Dir & "implementations");
+     Dir & "implementations",
+     Dir & "parsers",
+     Dir & "globalloop");
 
 end Tests;

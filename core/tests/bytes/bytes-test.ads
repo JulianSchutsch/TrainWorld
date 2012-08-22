@@ -22,13 +22,14 @@
 --     - Original version
 
 with TestFrameWork; use TestFrameWork;
+with Basics; use Basics;
 
 package Bytes.Test is
 
    procedure AccessTest;
    procedure AccessArithmeticTest;
 
-   Tests : Test_Array:=
+   Tests : constant Test_Array:=
      ((Name => U("Core.Bytes.Access"),
        Test => AccessTest'Access),
       (Name => U("Core.Bytes.AccessArithmetic"),

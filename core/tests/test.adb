@@ -27,13 +27,17 @@ with Bytes.Test;
 with Endianess.Test;
 with Config.Test;
 with GImplementationsTest;
+with VersionParser.Test;
+with GlobalLoop.Test;
 
 procedure Test is
    Tests : constant TestFrameWork.Test_Array:=
      Bytes.Test.Tests&
      Endianess.Test.Tests&
      Config.Test.Tests&
-     GImplementationsTest.Tests;
+     GImplementationsTest.Tests&
+     VersionParser.Test.Tests&
+     GlobalLoop.Test.Tests;
 begin
    TestFrameWork.Run(Tests);
 end Test;

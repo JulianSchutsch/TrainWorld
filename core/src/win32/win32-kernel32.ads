@@ -74,7 +74,7 @@ package Win32.Kernel32 is
 
    function ReadFile
      (hFile                : HANDLE_Type;
-      lpBuffer             : access ByteArray_Type;
+      lpBuffer             : Byte_Access;
       nNumberOfBytesToRead : DWORD_Type;
       lpNumberOfBytesRead  : access DWORD_Type;
       lpOverlapped         : access OVERLAPPED_Type)
@@ -89,7 +89,7 @@ package Win32.Kernel32 is
 
    function PeekNamedPipe
      (hNamedPipe             : HANDLE_Type;
-      lpBuffer               : access ByteArray_Type;
+      lpBuffer               : Byte_Access;
       nBufferSize            : DWORD_Type;
       lpBytesRead            : access DWORD_Type;
       lpTotalBytesAvail      : access DWORD_Type;
@@ -102,5 +102,21 @@ package Win32.Kernel32 is
       uExitCode : UINT_Type)
       return Boolean;
    pragma Import(StdCall,TerminateProcess,"TerminateProcess");
+
+   function LoadLibrary
+     (lpFileName : System.Address)
+      return HMODULE_Type;
+   pragma Import(StdCall,LoadLibrary,"LoadLibraryA");
+
+   function FreeLibrary
+     (hModule : HMODULE_Type)
+      return BOOL_Type;
+   pragma Import(StdCall,FreeLibrary,"FreeLibrary");
+
+   function GetProcAddress
+     (hModule : HMODULE_Type;
+      lpProcName : System.Address)
+      return System.Address;
+   pragma Import(StdCall,GetProcAddress,"GetProcAddress");
 
 end Win32.Kernel32;

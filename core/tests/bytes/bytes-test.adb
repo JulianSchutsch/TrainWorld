@@ -21,7 +21,7 @@ package body Bytes.Test is
 
    procedure AccessTest is
 
-      Buffer : ByteArray_Access:=new ByteArray_Type(1..1024);
+      Buffer : Byte_Array_Access:=new Byte_Array(1..1024);
 
    begin
 
@@ -36,7 +36,7 @@ package body Bytes.Test is
 
    procedure AccessArithmeticTest is
 
-      Buffer  : ByteArray_Access:=new ByteArray_Type(0..255);
+      Buffer  : Byte_Array_Access:=new Byte_Array(0..255);
       Current : Byte_Access:=Buffer(Buffer'First)'Access;
       Second  : Byte_Access;
 

@@ -25,10 +25,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package TestFrameWork is
 
-   function U
-     (Source : String)
-      return Unbounded_String renames To_Unbounded_String;
-
    type TestFunc_Access is access procedure;
    type Test_Type is
       record

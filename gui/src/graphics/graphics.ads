@@ -9,6 +9,7 @@ with Basics; use Basics;
 package Graphics is
 
    FailedContextCreation : Exception;
+   InvalidContext        : Exception;
 
    type MouseButton_Enum is
      (MouseButtonLeft,
@@ -23,7 +24,27 @@ package Graphics is
       WindowTypeFullDesktopWindow,
       WindowTypeFullScreen);
 
-   type Context_Interface is new RefCount.Ref_Interface with null record;
+   type Context_OnClose is
+     access procedure
+       (Data : C_ClassAccess);
+
+   type Context_OnResize is
+     access procedure
+       (Data   : C_ClassAccess;
+        Height : Integer;
+        Width  : Integer);
+
+   type Context_OnPaint is
+     access procedure
+       (Data : C_ClassAccess);
+
+   type Context_Interface is new RefCount.Ref_Interface with
+      record
+         Data     : C_ClassAccess    := null;
+         OnClose  : Context_OnClose  := null;
+         OnResize : Context_OnResize := null;
+         OnPaint  : Context_OnPaint  := null;
+      end record;
 
    type Context_Info is
       record

@@ -21,9 +21,8 @@ pragma Ada_2012;
 
 with Graphics; use Graphics;
 with Basics; use Basics;
---with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO; use Ada.Text_IO;
 with Opengl; use Opengl;
-pragma Unreferenced(OpenGL);
 with System;
 with Config;
 with Interfaces.C.Strings;
@@ -34,26 +33,109 @@ with Win32.Kernel32; use Win32.Kernel32;
 with Win32.GDI32; use Win32.GDI32;
 with Win32.OpenGL32; use Win32.OpenGL32;
 with Ada.Unchecked_Conversion;
+with Bytes;
+with GlobalLoop;
 
 package body OpenGL.Win32Context is
 
+   LibraryHandle : HMODULE_Type := NULLHANDLE;
+   LibraryCount  : Natural:=0;
+   LibraryName   : constant String:="opengl32.dll"&Character'Val(0);
+
+   type Context_Type;
+   type Context_Access is access all Context_Type;
+
+   type Context_Process is new GlobalLoop.Process_Type with
+      record
+         Context : Context_Access:=null;
+      end record;
+
+   overriding
+   procedure Process
+     (P : in out Context_Process);
+
    type Context_Type is new Graphics.Context_Interface with
       record
+
          WindowHandle        : HWND_Type         := NULLHANDLE;
          DeviceContext       : HDC_Type          := NULLHANDLE;
          RenderContext       : HGLRC_Type        := NULLHANDLE;
          DestroySignalSend   : Boolean           := False;
-         DoubleBuffered      : Boolean;
+         DoubleBuffered      : Boolean           := True;
          MouseButtonsPressed : MouseButton_Array := NoMouseButtons;
          HasCapture          : Boolean           := False;
+         LibraryLoaded       : Boolean           := False;
+         LoopProcess         : Context_Process;
 
          CSTR_ClassName : Interfaces.C.Strings.chars_ptr
            := Interfaces.C.Strings.Null_Ptr;
          CSTR_Title     : Interfaces.C.Strings.chars_ptr
            := Interfaces.C.Strings.Null_Ptr;
+
       end record;
 
-   type Context_Access is access all Context_Type;
+   procedure Process
+     (P : in out Context_Process) is
+
+      BoolResult : BOOL_Type;
+      LResult    : LRESULT_Type;
+      lMsg       : aliased MSG_Type;
+
+      pragma Unreferenced(BoolResult,LResult);
+
+   begin
+
+      if P.Context=null then
+         raise InvalidContext with "Process not properly initialized";
+      end if;
+
+      while PeekMessage
+        (lpMsg => lMsg'Access,
+         hwnd  => P.Context.WindowHandle,
+         wMsgFilterMin => 0,
+         wMsgFilterMax => 0,
+         wRemoveMsg    => PM_REMOVE)/=0 loop
+
+         BoolResult:=TranslateMessage(lMsg'Access);
+         LResult   :=DispatchMessage(lMsg'Access);
+      end loop;
+
+      if P.Context.DestroySignalSend and P.Context.OnClose/=null then
+         P.Context.OnClose(P.Context.Data);
+         P.Disable;
+      end if;
+
+   end Process;
+   ---------------------------------------------------------------------------
+
+   procedure Paint
+     (Context : in out Context_Type) is
+
+      Result : BOOL_Type;
+      pragma Unreferenced(Result);
+
+   begin
+
+      if Context.RenderContext=NULLHANDLE then
+         return;
+      end if;
+
+      Result:=wglMakeCurrent
+        (hdc   => Context.DeviceContext,
+         hglrc => Context.RenderContext);
+
+      if Context.OnPaint/=null then
+         Context.OnPaint(Context.Data);
+      end if;
+
+      if Context.DoubleBuffered then
+         Result:=SwapBuffers(Context.DeviceContext);
+      else
+         glFinish;
+      end if;
+
+   end Paint;
+   ---------------------------------------------------------------------------
 
    function WndProc
      (hWnd   : HWND_Type;
@@ -97,7 +179,7 @@ package body OpenGL.Win32Context is
                lParam => lParam);
 
          when WM_PAINT =>
---            Paint(Context.all);
+            Paint(Context.all);
             return DefWindowProc
               (hWnd => hWnd,
                uMsg => uMsg,
@@ -135,7 +217,6 @@ package body OpenGL.Win32Context is
             end;
             return 0;
          when WM_SIZE =>
-            -- TODO : Extract Resize
 --            GUI.PropagateContextResize
 --              (Context => Context_ClassAccess(Context),
 --               Width   => Integer(LOWORD(lParam)),
@@ -230,7 +311,7 @@ package body OpenGL.Win32Context is
             return 0;
 
          when WM_TIMER =>
---            Paint(Context.all);
+            Paint(Context.all);
             return 0;
 
          when WM_ERASEBKGND =>
@@ -291,6 +372,46 @@ null;
    end WndProc;
    ---------------------------------------------------------------------------
 
+   function OpenGL32GetProc
+     (Str : String)
+      return System.Address is
+
+      use type System.Address;
+
+      Result : System.Address;
+
+   begin
+
+      Result := GetProcAddress(LibraryHandle,Str(Str'First)'Address);
+      if result=System.Null_Address then
+         raise FailedContextCreation with "GetProcAddress return null for """&Str(Str'First..Str'Last-1)&"""";
+      end if;
+      return Result;
+
+   end OpenGL32GetProc;
+   ---------------------------------------------------------------------------
+
+   function WGLGetProc
+     (Str : String)
+      return System.Address is
+
+      use type System.Address;
+
+      Result : System.Address;
+
+   begin
+
+      pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
+      Put_Line("GetProc:"&Str&":");
+      Result := wglGetProcAddress(Str(Str'First)'Address);
+      if Result=System.Null_Address then
+         raise FailedContextCreation with "wglGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
+      end if;
+      return Result;
+
+   end WGLGetProc;
+   ---------------------------------------------------------------------------
+
    function ContextConstructor
      (GenConfig  : Config.Config_ClassAccess;
       ImplConfig : Config.Config_ClassAccess)
@@ -313,6 +434,7 @@ null;
       pragma Unreferenced(BoolResult,HWNDResult);
 
       GConfig : Context_Config;
+      Version : OpenGLVersion_Type;
 
    begin
 
@@ -321,6 +443,9 @@ null;
       end if;
 
       ContextRef.I:=Graphics.Ref.Interface_ClassAccess(Context);
+
+      Context.LoopProcess.Context:=Context;
+      Context.LoopProcess.Enable;
 
       HInstance:=GetModuleHandle(lpModuleName => Interfaces.C.Strings.Null_Ptr);
 
@@ -409,8 +534,8 @@ null;
          end if;
       end;
 
-      Context.DeviceContext := wglCreateContext(Context.DeviceContext);
-      if Context.DeviceContext=NULLHANDLE then
+      Context.RenderContext := wglCreateContext(Context.DeviceContext);
+      if Context.RenderContext=NULLHANDLE then
          raise Graphics.FailedContextCreation with "Could not create first opengl context using wglCreateContext, error :"
            &DWORD_Type'Image(GetLastError);
       end if;
@@ -421,6 +546,70 @@ null;
          raise Graphics.FailedContextCreation with "Could not make first opengl context current with wglMakeCurrent, error :"
            &DWORD_Type'Image(GetLastError);
       end if;
+
+      if LibraryCount=0 then
+         LibraryHandle:=LoadLibrary(LibraryName(LibraryName'First)'Address);
+         if LibraryHandle=NULLHANDLE then
+            raise Graphics.FailedContextCreation with "Could not load library handle";
+         end if;
+      end if;
+
+      Context.LibraryLoaded := True;
+      LibraryCount  := LibraryCount+1;
+
+      Version:=GetVersion(OpenGL32GetProc'Access);
+      Put_Line("Version:"&GLint_Type'Image(Version.Major)&"."&GLint_Type'Image(Version.Minor));
+
+      -- OpenGL <3.2 are treated as "old" style
+      if True or (Version.Major<3) or ((Version.Major=3) and (Version.Minor<2)) then
+         Put_Line("Created compatible context");
+         OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,True);
+         return ContextRef;
+      end if;
+
+      declare
+         NewContext : HGLRC_Type;
+         Attribs : Bytes.Int_Array:=
+           (WGL_CONTEXT_MAJOR_VERSION_ARB,Bytes.Int_Type(Version.Major),
+            WGL_CONTEXT_MINOR_VERSION_ARB,Bytes.Int_Type(Version.Minor),
+            WGL_CONTEXT_FLAGS_ARB,WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+            WGL_CONTEXT_PROFILE_MASK_ARB,WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+            0);
+      begin
+
+         NewContext:=wglCreateContextAttribsARB
+           (hdc           => Context.DeviceContext,
+            hShareContext => NULLHANDLE,
+            attriblist    => Attribs(Attribs'First)'Unchecked_Access);
+         if NewContext=NULLHANDLE then
+            -- TODO: Add Error note, but use allready present context
+            OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,True);
+            return ContextRef;
+         end if;
+
+         if wglMakeCurrent(NULLHANDLE,NULLHANDLE)/=Standard.Win32.TRUE then
+            if wglDeleteContext(NewContext)/=Standard.Win32.TRUE then
+               null;
+            end if;
+            raise Graphics.FailedContextCreation with "Failed call to wglMakeCurrent with NULLHANDLE";
+         end if;
+
+         if wglDeleteContext(Context.RenderContext)/=Standard.Win32.TRUE then
+            if wglDeleteContext(NewContext)/=Standard.Win32.TRUE then
+               null;
+            end if;
+            raise Graphics.FailedContextCreation with "Failed call to wglDeleteContext for help context";
+         end if;
+
+         Context.RenderContext:=NewContext;
+
+         if wglMakeCurrent(Context.DeviceContext,NewContext)/=Standard.Win32.TRUE then
+            raise Graphics.FailedContextCreation with "Failed to call wglMakeCurrent with OpenGL >3.2 context";
+         end if;
+
+      end;
+
+      OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,False);
 
       return ContextRef;
 

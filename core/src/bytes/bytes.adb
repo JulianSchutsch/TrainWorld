@@ -19,8 +19,6 @@
 
 pragma Ada_2005;
 
-with Interfaces.C;
-
 package body Bytes is
 
    function "+"

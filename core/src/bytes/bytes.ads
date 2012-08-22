@@ -27,17 +27,27 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with System;
 with Endianess;
+with Interfaces.C;
 
 package Bytes is
 
+   subtype Int_Type is Interfaces.C.int;
+   type Int_Access is access all Int_Type;
+   type Int_Array is array(Integer range <>) of aliased Int_Type;
+   pragma Convention(C,Int_Array);
+
    type Byte_Type is mod 2**8;
    type Byte_Access is access all Byte_Type;
-   type ByteArray_Type is array(Integer range <>) of aliased Byte_Type;
-   pragma Convention(C,ByteArray_Type);
+   type Byte_Array is array(Integer range <>) of aliased Byte_Type;
+   pragma Convention(C,Byte_Array);
 
    type LittleEndianCardinal32_Access is access all Endianess.LittleEndianCardinal32;
 
-   type ByteArray_Access is access all ByteArray_Type;
+   type Byte_Array_Access is access all Byte_Array;
+
+   function AddressToIntAccess is new Ada.Unchecked_Conversion
+     (Source => System.Address,
+      Target => Int_Access);
 
    function AddressToByteAccess is new Ada.Unchecked_Conversion
      (Source => System.Address,
@@ -48,8 +58,8 @@ package Bytes is
       Target => LittleEndianCardinal32_Access);
 
    procedure Free is new Ada.Unchecked_Deallocation
-     (Object => ByteArray_Type,
-      Name   => ByteArray_Access);
+     (Object => Byte_Array,
+      Name   => Byte_Array_Access);
 
    function "-"
      (Left  : Byte_Access;

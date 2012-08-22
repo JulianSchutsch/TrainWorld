@@ -22,13 +22,14 @@
 --     - Original version
 
 with TestFrameWork; use TestFrameWork;
+with Basics; use Basics;
 
 package Endianess.Test is
 
    procedure LittleEndian32Test;
    procedure BigEndian32Test;
 
-   Tests : Test_Array:=
+   Tests : constant Test_Array:=
      ((Name => U("Core.LittleEndian.32"),Test => LittleEndian32Test'Access),
       (Name => U("Core.BigEndian.32"),Test    => BigEndian32Test'Access));
 

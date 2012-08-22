@@ -28,12 +28,33 @@ with OpenGL.Win32Context;
 with Ada.Text_IO; use Ada.Text_IO;
 with Config;
 with Basics; use Basics;
+with OpenGL; use OpenGL;
+with GlobalLoop;
 
 procedure Test is
 
    C : Graphics.Context_Ref;
    pragma Warnings(Off,C);
    Configuration : Config.ConfigNode_Type;
+   Terminated : Boolean:=False;
+   pragma Warnings(Off,Terminated);
+
+   procedure OnContextClose
+     (Data : C_ClassAccess) is
+      pragma Unreferenced(Data);
+   begin
+      Terminated:=True;
+   end OnContextClose;
+   ---------------------------------------------------------------------------
+
+   procedure OnContextPaint
+     (Data : C_ClassAccess) is
+      pragma Unreferenced(Data);
+   begin
+      glClearColor(1.0,1.0,0.0,1.0);
+      glClear(GL_COLOR_BUFFER_BIT);
+   end OnContextPaint;
+   ---------------------------------------------------------------------------
 
 begin
 
@@ -46,7 +67,13 @@ begin
 
    Put_Line("Find");
    C:=Graphics.Implementations.Utilize(Configuration);
-   Put_Line("Done..");
-   delay 2.0;
+   C.I.OnClose:=OnContextClose'Unrestricted_Access;
+   C.I.OnPaint:=OnContextPaint'Unrestricted_Access;
+   if OpenGL.SupportProgram then
+      Put_Line("GLSL supported");
+   end if;
+   while not Terminated loop
+      GlobalLoop.Process;
+   end loop;
 
 end Test;

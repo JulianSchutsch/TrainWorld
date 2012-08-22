@@ -1,4 +1,5 @@
 with TestFrameWork; use TestFrameWork;
+with Basics; use Basics;
 
 package GImplementationsTest is
 

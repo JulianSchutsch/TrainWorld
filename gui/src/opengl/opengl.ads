@@ -25,8 +25,12 @@ pragma Ada_2005;
 
 with Interfaces.C;
 with Interfaces;
+with Interfaces.C.Strings; use Interfaces.C.Strings;
+with System;
 
 package OpenGL is
+
+   InvalidOpenGLVersion : Exception;
 
    OpenGLError : Exception;
 
@@ -43,7 +47,17 @@ package OpenGL is
    type GLint_Access is access all GLint_Type;
    type GLsizei_Type is new Interfaces.C.int;
    type GLsizei_Access is access all GLsizei_Type;
+   type GLsizeiptr_Type is new Interfaces.C.int; -- <- why this one?
    type GLenum_Type is new Interfaces.Unsigned_32;
+   subtype GLchar_Type is Character;
+   type GLchar_Access is access all GLchar_Type;
+   type GLboolean_Type is new Interfaces.Unsigned_8;
+
+   type OpenGLVersion_Type is
+      record
+         Major : aliased GLint_Type;
+         Minor : aliased GLint_Type;
+      end record;
 
    GL_MODELVIEW  : constant GLenum_Type:=16#1700#;
    GL_PROJECTION : constant GLenum_Type:=16#1701#;
@@ -77,13 +91,211 @@ package OpenGL is
 
    GL_VERSION : constant GLenum_Type:=16#1F02#;
 
-   function glGetString
-     (name : GLenum_Type)
-     return String;
+   GL_MAJOR_VERSION : constant GLenum_Type:=16#821B#;
+   GL_MINOR_VERSION : constant GLenum_Type:=16#821C#;
 
+   -- GetProc_Access expects null terminated strings and returns
+   -- a pointer to a function/procedure of the OpenGL interface
+   type GetProc_Access is
+     access function
+       (Name : String) return System.Address;
+
+   type glGetString_Access is
+     access function
+       (name : GLenum_Type)
+        return chars_ptr;
+   pragma Convention(StdCall,glGetString_Access);
+
+   function glGetString
+     (name    : GLenum_Type;
+      GetProc : not null GetProc_Access)
+      return String;
+
+   type glGetIntegerv_Access is
+     access procedure
+       (pname  : GLenum_Type;
+        params : access GLint_Type);
+   pragma Convention(StdCall,glGetIntegerv_Access);
+
+   procedure glGetIntegerv
+     (pname : GLenum_Type;
+      params : access GLint_Type;
+      GetProc : not null GetProc_Access);
+
+   type glClearColor_Access is
+     access procedure
+       (red   : GLclampf_Type;
+        green : GLclampf_Type;
+        blue  : GLclampf_Type;
+        alpha : GLclampf_Type);
+   pragma Convention(StdCall,glClearColor_Access);
+
+   type glClear_Access is
+     access procedure
+       (mask : GLbitfield_Type);
+
+   procedure aglClearColor
+     (r,g,b,a:GLclampf_Type);
+   pragma Import(StdCall,aglClearColor,"glClearColor");
+   procedure aglClear
+     (mask : GLbitfield_Type);
+   procedure glFinish;
+   pragma Import(StdCall,glFinish,"glFinish");
+   pragma Import(StdCall,aglClear,"glClear");
+   glClearColor : glClearColor_Access:=null;
+   glClear      : glClear_Access:=null;
+   ---------------------------------------------------------------------------
+
+   -- Buffer Objects
+
+   type glGenBuffers_Access is
+     access procedure
+       (n       : GLsizei_Type;
+        buffers : access GLuint_Type);
+
+   type glBindBuffer_Access is
+     access procedure
+       (target : GLenum_Type;
+        buffer : GLuint_Type);
+
+   type glBufferData_Access is
+     access procedure
+       (target : GLenum_Type;
+        size   : GLsizeiptr_Type;
+        data   : System.Address;
+        usage  : GLenum_Type);
+
+   glGenBuffers : glGenBuffers_Access:=null;
+   glBindBuffer : glBindBuffer_Access:=null;
+   glBufferData : glBufferData_Access:=null;
+
+   SupportBufferObjects : Boolean:=False;
+
+   -- Vertex Attributes
+
+   type glVertexAttribPointer_Access is
+     access procedure
+       (index      : GLuint_Type;
+        size       : GLint_Type;
+        ttype      : GLenum_Type;
+        normalized : GLboolean_Type;
+        stride     : GLsizei_Type;
+        pointer    : System.Address);
+
+   glVertexAttribPointer : glVertexAttribPointer_Access:=null;
+
+   SupportVertexAttributes : Boolean:=False;
+
+   -- GLSL --
+
+   type glCreateProgram_Access is
+     access function
+     return GLuint_Type;
+
+   type glDeleteProgram_Access is
+     access procedure
+       (program : GLuint_Type);
+
+   type glUseProgram_Access is
+     access procedure
+       (program : GLuint_Type);
+
+   type glAttachShader_Access is
+     access procedure
+       (program : GLuint_Type;
+        shader  : GLuint_Type);
+
+   type glDetachShader_Access is
+     access procedure
+       (program : GLuint_Type;
+        shader  : GLuint_Type);
+
+   type glLinkProgram_Access is
+     access procedure
+       (program : GLuint_Type);
+
+   type glGetProgramiv_Access is
+     access procedure
+       (program : GLuint_Type;
+        pname   : GLenum_Type;
+        params  : access GLint_Type);
+
+   type glGetShaderInfoLog_Access is
+     access procedure
+       (shader    : GLuint_Type;
+        maxLength : GLsizei_Type;
+        length    : access GLsizei_Type;
+        infoLog   : access GLchar_Type);
+
+   type glGetUniformLocation_Access is
+     access function
+       (program : GLuint_Type;
+        name    : access GLchar_Type) -- const
+        return GLint_Type;
+
+   type glCreateShader_Access is
+     access function
+       (shaderType : GLenum_Type)
+        return GLuint_Type;
+
+   type glDeleteShader_Access is
+     access procedure
+       (shader : GLuint_Type);
+
+   type glShaderSource_Access is
+     access procedure
+       (shader : GLuint_Type;
+        count  : GLsizei_Type;
+        string : access GLchar_Access;
+        length : access GLint_Type);
+
+   type glCompileShader_Access is
+     access procedure
+       (shader : GLuint_Type);
+
+   type glGetShaderiv_Access is
+     access procedure
+       (shader : GLuint_Type;
+        pname  : GLenum_Type;
+        params : access GLint_Type);
+
+   glCreateProgram      : glCreateProgram_Access      := null;
+   glDeleteProgram      : glDeleteProgram_Access      := null;
+   glUseProgram         : glUseProgram_Access         := null;
+   glAttachShader       : glAttachShader_Access       := null;
+   glDetachShader       : glDetachShader_Access       := null;
+   glLinkProgram        : glLinkProgram_Access        := null;
+   glGetProgramiv       : glGetProgramiv_Access       := null;
+   glGetShaderInfoLog   : glGetShaderInfoLog_Access   := null;
+   glGetUniformLocation : glGetUniformLocation_Access := null;
+
+   glCreateShader  : glCreateShader_Access  := null;
+   glDeleteShader  : glDeleteShader_Access  := null;
+   glShaderSource  : glShaderSource_Access  := null;
+   glCompileShader : glCompileShader_Access := null;
+   glGetShaderiv   : glGetShaderiv_Access   := null;
+
+   SupportProgram  : Boolean := False;
+
+   ---------------------------------------------------------------------------
+
+   function GetVersion
+     (GetProc : not null GetProc_Access)
+      return OpenGLVersion_Type;
+
+   -- These functions are like the usual opengl calls, but the
+   -- function pointer is loaded on demand.
+   -- This is necessary for initialisation
+
+   -- TODO: Do not link static...
    function glGetError
      return GLenum_Type;
    pragma Import(StdCall,glGetError,"glGetError");
+
+   procedure LoadFunctions
+     (DefaultGetProc   : not null GetProc_Access;
+      ExtensionGetProc : not null GetProc_Access;
+      Compatible       : Boolean);
 
    procedure AssertError;
 
