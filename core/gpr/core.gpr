@@ -1,4 +1,4 @@
-with "Config";
+with "config";
 
 project Core is
 
