@@ -92,12 +92,13 @@ package body OpenGL is
       VersionString : constant String:=glGetString(GL_VERSION,GetProc);
 
    begin
-      Put_Line("Version"&VersionString&":");
+      Put_Line("Version:"&VersionString&":");
       return Result : OpenGLVersion_Type do
          declare
-            Version : constant VersionParser.Version_Type:=VersionParser.Parse(VersionString);
+            -- The limit is necessary because some implementations add content to the string
+            Version : constant VersionParser.Version_Type:=VersionParser.Parse(VersionString,Limit=>2);
          begin
-            if Version'Length/=3 then
+            if Version'Length/=2 then
                raise InvalidOpenGLVersion;
             end if;
             if Version(Version'First)>3 then

@@ -5,7 +5,8 @@ package body VersionParser is
    DigitLimit : constant Natural:=5;
 
    function Parse
-     (StringData : String)
+     (StringData : String;
+      Limit      : Natural:=0)
       return Version_Type is
 
       Pos   : Integer := StringData'First;
@@ -81,7 +82,9 @@ package body VersionParser is
          end if;
          Consume;
 
-         ParseNumber;
+         if (Limit=0) or (Depth<Limit) then
+            ParseNumber;
+         end if;
 
       end ParseNumber;
       ------------------------------------------------------------------------
@@ -116,7 +119,9 @@ package body VersionParser is
          pragma Assert(Current='.');
          Consume;
 
-         ReadNumber(Result(Result'First+1..Result'Last));
+         if Result'Length/=1 then
+            ReadNumber(Result(Result'First+1..Result'Last));
+         end if;
 
       end ReadNumber;
 

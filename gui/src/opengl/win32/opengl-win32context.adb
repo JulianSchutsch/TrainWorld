@@ -560,8 +560,8 @@ null;
       Version:=GetVersion(OpenGL32GetProc'Access);
       Put_Line("Version:"&GLint_Type'Image(Version.Major)&"."&GLint_Type'Image(Version.Minor));
 
-      -- OpenGL <3.2 are treated as "old" style
-      if True or (Version.Major<3) or ((Version.Major=3) and (Version.Minor<2)) then
+      -- OpenGL <3.2 are treated as "old"
+      if (Version.Major<3) or ((Version.Major=3) and (Version.Minor<2)) then
          Put_Line("Created compatible context");
          OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,True);
          return ContextRef;
