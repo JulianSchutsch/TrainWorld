@@ -123,8 +123,10 @@ package body OpenGL is
       Version : constant OpenGLVersion_Type:=GetVersion(DefaultGetProc);
 
    begin
+
       glClear:=Conv(DefaultGetProc("glClear"&NullChar));
       glClearColor:=Conv(DefaultGetProc("glClearColor"&NullChar));
+
       -- Buffer Objects
       if (Version.Minor>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
@@ -132,11 +134,13 @@ package body OpenGL is
          glBindBuffer:=Conv(ExtensionGetProc("glBindBuffer"&NullChar));
          glBufferData:=Conv(ExtensionGetProc("glBufferData"&NullChar));
       end if;
+
       -- VertexAttrib
       if Version.Major>2 then
          SupportVertexAttributes:=True;
          glVertexAttribPointer:=Conv(ExtensionGetProc("glVertexAttribPointer"&NullChar));
       end if;
+
       -- GLSL
       if Version.Major>2 then
          SupportProgram := True;
