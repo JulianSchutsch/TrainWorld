@@ -1,5 +1,6 @@
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO; use Ada.Text_IO;
+with Basics; use Basics;
 
 package body RefCount is
 
@@ -29,10 +30,28 @@ package body RefCount is
             Put_Line("Finalize, Dec");
             Ref_Access(Ref.I).Count:=Ref_Access(Ref.I) .Count-1;
             if Ref_Access(Ref.I).Count=0 then
+               Put_Line("Free Ref");
                Free(Ref.I);
+               Put_Line("Freed");
             end if;
          end if;
       end Finalize;
+      ------------------------------------------------------------------------
+
+      function MakeRef
+        (Object : access Interface_Type'Class)
+         return Ref.Ref_Type is
+         pragma Suppress(Accessibility_Check);
+      begin
+         return R:Ref_Type do
+            Put_Line("Create Ref");
+            PutAddr(Object.all'Address);
+            Put_Line("Conv");
+            R.I:=Interface_ClassAccess(Object);
+            Put_Line("Inc Count");
+            Ref_Access(Object).Count:=Ref_Access(Object).Count+1;
+         end return;
+      end MakeRef;
       ------------------------------------------------------------------------
 
    end Ref;

@@ -74,6 +74,11 @@ package body OpenGL.Win32Context is
 
       end record;
 
+   overriding
+   procedure Finalize
+     (Context : in out Context_Type);
+   ---------------------------------------------------------------------------
+
    procedure Process
      (P : in out Context_Process) is
 
@@ -410,6 +415,30 @@ null;
       return Result;
 
    end WGLGetProc;
+   ---------------------------------------------------------------------------
+
+   procedure Finalize
+     (Context : in out Context_Type) is
+      IntResult : Interfaces.C.int;
+      BoolResult : BOOL_Type;
+      pragma Unreferenced(IntResult,BoolResult);
+   begin
+
+      Put_Line("Finalize Win32 Context");
+      if Context.DeviceContext/=NULLHANDLE then
+         Intresult:=ReleaseDC
+           (hWnd => Context.WindowHandle,
+            hDC  => Context.DeviceContext);
+      end if;
+      if Context.WindowHandle/=NULLHANDLE then
+         BoolResult:=DestroyWindow
+           (hWnd => Context.WindowHandle);
+      end if;
+      -- TODO :Remove Window Class
+      Interfaces.C.Strings.Free(Context.CSTR_ClassName);
+      Interfaces.C.Strings.Free(Context.CSTR_Title);
+      Put_Line("Done Win32 Context");
+   end Finalize;
    ---------------------------------------------------------------------------
 
    function ContextConstructor

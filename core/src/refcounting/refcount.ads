@@ -26,6 +26,11 @@ package RefCount is
       overriding
       procedure Finalize
         (Ref : in out Ref_Type);
+      ------------------------------------------------------------------------
+
+      function MakeRef
+        (Object : access Interface_Type'Class)
+         return Ref.Ref_Type;
 
    end Ref;
 

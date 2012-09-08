@@ -30,6 +30,9 @@ with Config;
 with Basics; use Basics;
 with OpenGL; use OpenGL;
 with GlobalLoop;
+with Interfaces.C;
+with OpenGL.Program;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 procedure Test is
 
@@ -38,6 +41,30 @@ procedure Test is
    Configuration : Config.ConfigNode_Type;
    Terminated : Boolean:=False;
    pragma Warnings(Off,Terminated);
+
+   VertexShaderSource : constant String:=
+     "#version 150"&Character'Val(10)&
+     "in vec3 in_Position;"&
+     "in vec3 in_Color;"&
+     "out vec3 ex_Color;"&
+     "void main(void)"&
+     "{"&
+     "  gl_Position = vec4(in_Position,1.0);"&
+     "  ex_Color = in_Color;"&
+     "}"&Character'Val(0);
+
+   FragmentShaderSource : constant String:=
+     "#version 150"&Character'Val(10)&
+     "in vec3 ex_Color;"&
+     "out vec4 out_Color;"&
+     "void main(void)"&
+     "{"&
+     "  out_Color=vec4(ex_Color,1.0);"&
+     "}"&Character'Val(0);
+
+   FragmentShader : aliased OpenGL.Program.Shader_Type;
+   VertexShader   : aliased OpenGL.Program.Shader_Type;
+   Program        : OpenGL.Program.Program_Type;
 
    procedure OnContextClose
      (Data : C_ClassAccess) is
@@ -53,6 +80,8 @@ procedure Test is
    begin
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
+      Program.UseProgram;
+      AssertError;
    end OnContextPaint;
    ---------------------------------------------------------------------------
 
@@ -72,8 +101,27 @@ begin
    if OpenGL.SupportProgram then
       Put_Line("GLSL supported");
    end if;
+
+   FragmentShader.Create
+     (ShaderType => OpenGL.Program.ShaderFragment,
+      Source     => FragmentShaderSource);
+   Put_Line("Compile Fragment Shader:"&To_String(FragmentShader.GetCompileLog));
+
+   VertexShader.Create
+     (ShaderType => OpenGL.Program.ShaderVertex,
+      Source     => VertexShaderSource);
+   Put_Line("Compile Vertex Shader:"&To_String(VertexShader.GetCompileLog));
+
+   Program.Create
+     ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeRef(VertexShader'Access),
+       OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeRef(FragmentShader'Access)));
+   Put_Line("Link:"&To_String(Program.GetLinkLog));
+
    while not Terminated loop
       GlobalLoop.Process;
    end loop;
+
+   FragmentShader.Reset;
+   VertexShader.Reset;
 
 end Test;

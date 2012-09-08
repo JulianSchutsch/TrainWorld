@@ -49,9 +49,12 @@ package OpenGL is
    type GLsizei_Access is access all GLsizei_Type;
    type GLsizeiptr_Type is new Interfaces.C.int; -- <- why this one?
    type GLenum_Type is new Interfaces.Unsigned_32;
-   subtype GLchar_Type is Character;
+   subtype GLchar_Type is Interfaces.C.char;
    type GLchar_Access is access all GLchar_Type;
    type GLboolean_Type is new Interfaces.Unsigned_8;
+
+   type CChar_Access is access all Interfaces.C.char;
+   pragma Convention(C,CChar_Access);
 
    type OpenGLVersion_Type is
       record
@@ -134,14 +137,8 @@ package OpenGL is
      access procedure
        (mask : GLbitfield_Type);
 
-   procedure aglClearColor
-     (r,g,b,a:GLclampf_Type);
-   pragma Import(StdCall,aglClearColor,"glClearColor");
-   procedure aglClear
-     (mask : GLbitfield_Type);
    procedure glFinish;
    pragma Import(StdCall,glFinish,"glFinish");
-   pragma Import(StdCall,aglClear,"glClear");
    glClearColor : glClearColor_Access:=null;
    glClear      : glClear_Access:=null;
    ---------------------------------------------------------------------------
@@ -191,34 +188,49 @@ package OpenGL is
    type glCreateProgram_Access is
      access function
      return GLuint_Type;
+   pragma Convention(StdCall,glCreateProgram_Access);
 
    type glDeleteProgram_Access is
      access procedure
        (program : GLuint_Type);
+   pragma Convention(StdCall,glDeleteProgram_Access);
 
    type glUseProgram_Access is
      access procedure
        (program : GLuint_Type);
+   pragma Convention(StdCall,glUseProgram_Access);
 
    type glAttachShader_Access is
      access procedure
        (program : GLuint_Type;
         shader  : GLuint_Type);
+   pragma Convention(StdCall,glAttachShader_Access);
 
    type glDetachShader_Access is
      access procedure
        (program : GLuint_Type;
         shader  : GLuint_Type);
+   pragma Convention(StdCall,glDetachShader_Access);
 
    type glLinkProgram_Access is
      access procedure
        (program : GLuint_Type);
+   pragma Convention(StdCall,glLinkProgram_Access);
+
+   type glGetProgramInfoLog_Access is
+     access procedure
+       (program   : GLuint_Type;
+        maxLength : GLsizei_Type;
+        length    : access GLsizei_Type;
+        infoLog   : access GLchar_Type);
+   pragma Convention(StdCall,glGetProgramInfoLog_Access);
 
    type glGetProgramiv_Access is
      access procedure
        (program : GLuint_Type;
         pname   : GLenum_Type;
         params  : access GLint_Type);
+   pragma Convention(StdCall,glGetProgramiv_Access);
 
    type glGetShaderInfoLog_Access is
      access procedure
@@ -226,38 +238,45 @@ package OpenGL is
         maxLength : GLsizei_Type;
         length    : access GLsizei_Type;
         infoLog   : access GLchar_Type);
+   pragma Convention(StdCall,glGetShaderInfoLog_Access);
 
    type glGetUniformLocation_Access is
      access function
        (program : GLuint_Type;
         name    : access GLchar_Type) -- const
         return GLint_Type;
+   pragma Convention(StdCall,glGetUniformLocation_Access);
 
    type glCreateShader_Access is
      access function
        (shaderType : GLenum_Type)
         return GLuint_Type;
+   pragma Convention(StdCall,glCreateShader_Access);
 
    type glDeleteShader_Access is
      access procedure
        (shader : GLuint_Type);
+   pragma Convention(StdCall,glDeleteShader_Access);
 
    type glShaderSource_Access is
      access procedure
-       (shader : GLuint_Type;
-        count  : GLsizei_Type;
-        string : access GLchar_Access;
-        length : access GLint_Type);
+       (shader  : GLuint_Type;
+        count   : GLsizei_Type;
+        strings : access CChar_Access;
+        lengths : access GLint_Type);
+   pragma Convention(StdCall,glShaderSource_Access);
 
    type glCompileShader_Access is
      access procedure
        (shader : GLuint_Type);
+   pragma Convention(StdCall,glCompileShader_Access);
 
    type glGetShaderiv_Access is
      access procedure
        (shader : GLuint_Type;
         pname  : GLenum_Type;
         params : access GLint_Type);
+   pragma Convention(StdCall,glGetShaderiv_Access);
 
    glCreateProgram      : glCreateProgram_Access      := null;
    glDeleteProgram      : glDeleteProgram_Access      := null;
@@ -268,6 +287,7 @@ package OpenGL is
    glGetProgramiv       : glGetProgramiv_Access       := null;
    glGetShaderInfoLog   : glGetShaderInfoLog_Access   := null;
    glGetUniformLocation : glGetUniformLocation_Access := null;
+   glGetProgramInfoLog  : glGetProgramInfoLog_Access  := null;
 
    glCreateShader  : glCreateShader_Access  := null;
    glDeleteShader  : glDeleteShader_Access  := null;
@@ -276,6 +296,9 @@ package OpenGL is
    glGetShaderiv   : glGetShaderiv_Access   := null;
 
    SupportProgram  : Boolean := False;
+
+   GL_FRAGMENT_SHADER : constant GLenum_Type:=16#8B30#;
+   GL_VERTEX_SHADER   : constant GLenum_Type:=16#8B31#;
 
    ---------------------------------------------------------------------------
 

@@ -53,6 +53,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glShaderSource_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glCompileShader_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetShaderiv_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glGetProgramInfoLog_Access);
 
    function glGetString
      (name    : GLenum_Type;
@@ -153,6 +154,7 @@ package body OpenGL is
          glGetProgramiv       := Conv(ExtensionGetProc("glGetProgramiv"&NullChar));
          glGetShaderInfoLog   := Conv(ExtensionGetProc("glGetShaderInfoLog"&NullChar));
          glGetUniformLocation := Conv(ExtensionGetProc("glGetUniformLocation"&NullChar));
+         glGetProgramInfoLog  := Conv(ExtensionGetProc("glGetProgramInfoLog"&NullChar));
          glCreateShader       := Conv(ExtensionGetProc("glCreateShader"&NullChar));
          glDeleteShader       := Conv(ExtensionGetProc("glDeleteShader"&NullChar));
          glShaderSource       := Conv(ExtensionGetProc("glShaderSource"&NullChar));
