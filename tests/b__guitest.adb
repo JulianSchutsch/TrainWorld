@@ -8,43 +8,41 @@ package body ada_main is
 
    E011 : Short_Integer; pragma Import (Ada, E011, "system__soft_links_E");
    E021 : Short_Integer; pragma Import (Ada, E021, "system__exception_table_E");
-   E123 : Short_Integer; pragma Import (Ada, E123, "ada__containers_E");
-   E091 : Short_Integer; pragma Import (Ada, E091, "ada__io_exceptions_E");
-   E045 : Short_Integer; pragma Import (Ada, E045, "ada__strings_E");
-   E051 : Short_Integer; pragma Import (Ada, E051, "ada__strings__maps_E");
-   E058 : Short_Integer; pragma Import (Ada, E058, "ada__tags_E");
-   E082 : Short_Integer; pragma Import (Ada, E082, "ada__streams_E");
-   E100 : Short_Integer; pragma Import (Ada, E100, "interfaces__c_E");
-   E102 : Short_Integer; pragma Import (Ada, E102, "interfaces__c__strings_E");
-   E027 : Short_Integer; pragma Import (Ada, E027, "system__exceptions_E");
-   E084 : Short_Integer; pragma Import (Ada, E084, "system__finalization_root_E");
-   E081 : Short_Integer; pragma Import (Ada, E081, "ada__finalization_E");
-   E086 : Short_Integer; pragma Import (Ada, E086, "system__storage_pools_E");
-   E075 : Short_Integer; pragma Import (Ada, E075, "system__finalization_masters_E");
-   E071 : Short_Integer; pragma Import (Ada, E071, "system__storage_pools__subpools_E");
-   E110 : Short_Integer; pragma Import (Ada, E110, "system__pool_global_E");
-   E108 : Short_Integer; pragma Import (Ada, E108, "system__file_control_block_E");
-   E131 : Short_Integer; pragma Import (Ada, E131, "ada__streams__stream_io_E");
-   E098 : Short_Integer; pragma Import (Ada, E098, "system__file_io_E");
+   E118 : Short_Integer; pragma Import (Ada, E118, "ada__containers_E");
+   E076 : Short_Integer; pragma Import (Ada, E076, "ada__io_exceptions_E");
+   E044 : Short_Integer; pragma Import (Ada, E044, "ada__strings_E");
+   E050 : Short_Integer; pragma Import (Ada, E050, "ada__strings__maps_E");
+   E056 : Short_Integer; pragma Import (Ada, E056, "ada__tags_E");
+   E069 : Short_Integer; pragma Import (Ada, E069, "ada__streams_E");
+   E095 : Short_Integer; pragma Import (Ada, E095, "interfaces__c_E");
+   E097 : Short_Integer; pragma Import (Ada, E097, "interfaces__c__strings_E");
    E015 : Short_Integer; pragma Import (Ada, E015, "system__secondary_stack_E");
-   E047 : Short_Integer; pragma Import (Ada, E047, "ada__strings__unbounded_E");
-   E105 : Short_Integer; pragma Import (Ada, E105, "system__os_lib_E");
-   E129 : Short_Integer; pragma Import (Ada, E129, "system__strings__stream_ops_E");
-   E093 : Short_Integer; pragma Import (Ada, E093, "ada__text_io_E");
-   E114 : Short_Integer; pragma Import (Ada, E114, "basics_E");
-   E116 : Short_Integer; pragma Import (Ada, E116, "config_E");
-   E120 : Short_Integer; pragma Import (Ada, E120, "globalloop_E");
-   E125 : Short_Integer; pragma Import (Ada, E125, "implementations_E");
-   E135 : Short_Integer; pragma Import (Ada, E135, "opengl_E");
-   E147 : Short_Integer; pragma Import (Ada, E147, "opengl__win32context_E");
-   E127 : Short_Integer; pragma Import (Ada, E127, "refcount_E");
-   E122 : Short_Integer; pragma Import (Ada, E122, "graphics_E");
-   E143 : Short_Integer; pragma Import (Ada, E143, "opengl__program_E");
-   E151 : Short_Integer; pragma Import (Ada, E151, "endianess_E");
-   E149 : Short_Integer; pragma Import (Ada, E149, "bytes_E");
-   E141 : Short_Integer; pragma Import (Ada, E141, "versionparser_E");
-   E156 : Short_Integer; pragma Import (Ada, E156, "win32_E");
-   E161 : Short_Integer; pragma Import (Ada, E161, "win32__opengl32_E");
+   E071 : Short_Integer; pragma Import (Ada, E071, "system__finalization_root_E");
+   E068 : Short_Integer; pragma Import (Ada, E068, "ada__finalization_E");
+   E046 : Short_Integer; pragma Import (Ada, E046, "ada__strings__unbounded_E");
+   E088 : Short_Integer; pragma Import (Ada, E088, "system__storage_pools_E");
+   E080 : Short_Integer; pragma Import (Ada, E080, "ada__finalization__heap_management_E");
+   E100 : Short_Integer; pragma Import (Ada, E100, "system__os_lib_E");
+   E105 : Short_Integer; pragma Import (Ada, E105, "system__pool_global_E");
+   E103 : Short_Integer; pragma Import (Ada, E103, "system__file_control_block_E");
+   E126 : Short_Integer; pragma Import (Ada, E126, "ada__streams__stream_io_E");
+   E093 : Short_Integer; pragma Import (Ada, E093, "system__file_io_E");
+   E124 : Short_Integer; pragma Import (Ada, E124, "system__strings__stream_ops_E");
+   E078 : Short_Integer; pragma Import (Ada, E078, "ada__text_io_E");
+   E109 : Short_Integer; pragma Import (Ada, E109, "basics_E");
+   E111 : Short_Integer; pragma Import (Ada, E111, "config_E");
+   E115 : Short_Integer; pragma Import (Ada, E115, "globalloop_E");
+   E120 : Short_Integer; pragma Import (Ada, E120, "implementations_E");
+   E130 : Short_Integer; pragma Import (Ada, E130, "opengl_E");
+   E142 : Short_Integer; pragma Import (Ada, E142, "opengl__win32context_E");
+   E122 : Short_Integer; pragma Import (Ada, E122, "refcount_E");
+   E117 : Short_Integer; pragma Import (Ada, E117, "graphics_E");
+   E138 : Short_Integer; pragma Import (Ada, E138, "opengl__program_E");
+   E146 : Short_Integer; pragma Import (Ada, E146, "endianess_E");
+   E144 : Short_Integer; pragma Import (Ada, E144, "bytes_E");
+   E136 : Short_Integer; pragma Import (Ada, E136, "versionparser_E");
+   E151 : Short_Integer; pragma Import (Ada, E151, "win32_E");
+   E156 : Short_Integer; pragma Import (Ada, E156, "win32__opengl32_E");
 
    Local_Priority_Specific_Dispatching : constant String := "";
    Local_Interrupt_States : constant String := "";
@@ -52,19 +50,21 @@ package body ada_main is
    Is_Elaborated : Boolean := False;
 
    procedure finalize_library is
+      LE_Set : Boolean;
+      pragma Import (Ada, LE_Set, "__gnat_library_exception_set");
    begin
       declare
          procedure F1;
          pragma Import (Ada, F1, "opengl__win32context__finalize_body");
       begin
-         E147 := E147 - 1;
+         E142 := E142 - 1;
          F1;
       end;
       declare
          procedure F2;
          pragma Import (Ada, F2, "opengl__program__finalize_body");
       begin
-         E143 := E143 - 1;
+         E138 := E138 - 1;
          F2;
       end;
       declare
@@ -73,103 +73,119 @@ package body ada_main is
       begin
          F3;
       end;
-      E122 := E122 - 1;
+      E117 := E117 - 1;
       declare
          procedure F4;
          pragma Import (Ada, F4, "graphics__finalize_spec");
       begin
          F4;
       end;
-      E127 := E127 - 1;
+      E122 := E122 - 1;
       declare
          procedure F5;
          pragma Import (Ada, F5, "refcount__finalize_spec");
       begin
          F5;
       end;
-      E120 := E120 - 1;
+      E115 := E115 - 1;
       declare
          procedure F6;
          pragma Import (Ada, F6, "globalloop__finalize_spec");
       begin
          F6;
       end;
-      E116 := E116 - 1;
+      E111 := E111 - 1;
       declare
          procedure F7;
          pragma Import (Ada, F7, "config__finalize_spec");
       begin
          F7;
       end;
-      E114 := E114 - 1;
+      E109 := E109 - 1;
       declare
          procedure F8;
          pragma Import (Ada, F8, "basics__finalize_spec");
       begin
          F8;
       end;
-      E093 := E093 - 1;
       declare
          procedure F9;
-         pragma Import (Ada, F9, "ada__text_io__finalize_spec");
+         pragma Import (Ada, F9, "ada__text_io__finalize_body");
       begin
+         E078 := E078 - 1;
          F9;
       end;
       declare
          procedure F10;
-         pragma Import (Ada, F10, "system__file_io__finalize_body");
+         pragma Import (Ada, F10, "ada__text_io__finalize_spec");
       begin
-         E098 := E098 - 1;
          F10;
       end;
-      E047 := E047 - 1;
       declare
          procedure F11;
-         pragma Import (Ada, F11, "ada__strings__unbounded__finalize_spec");
+         pragma Import (Ada, F11, "ada__streams__stream_io__finalize_body");
       begin
+         E126 := E126 - 1;
          F11;
       end;
-      E075 := E075 - 1;
-      E071 := E071 - 1;
-      E131 := E131 - 1;
       declare
          procedure F12;
-         pragma Import (Ada, F12, "ada__streams__stream_io__finalize_spec");
+         pragma Import (Ada, F12, "system__file_io__finalize_body");
       begin
+         E093 := E093 - 1;
          F12;
       end;
       declare
          procedure F13;
-         pragma Import (Ada, F13, "system__file_control_block__finalize_spec");
+         pragma Import (Ada, F13, "ada__streams__stream_io__finalize_spec");
       begin
-         E108 := E108 - 1;
          F13;
       end;
-      E110 := E110 - 1;
       declare
          procedure F14;
-         pragma Import (Ada, F14, "system__pool_global__finalize_spec");
+         pragma Import (Ada, F14, "system__file_control_block__finalize_spec");
       begin
+         E103 := E103 - 1;
          F14;
       end;
+      E105 := E105 - 1;
       declare
          procedure F15;
-         pragma Import (Ada, F15, "system__storage_pools__subpools__finalize_spec");
+         pragma Import (Ada, F15, "system__pool_global__finalize_spec");
       begin
          F15;
       end;
+      E080 := E080 - 1;
       declare
          procedure F16;
-         pragma Import (Ada, F16, "system__finalization_masters__finalize_spec");
+         pragma Import (Ada, F16, "ada__finalization__heap_management__finalize_spec");
       begin
          F16;
       end;
+      E046 := E046 - 1;
       declare
-         procedure Reraise_Library_Exception_If_Any;
-            pragma Import (Ada, Reraise_Library_Exception_If_Any, "__gnat_reraise_library_exception_if_any");
+         procedure F17;
+         pragma Import (Ada, F17, "ada__strings__unbounded__finalize_spec");
       begin
-         Reraise_Library_Exception_If_Any;
+         F17;
       end;
+      E071 := E071 - 1;
+      declare
+         procedure F18;
+         pragma Import (Ada, F18, "system__finalization_root__finalize_spec");
+      begin
+         F18;
+      end;
+      if LE_Set then
+         declare
+            LE : Ada.Exceptions.Exception_Occurrence;
+            pragma Import (Ada, LE, "__gnat_library_exception");
+            procedure Raise_From_Controlled_Operation (X : Ada.Exceptions.Exception_Occurrence;  From_Abort : Boolean);
+            pragma Import (Ada, Raise_From_Controlled_Operation, "__gnat_raise_from_controlled_operation");
+         begin
+            Raise_From_Controlled_Operation (LE, False);
+         end;
+      end if;
    end finalize_library;
 
    procedure adafinal is
@@ -260,80 +276,76 @@ package body ada_main is
       System.Exception_Table'Elab_Body;
       E021 := E021 + 1;
       Ada.Containers'Elab_Spec;
-      E123 := E123 + 1;
+      E118 := E118 + 1;
       Ada.Io_Exceptions'Elab_Spec;
-      E091 := E091 + 1;
+      E076 := E076 + 1;
       Ada.Strings'Elab_Spec;
-      E045 := E045 + 1;
+      E044 := E044 + 1;
       Ada.Strings.Maps'Elab_Spec;
       Ada.Tags'Elab_Spec;
       Ada.Streams'Elab_Spec;
-      E082 := E082 + 1;
+      E069 := E069 + 1;
       Interfaces.C'Elab_Spec;
       Interfaces.C.Strings'Elab_Spec;
-      System.Exceptions'Elab_Spec;
-      E027 := E027 + 1;
-      System.Finalization_Root'Elab_Spec;
-      E084 := E084 + 1;
-      Ada.Finalization'Elab_Spec;
-      E081 := E081 + 1;
-      System.Storage_Pools'Elab_Spec;
-      E086 := E086 + 1;
-      System.Finalization_Masters'Elab_Spec;
-      System.Storage_Pools.Subpools'Elab_Spec;
-      System.Pool_Global'Elab_Spec;
-      E110 := E110 + 1;
-      System.File_Control_Block'Elab_Spec;
-      E108 := E108 + 1;
-      Ada.Streams.Stream_Io'Elab_Spec;
-      E131 := E131 + 1;
-      E071 := E071 + 1;
-      System.Finalization_Masters'Elab_Body;
-      E075 := E075 + 1;
-      E102 := E102 + 1;
-      E100 := E100 + 1;
+      E097 := E097 + 1;
+      E095 := E095 + 1;
       Ada.Tags'Elab_Body;
-      E058 := E058 + 1;
-      E051 := E051 + 1;
+      E056 := E056 + 1;
+      E050 := E050 + 1;
       System.Soft_Links'Elab_Body;
       E011 := E011 + 1;
       System.Secondary_Stack'Elab_Body;
       E015 := E015 + 1;
+      System.Finalization_Root'Elab_Spec;
+      E071 := E071 + 1;
+      Ada.Finalization'Elab_Spec;
+      E068 := E068 + 1;
       Ada.Strings.Unbounded'Elab_Spec;
-      E047 := E047 + 1;
+      E046 := E046 + 1;
+      System.Storage_Pools'Elab_Spec;
+      E088 := E088 + 1;
+      Ada.Finalization.Heap_Management'Elab_Spec;
+      E080 := E080 + 1;
       System.Os_Lib'Elab_Body;
+      E100 := E100 + 1;
+      System.Pool_Global'Elab_Spec;
       E105 := E105 + 1;
+      System.File_Control_Block'Elab_Spec;
+      E103 := E103 + 1;
+      Ada.Streams.Stream_Io'Elab_Spec;
       System.File_Io'Elab_Body;
-      E098 := E098 + 1;
+      E093 := E093 + 1;
+      Ada.Streams.Stream_Io'Elab_Body;
+      E126 := E126 + 1;
       System.Strings.Stream_Ops'Elab_Body;
-      E129 := E129 + 1;
+      E124 := E124 + 1;
       Ada.Text_Io'Elab_Spec;
       Ada.Text_Io'Elab_Body;
-      E093 := E093 + 1;
+      E078 := E078 + 1;
       Basics'Elab_Spec;
-      E114 := E114 + 1;
+      E109 := E109 + 1;
       Config'Elab_Spec;
-      E116 := E116 + 1;
+      E111 := E111 + 1;
       Globalloop'Elab_Spec;
+      E115 := E115 + 1;
       E120 := E120 + 1;
-      E125 := E125 + 1;
       Opengl'Elab_Spec;
       Refcount'Elab_Spec;
-      E127 := E127 + 1;
-      Graphics'Elab_Spec;
       E122 := E122 + 1;
+      Graphics'Elab_Spec;
+      E117 := E117 + 1;
       Opengl.Program'Elab_Spec;
       Opengl.Program'Elab_Body;
-      E143 := E143 + 1;
-      E151 := E151 + 1;
-      E149 := E149 + 1;
+      E138 := E138 + 1;
+      E146 := E146 + 1;
+      E144 := E144 + 1;
       Versionparser'Elab_Spec;
-      E141 := E141 + 1;
-      E135 := E135 + 1;
+      E136 := E136 + 1;
+      E130 := E130 + 1;
+      E151 := E151 + 1;
       E156 := E156 + 1;
-      E161 := E161 + 1;
       Opengl.Win32context'Elab_Body;
-      E147 := E147 + 1;
+      E142 := E142 + 1;
    end adainit;
 
    procedure Ada_Main_Program;
@@ -369,32 +381,31 @@ package body ada_main is
    end;
 
 --  BEGIN Object file/option list
-   --   C:\Users\alexandrus\tw\gpr\basics.o
-   --   C:\Users\alexandrus\tw\gpr\config.o
-   --   C:\Users\alexandrus\tw\gpr\globalloop.o
-   --   C:\Users\alexandrus\tw\gpr\implementations.o
-   --   C:\Users\alexandrus\tw\gpr\refcount.o
-   --   C:\Users\alexandrus\tw\gpr\graphics.o
-   --   C:\Users\alexandrus\tw\gpr\opengl-program.o
-   --   C:\Users\alexandrus\tw\tests\guitest.o
-   --   C:\Users\alexandrus\tw\gpr\types.o
-   --   C:\Users\alexandrus\tw\gpr\endianess.o
-   --   C:\Users\alexandrus\tw\gpr\bytes.o
-   --   C:\Users\alexandrus\tw\gpr\versionparser.o
-   --   C:\Users\alexandrus\tw\gpr\opengl.o
-   --   C:\Users\alexandrus\tw\gpr\win32.o
-   --   C:\Users\alexandrus\tw\gpr\win32-gdi32.o
-   --   C:\Users\alexandrus\tw\gpr\win32-kernel32.o
-   --   C:\Users\alexandrus\tw\gpr\win32-ole32.o
-   --   C:\Users\alexandrus\tw\gpr\win32-opengl32.o
-   --   C:\Users\alexandrus\tw\gpr\win32-user32.o
-   --   C:\Users\alexandrus\tw\gpr\opengl-win32context.o
-   --   -LC:\Users\alexandrus\tw\tests\
-   --   -LC:\Users\alexandrus\tw\gpr\
-   --   -LC:/gnat/2012/lib/gcc/i686-pc-mingw32/4.5.4/adalib/
+   --   /home/alexander/tw/gpr/basics.o
+   --   /home/alexander/tw/gpr/config.o
+   --   /home/alexander/tw/gpr/globalloop.o
+   --   /home/alexander/tw/gpr/implementations.o
+   --   /home/alexander/tw/gpr/refcount.o
+   --   /home/alexander/tw/gpr/graphics.o
+   --   /home/alexander/tw/gpr/opengl-program.o
+   --   /home/alexander/tw/tests/guitest.o
+   --   /home/alexander/tw/gpr/types.o
+   --   /home/alexander/tw/gpr/endianess.o
+   --   /home/alexander/tw/gpr/bytes.o
+   --   /home/alexander/tw/gpr/versionparser.o
+   --   /home/alexander/tw/gpr/opengl.o
+   --   /home/alexander/tw/gpr/win32.o
+   --   /home/alexander/tw/gpr/win32-gdi32.o
+   --   /home/alexander/tw/gpr/win32-kernel32.o
+   --   /home/alexander/tw/gpr/win32-ole32.o
+   --   /home/alexander/tw/gpr/win32-opengl32.o
+   --   /home/alexander/tw/gpr/win32-user32.o
+   --   /home/alexander/tw/gpr/opengl-win32context.o
+   --   -L/home/alexander/tw/tests/
+   --   -L/home/alexander/tw/gpr/
+   --   -L/usr/gnat/lib/gcc/x86_64-pc-linux-gnu/4.5.3/adalib/
    --   -static
    --   -lgnat
-   --   -Wl,--stack=0x2000000
 --  END Object file/option list   
 
 end ada_main;
