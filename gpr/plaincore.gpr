@@ -21,6 +21,8 @@ project PlainCore is
      Dir & "../src/testframework",
      Dir & "../src/parsers",
      Dir & "../src/resourcefilesystem",
-     Dir & "../src/streams");
+     Dir & "../src/streams",
+     Dir & "../src/plattform",
+     Dir & "../src/portableexec");
 
 end PlainCore;

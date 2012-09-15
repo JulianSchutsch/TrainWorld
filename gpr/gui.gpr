@@ -1,5 +1,4 @@
 with "core";
-with "guiconfig";
 with "config";
 with "switches";
 
@@ -14,10 +13,16 @@ project GUI is
     for Default_Switches("Ada") use Switches.Compiler_Switches;
   end Compiler;
 
-  case GUIConfig.Win32OpenGLContext is
+  case Config.Win32OpenGL is
      when "On" =>
         Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32","-lkernel32");
      when "Off" =>
+  end case;
+
+  case Config.XOpenGL is
+     when "On" =>
+        Linker_Switches:=("-lXlib","-lgl");
+    when "Off" =>
   end case;
 
   for Source_Dirs use
