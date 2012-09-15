@@ -1,0 +1,29 @@
+with "core";
+with "Config";
+
+project CoreTest is
+
+  Dir:=CoreTest'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  for Main use ("coretest.adb");
+
+  package Compiler is
+    for Default_Switches("Ada") use Config.Compiler_Switches;
+  end Compiler;
+
+  package Linker is
+    for Default_Switches("Ada") use
+      ("-lgmem");
+  end Linker;
+
+  for Source_Dirs use
+    (Dir & ".",
+     Dir & "bytes",
+     Dir & "config",
+     Dir & "implementations",
+     Dir & "parsers",
+     Dir & "globalloop");
+
+end CoreTest;

@@ -1,0 +1,26 @@
+with "core";
+with "gui";
+with "config";
+
+project GUITest is
+
+  Dir:=GUITest'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  for Main use ("guitest.adb");
+
+  package Compiler is
+    for Default_Switches("Ada") use Config.Compiler_Switches;
+  end Compiler;
+
+  package Linker is
+    for Default_Switches("Ada") use
+       Core.Linker_Switches
+      &GUI.Linker_Switches;
+  end Linker;
+
+  for Source_Dirs use
+    (Dir & ".");
+
+end GUITest;
