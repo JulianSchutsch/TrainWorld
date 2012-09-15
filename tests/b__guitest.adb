@@ -33,16 +33,13 @@ package body ada_main is
    E111 : Short_Integer; pragma Import (Ada, E111, "config_E");
    E115 : Short_Integer; pragma Import (Ada, E115, "globalloop_E");
    E120 : Short_Integer; pragma Import (Ada, E120, "implementations_E");
-   E130 : Short_Integer; pragma Import (Ada, E130, "opengl_E");
-   E142 : Short_Integer; pragma Import (Ada, E142, "opengl__win32context_E");
+   E132 : Short_Integer; pragma Import (Ada, E132, "opengl_E");
+   E140 : Short_Integer; pragma Import (Ada, E140, "opengl__glxcontext_E");
    E122 : Short_Integer; pragma Import (Ada, E122, "refcount_E");
    E117 : Short_Integer; pragma Import (Ada, E117, "graphics_E");
-   E138 : Short_Integer; pragma Import (Ada, E138, "opengl__program_E");
-   E146 : Short_Integer; pragma Import (Ada, E146, "endianess_E");
-   E144 : Short_Integer; pragma Import (Ada, E144, "bytes_E");
-   E136 : Short_Integer; pragma Import (Ada, E136, "versionparser_E");
-   E151 : Short_Integer; pragma Import (Ada, E151, "win32_E");
-   E156 : Short_Integer; pragma Import (Ada, E156, "win32__opengl32_E");
+   E130 : Short_Integer; pragma Import (Ada, E130, "graphics__impl_E");
+   E142 : Short_Integer; pragma Import (Ada, E142, "opengl__program_E");
+   E138 : Short_Integer; pragma Import (Ada, E138, "versionparser_E");
 
    Local_Priority_Specific_Dispatching : constant String := "";
    Local_Interrupt_States : constant String := "";
@@ -55,126 +52,119 @@ package body ada_main is
    begin
       declare
          procedure F1;
-         pragma Import (Ada, F1, "opengl__win32context__finalize_body");
+         pragma Import (Ada, F1, "opengl__program__finalize_body");
       begin
          E142 := E142 - 1;
          F1;
       end;
       declare
          procedure F2;
-         pragma Import (Ada, F2, "opengl__program__finalize_body");
+         pragma Import (Ada, F2, "opengl__program__finalize_spec");
       begin
-         E138 := E138 - 1;
          F2;
-      end;
-      declare
-         procedure F3;
-         pragma Import (Ada, F3, "opengl__program__finalize_spec");
-      begin
-         F3;
       end;
       E117 := E117 - 1;
       declare
-         procedure F4;
-         pragma Import (Ada, F4, "graphics__finalize_spec");
+         procedure F3;
+         pragma Import (Ada, F3, "graphics__finalize_spec");
       begin
-         F4;
+         F3;
       end;
       E122 := E122 - 1;
       declare
-         procedure F5;
-         pragma Import (Ada, F5, "refcount__finalize_spec");
+         procedure F4;
+         pragma Import (Ada, F4, "refcount__finalize_spec");
       begin
-         F5;
+         F4;
       end;
       E115 := E115 - 1;
       declare
-         procedure F6;
-         pragma Import (Ada, F6, "globalloop__finalize_spec");
+         procedure F5;
+         pragma Import (Ada, F5, "globalloop__finalize_spec");
       begin
-         F6;
+         F5;
       end;
       E111 := E111 - 1;
       declare
-         procedure F7;
-         pragma Import (Ada, F7, "config__finalize_spec");
+         procedure F6;
+         pragma Import (Ada, F6, "config__finalize_spec");
       begin
-         F7;
+         F6;
       end;
       E109 := E109 - 1;
       declare
-         procedure F8;
-         pragma Import (Ada, F8, "basics__finalize_spec");
+         procedure F7;
+         pragma Import (Ada, F7, "basics__finalize_spec");
       begin
+         F7;
+      end;
+      declare
+         procedure F8;
+         pragma Import (Ada, F8, "ada__text_io__finalize_body");
+      begin
+         E078 := E078 - 1;
          F8;
       end;
       declare
          procedure F9;
-         pragma Import (Ada, F9, "ada__text_io__finalize_body");
+         pragma Import (Ada, F9, "ada__text_io__finalize_spec");
       begin
-         E078 := E078 - 1;
          F9;
       end;
       declare
          procedure F10;
-         pragma Import (Ada, F10, "ada__text_io__finalize_spec");
+         pragma Import (Ada, F10, "ada__streams__stream_io__finalize_body");
       begin
+         E126 := E126 - 1;
          F10;
       end;
       declare
          procedure F11;
-         pragma Import (Ada, F11, "ada__streams__stream_io__finalize_body");
+         pragma Import (Ada, F11, "system__file_io__finalize_body");
       begin
-         E126 := E126 - 1;
+         E093 := E093 - 1;
          F11;
       end;
       declare
          procedure F12;
-         pragma Import (Ada, F12, "system__file_io__finalize_body");
+         pragma Import (Ada, F12, "ada__streams__stream_io__finalize_spec");
       begin
-         E093 := E093 - 1;
          F12;
       end;
       declare
          procedure F13;
-         pragma Import (Ada, F13, "ada__streams__stream_io__finalize_spec");
-      begin
-         F13;
-      end;
-      declare
-         procedure F14;
-         pragma Import (Ada, F14, "system__file_control_block__finalize_spec");
+         pragma Import (Ada, F13, "system__file_control_block__finalize_spec");
       begin
          E103 := E103 - 1;
-         F14;
+         F13;
       end;
       E105 := E105 - 1;
       declare
-         procedure F15;
-         pragma Import (Ada, F15, "system__pool_global__finalize_spec");
+         procedure F14;
+         pragma Import (Ada, F14, "system__pool_global__finalize_spec");
       begin
-         F15;
+         F14;
       end;
       E080 := E080 - 1;
       declare
-         procedure F16;
-         pragma Import (Ada, F16, "ada__finalization__heap_management__finalize_spec");
+         procedure F15;
+         pragma Import (Ada, F15, "ada__finalization__heap_management__finalize_spec");
       begin
-         F16;
+         F15;
       end;
       E046 := E046 - 1;
       declare
-         procedure F17;
-         pragma Import (Ada, F17, "ada__strings__unbounded__finalize_spec");
+         procedure F16;
+         pragma Import (Ada, F16, "ada__strings__unbounded__finalize_spec");
       begin
-         F17;
+         F16;
       end;
       E071 := E071 - 1;
       declare
-         procedure F18;
-         pragma Import (Ada, F18, "system__finalization_root__finalize_spec");
+         procedure F17;
+         pragma Import (Ada, F17, "system__finalization_root__finalize_spec");
       begin
-         F18;
+         F17;
       end;
       if LE_Set then
          declare
@@ -330,22 +320,18 @@ package body ada_main is
       E115 := E115 + 1;
       E120 := E120 + 1;
       Opengl'Elab_Spec;
+      E140 := E140 + 1;
       Refcount'Elab_Spec;
       E122 := E122 + 1;
       Graphics'Elab_Spec;
       E117 := E117 + 1;
+      E130 := E130 + 1;
       Opengl.Program'Elab_Spec;
       Opengl.Program'Elab_Body;
-      E138 := E138 + 1;
-      E146 := E146 + 1;
-      E144 := E144 + 1;
-      Versionparser'Elab_Spec;
-      E136 := E136 + 1;
-      E130 := E130 + 1;
-      E151 := E151 + 1;
-      E156 := E156 + 1;
-      Opengl.Win32context'Elab_Body;
       E142 := E142 + 1;
+      Versionparser'Elab_Spec;
+      E138 := E138 + 1;
+      E132 := E132 + 1;
    end adainit;
 
    procedure Ada_Main_Program;
@@ -385,22 +371,14 @@ package body ada_main is
    --   /home/alexander/tw/gpr/config.o
    --   /home/alexander/tw/gpr/globalloop.o
    --   /home/alexander/tw/gpr/implementations.o
+   --   /home/alexander/tw/gpr/opengl-glxcontext.o
    --   /home/alexander/tw/gpr/refcount.o
    --   /home/alexander/tw/gpr/graphics.o
+   --   /home/alexander/tw/gpr/graphics-impl.o
    --   /home/alexander/tw/gpr/opengl-program.o
    --   /home/alexander/tw/tests/guitest.o
-   --   /home/alexander/tw/gpr/types.o
-   --   /home/alexander/tw/gpr/endianess.o
-   --   /home/alexander/tw/gpr/bytes.o
    --   /home/alexander/tw/gpr/versionparser.o
    --   /home/alexander/tw/gpr/opengl.o
-   --   /home/alexander/tw/gpr/win32.o
-   --   /home/alexander/tw/gpr/win32-gdi32.o
-   --   /home/alexander/tw/gpr/win32-kernel32.o
-   --   /home/alexander/tw/gpr/win32-ole32.o
-   --   /home/alexander/tw/gpr/win32-opengl32.o
-   --   /home/alexander/tw/gpr/win32-user32.o
-   --   /home/alexander/tw/gpr/opengl-win32context.o
    --   -L/home/alexander/tw/tests/
    --   -L/home/alexander/tw/gpr/
    --   -L/usr/gnat/lib/gcc/x86_64-pc-linux-gnu/4.5.3/adalib/
