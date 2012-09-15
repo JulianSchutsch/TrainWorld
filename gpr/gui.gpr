@@ -1,0 +1,31 @@
+with "Core";
+with "guiconfig";
+with "config";
+
+project GUI is
+
+  Dir:=GUI'Project_Dir & "/";
+  Linker_Switches:=();
+
+  for Languages use ("Ada");
+
+  package Compiler is
+    for Default_Switches("Ada") use Config.Compiler_Switches;
+  end Compiler;
+
+  case GUIConfig.Win32OpenGLContext is
+     when "On" =>
+        Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32","-lkernel32");
+     when "Off" =>
+  end case;
+
+  for Source_Dirs use
+    (Dir & "../src/gui",
+     Dir & "../src/canvas",
+     Dir & "../src/graphics",
+     Dir & "../src/opengl",
+     Dir & "../src/bounds",
+     Dir & "../src/xlib",
+     Dir & "../src/opengl/win32");
+
+end GUI;
