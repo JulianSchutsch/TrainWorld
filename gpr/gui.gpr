@@ -1,6 +1,7 @@
 with "core";
 with "guiconfig";
 with "config";
+with "switches";
 
 project GUI is
 
@@ -10,7 +11,7 @@ project GUI is
   for Languages use ("Ada");
 
   package Compiler is
-    for Default_Switches("Ada") use Config.Compiler_Switches;
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
   end Compiler;
 
   case GUIConfig.Win32OpenGLContext is

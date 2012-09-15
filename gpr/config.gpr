@@ -1,12 +1,9 @@
 abstract project Config is
 
-   Compiler_Switches:=
-     ("-gnato",
-      "-gnatn",
-      "-g",
-      "-gnatf",
-      "-Wall",
-      "-O0",
-      "-fno-strict-aliasing");
+   type Plattform_Type is
+      ("Linux",
+       "WindowsNT");
+
+   Plattform : Plattform_Type:=external("OS","Linux");
 
 end Config;

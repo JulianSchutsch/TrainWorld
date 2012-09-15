@@ -1,0 +1,12 @@
+abstract project Switches is
+
+   Compiler_Switches:=
+     ("-gnato",
+      "-gnatn",
+      "-g",
+      "-gnatf",
+      "-Wall",
+      "-O0",
+      "-fno-strict-aliasing");
+
+end Switches;

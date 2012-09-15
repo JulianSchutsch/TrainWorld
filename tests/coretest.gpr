@@ -1,5 +1,6 @@
 with "core";
 with "config";
+with "switches";
 
 project CoreTest is
 
@@ -10,7 +11,7 @@ project CoreTest is
   for Main use ("coretest.adb");
 
   package Compiler is
-    for Default_Switches("Ada") use Config.Compiler_Switches;
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
   end Compiler;
 
   package Linker is

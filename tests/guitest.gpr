@@ -1,6 +1,7 @@
 with "core";
 with "gui";
 with "config";
+with "switches";
 
 project GUITest is
 
@@ -11,7 +12,7 @@ project GUITest is
   for Main use ("guitest.adb");
 
   package Compiler is
-    for Default_Switches("Ada") use Config.Compiler_Switches;
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
   end Compiler;
 
   package Linker is
