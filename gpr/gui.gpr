@@ -21,7 +21,7 @@ project GUI is
 
   case Config.XOpenGL is
      when "On" =>
-        Linker_Switches:=("-lXlib","-lgl");
+        Linker_Switches:=("-lX11","-lGL");
     when "Off" =>
   end case;
 

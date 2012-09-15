@@ -45,6 +45,7 @@ procedure Build is
       Put_Line(File,"--   You should have received a copy of the GNU Affero General Public License");
       Put_Line(File,"--   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.");
       Put_Line(File,"-------------------------------------------------------------------------------");
+      Put_Line(File,"");
    end WriteCopyRight;
    ---------------------------------------------------------------------------
 
@@ -60,8 +61,24 @@ procedure Build is
    end StrOn;
    ---------------------------------------------------------------------------
 
-   ConfigGPRPath : constant String:="../gpr/config.gpr";
-   File          : File_Type;
+   ConfigGPRPath       : constant String:="../gpr/config.gpr";
+   GraphicsImplPathAds : constant String:="../src/graphics.impl.ads";
+   GraphicsImplPathAdb : constant String:="../src/graphics.impl.adb";
+   File                : File_Type;
+
+   function Win32OpenGL
+     return Boolean is
+   begin
+      return Detected=PlattformWindowsNT;
+   end Win32OpenGL;
+   ---------------------------------------------------------------------------
+
+   function GLXOpenGL
+     return Boolean is
+   begin
+      return Detected/=PlattformWindowsNT;
+   end GLXOpenGL;
+   ---------------------------------------------------------------------------
 
 begin
 
@@ -78,7 +95,6 @@ begin
       Mode => Out_File,
       Name => To_String(BasePath)&ConfigGPRPath);
    WriteCopyright(File);
-   Put_Line(File,"");
    Put_Line(File,"-- This file was automatically created using /build/build");
    Put_Line(File,"");
    Put_Line(File,"abstract project Config is");
@@ -97,12 +113,66 @@ begin
    Put_Line(File,"");
 
    -- Win32 OpenGL
-   Put_Line(File,"   Win32OpenGL : Switch_Type:="""&StrOn(Detected=PlattformWindowsNT)&""";");
+   Put_Line(File,"   Win32OpenGL : Switch_Type:="""&StrOn(Win32OpenGL)&""";");
 
    -- GLX OpenGL
-   Put_Line(File,"   XOpenGL     : Switch_Type:="""&StrOn(Detected/=PlattformWindowsNT)&""";");
+   Put_Line(File,"   XOpenGL     : Switch_Type:="""&StrOn(GLXOpenGL)&""";");
 
    Put_Line(File,"");
    Put_Line(File,"end Config;");
+
+   Close(File);
+
+   begin
+      Delete_File(To_String(BasePath)&GraphicsImplPathAds);
+   exception
+      when others =>
+         null;
+   end;
+
+   Create
+     (File => File,
+      Mode => Out_File,
+      Name => To_String(BasePath)&GraphicsImplPathAds);
+
+   WriteCopyright(File);
+   Put_Line(File,"package Graphics.Impl is");
+   Put_Line(File,"   procedure Register;");
+   Put_Line(File,"end Graphics.Impl;");
+
+   Close(File);
+
+   begin
+      Delete_File(To_String(BasePath)&GraphicsImplPathAdb);
+   exception
+      when others =>
+         null;
+   end;
+
+   Create
+     (File => File,
+      Mode => Out_File,
+      Name => To_String(BasePath)&GraphicsImplPathAdb);
+
+   WriteCopyright(File);
+   if Win32OpenGL then
+      Put_Line(File,"with OpenGL.Win32Context;");
+   end if;
+   if GLXOpenGL then
+      Put_Line(File,"with OpenGL.GLXContext;");
+   end if;
+   Put_Line(File,"package body Graphics.Impl is");
+   Put_Line(File,"   procedure Register is");
+   Put_Line(File,"   begin");
+   if Win32OpenGL then
+      Put_Line(File,"      OpenGL.Win32Context.Register;");
+   end if;
+   if GLXOpenGL then
+      Put_Line(File,"      OpenGL.GLXContext.Register;");
+   end if;
+   Put_Line(File,"   end Register;");
+   Put_Line(File,"end Graphics.Impl;");
+
+   Close(File);
 
 end Build;
