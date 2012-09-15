@@ -24,7 +24,7 @@
 pragma Ada_2012;
 
 with Graphics;
-with OpenGL.Win32Context;
+with Graphics.Impl;
 with Ada.Text_IO; use Ada.Text_IO;
 with Config;
 with Basics; use Basics;
@@ -107,7 +107,7 @@ procedure GUITest is
 
 begin
 
-   OpenGL.Win32Context.Register;
+   Graphics.Impl.Register;
 
    Configuration.SetImplementation( U("OpenGL"));
    Graphics.CreateConfig

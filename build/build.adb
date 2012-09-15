@@ -62,8 +62,8 @@ procedure Build is
    ---------------------------------------------------------------------------
 
    ConfigGPRPath       : constant String:="../gpr/config.gpr";
-   GraphicsImplPathAds : constant String:="../src/graphics.impl.ads";
-   GraphicsImplPathAdb : constant String:="../src/graphics.impl.adb";
+   GraphicsImplPathAds : constant String:="../src/graphics/graphics-impl.ads";
+   GraphicsImplPathAdb : constant String:="../src/graphics/graphics-impl.adb";
    File                : File_Type;
 
    function Win32OpenGL
