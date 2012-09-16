@@ -22,6 +22,7 @@ pragma Ada_2005;
 with Ada.Unchecked_Conversion;
 with VersionParser;
 with Ada.Text_IO; use Ada.Text_IO;
+with Basics; use Basics;
 
 package body OpenGL is
 
@@ -33,6 +34,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glClear_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glViewport_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glDrawArrays_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glFinish_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -121,6 +123,62 @@ package body OpenGL is
    end GetVersion;
    ---------------------------------------------------------------------------
 
+   function IsExtensionSupported
+     (Name : String)
+      return Boolean is
+   begin
+      for i in Extensions'Range loop
+         if Extensions(i)=Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end IsExtensionSupported;
+   ---------------------------------------------------------------------------
+
+   procedure GetExtensionsByGetString
+     (GetProc : GetProc_Access) is
+
+      ExtStr   : constant String := glGetString(GL_EXTENSIONS,GetProc);
+      Start    : Integer := ExtStr'First;
+      Count    : Natural := 0;
+      Position : Natural := 0;
+
+   begin
+
+      for i in ExtStr'Range loop
+         if ExtStr(i)=' ' then
+            if i/=Start then
+               Count:=Count+1;
+            end if;
+            Start:=i+1;
+         end if;
+      end loop;
+
+      if ExtStr'Last/=Start then
+         Count:=Count+1;
+      end if;
+
+      Extensions:=new Extension_Array(0..Count-1);
+
+      Start:=ExtStr'First;
+      for i in ExtStr'Range loop
+         if ExtStr(i)=' ' then
+            if i/=Start then
+               Extensions(Position) := U(ExtStr(Start..i-1));
+               Position             := Position+1;
+            end if;
+            Start:=i+1;
+         end if;
+      end loop;
+
+      if ExtStr'Last/=Start then
+         Extensions(Position) := U(ExtStr(Start..ExtStr'Last));
+      end if;
+
+   end GetExtensionsByGetString;
+   ---------------------------------------------------------------------------
+
    procedure LoadFunctions
      (DefaultGetProc   : not null GetProc_Access;
       ExtensionGetProc : not null GetProc_Access;
@@ -133,11 +191,16 @@ package body OpenGL is
 
       glClear      := Conv(DefaultGetProc("glClear"&NullChar));
       glClearColor := Conv(DefaultGetProc("glClearColor"&NullChar));
-      glViewport   := Conv(DefaultGetProc("glViewport"&NulLChar));
+      glViewport   := Conv(DefaultGetProc("glViewport"&NullChar));
+      glFinish     := Conv(ExtensionGetProc("glFinish"&NullChar));
       glDrawArrays := Conv(ExtensionGetProc("glDrawArrays"&NullChar));
 
+      -- TODO: Check if this is still a valid method or if you
+      --  need to apply something new for OGL 3
+      GetExtensionsByGetString(DefaultGetProc);
+
       -- Buffer Objects
-      if (Version.Minor>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
+      if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
          glGenBuffers := Conv(ExtensionGetProc("glGenBuffers"&NullChar));
          glBindBuffer := Conv(ExtensionGetProc("glBindBuffer"&NullChar));
@@ -152,14 +215,25 @@ package body OpenGL is
          glBindAttribLocation      := Conv(ExtensionGetProc("glBindAttribLocation"&NullChar));
       end if;
 
-      if Version.Major>=3 then
+      if (Version.Major>=3) or
+        IsExtensionSupported("GL_ARB_vertex_array_object") then
          glBindVertexArray:=Conv(ExtensionGetProc("glBindVertexArray"&NullChar));
          glGenVertexArrays:=Conv(ExtensionGetProc("glGenVertexArrays"&NullChar));
       end if;
 
       -- GLSL
-      if Version.Major>2 then
+      if (Version.Major>=2)then
          SupportProgram := True;
+         -- TODO: Check if Get
+         declare
+            Version : constant VersionParser.Version_Type:=VersionParser.Parse(glGetString(GL_SHADING_LANGUAGE_VERSION,DefaultGetProc));
+         begin
+            if Version'Length/=2 then
+               raise InvalidGLSLVersion;
+            end if;
+            GLSLVersion.Major:=GLint_Type(Version(Version'First));
+            GLSLVersion.Minor:=GLint_Type(Version(Version'First+1));
+         end;
          glCreateProgram      := Conv(ExtensionGetProc("glCreateProgram"&NullChar));
          glDeleteProgram      := Conv(ExtensionGetProc("glDeleteProgram"&NullChar));
          glUseProgram         := Conv(ExtensionGetProc("glUseProgram"&NullChar));

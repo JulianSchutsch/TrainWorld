@@ -44,7 +44,7 @@ procedure GUITest is
    pragma Warnings(Off,Terminated);
 
    VertexShaderSource : constant String:=
-     "#version 150"&Character'Val(10)&
+     "#version 120"&Character'Val(10)&
      "in vec3 in_Position;"&
      "in vec3 in_Color;"&
      "out vec3 ex_Color;"&
@@ -55,7 +55,7 @@ procedure GUITest is
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
-     "#version 150"&Character'Val(10)&
+     "#version 120"&Character'Val(10)&
      "in vec3 ex_Color;"&
      "out vec4 out_Color;"&
      "void main(void)"&
@@ -119,12 +119,19 @@ begin
 
    C.I.OnClose:=OnContextClose'Unrestricted_Access;
    C.I.OnPaint:=OnContextPaint'Unrestricted_Access;
+
+--   Put_Line("Extensions:");
+--   for i in OpenGL.Extensions'Range loop
+--      Put_Line(Integer'Image(i)&":"&To_String(OpenGL.Extensions(i))&":");
+--   end loop;
+
    if OpenGL.SupportProgram then
       Put_Line("GLSL supported");
    else
       Put_Line("GLSL not supported");
       return;
    end if;
+   Put_Line("GLSL Version:"&GLint_Type'Image(GLSLVersion.Major)&"."&GLint_Type'Image(GLSLVersion.Minor));
 
    FragmentShader.Create
      (ShaderType => OpenGL.Program.ShaderFragment,

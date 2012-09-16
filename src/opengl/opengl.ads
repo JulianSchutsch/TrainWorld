@@ -27,10 +27,18 @@ with Interfaces.C;
 with Interfaces;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 with System;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package OpenGL is
 
+   subtype Extension_Type is Unbounded_String;
+   type Extension_Array is array(Natural range <>) of Extension_Type;
+   type Extension_ArrayAccess is access Extension_Array;
+
+   Extensions : Extension_ArrayAccess;
+
    InvalidOpenGLVersion : Exception;
+   InvalidGLSLVersion   : Exception;
 
    OpenGLError : Exception;
 
@@ -63,6 +71,12 @@ package OpenGL is
          Minor : aliased GLint_Type;
       end record;
 
+   type GLSLVersion_Type is
+      record
+         Major : aliased GLint_Type:=0;
+         Minor : aliased GLint_Type:=0;
+      end record;
+
    GL_MODELVIEW  : constant GLenum_Type:=16#1700#;
    GL_PROJECTION : constant GLenum_Type:=16#1701#;
 
@@ -93,7 +107,11 @@ package OpenGL is
    GL_CLAMP              : constant GLint_Type:=16#2900#;
    GL_REPEAT             : constant GLint_Type:=16#2901#;
 
-   GL_VERSION : constant GLenum_Type:=16#1F02#;
+   GL_VENDOR                   : constant GLenum_Type:=16#1F00#;
+   GL_RENDERER                 : constant GLenum_Type:=16#1F01#;
+   GL_VERSION                  : constant GLenum_Type:=16#1F02#;
+   GL_EXTENSIONS               : constant GLenum_Type:=16#1F03#;
+   GL_SHADING_LANGUAGE_VERSION : constant GLenum_Type:=16#8B8C#;
 
    GL_MAJOR_VERSION : constant GLenum_Type:=16#821B#;
    GL_MINOR_VERSION : constant GLenum_Type:=16#821C#;
@@ -101,6 +119,7 @@ package OpenGL is
    GL_FLOAT : constant GLenum_Type:=16#1406#;
    GL_FALSE : constant GLboolean_Type:=0;
    GL_TRIANGLES : constant GLenum_Type:=4;
+
 
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
@@ -158,12 +177,15 @@ package OpenGL is
         count : GLsizei_Type);
    pragma Convention(StdCall,glDrawArrays_Access);
 
-   procedure glFinish;
-   pragma Import(StdCall,glFinish,"glFinish");
+   type glFinish_Access is
+     access procedure;
+   pragma Convention(StdCall,glFinish_Access);
+
    glClearColor : glClearColor_Access:=null;
    glClear      : glClear_Access:=null;
    glViewport   : glViewport_Access:=null;
    glDrawArrays : glDrawArrays_Access:=null;
+   glFinish     : glFinish_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects
@@ -378,6 +400,12 @@ package OpenGL is
       ExtensionGetProc : not null GetProc_Access;
       Compatible       : Boolean);
 
+   function IsExtensionSupported
+     (Name : String)
+      return Boolean;
+
    procedure AssertError;
+
+   GLSLVersion : GLSLVersion_Type;
 
 end OpenGL;

@@ -123,7 +123,7 @@ package body OpenGL.GLXContext is
               (dpy => P.Context.Display,
                drawable => glX.GLXDrawable_Type(P.Context.Window));
          else
-            glFinish;
+            glFinish.all;
          end if;
       end Paint;
 
@@ -161,6 +161,10 @@ package body OpenGL.GLXContext is
                if Event.ClientMessage.l(0)
                  =Interfaces.C.long(P.Context.DeleteWindowAtom) then
                   P.Context.DestroyedSignalSend:=True;
+                  if P.Context.OnClose/=null then
+                     P.Context.OnClose(P.Context.Data);
+                  end if;
+                  P.Disable;
                   return;
                end if;
 
@@ -397,6 +401,27 @@ null;
       end if;
 
    end Finalize;
+   ---------------------------------------------------------------------------
+
+   function GLXGetProc
+     (Str : String)
+      return System.Address is
+
+      use type System.Address;
+
+      Result : System.Address;
+
+   begin
+
+      pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
+      Put_Line("GetProc:"&Str&":");
+      Result := GLXGetProcAddress(Str(Str'First)'Address);
+      if Result=System.Null_Address then
+         raise FailedContextCreation with "GLXGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
+      end if;
+      return Result;
+
+   end GLXGetProc;
    ---------------------------------------------------------------------------
 
    function ContextConstructor
@@ -675,6 +700,11 @@ null;
            with "Failed to create Input Context with XCreateIC"
              &ErrorCodeString;
       end if;
+
+      OpenGL.LoadFunctions
+        (DefaultGetProc   => GLXGetProc'Access,
+         ExtensionGetProc => GLXGetProc'Access,
+         Compatible       => True);
 
       return ContextRef;
    end ContextConstructor;

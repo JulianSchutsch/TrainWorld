@@ -42,7 +42,7 @@ package Win32.OpenGL32 is
 
    function wglGetProcAddress
      (Str : System.Address)
-         return System.Address;
+      return System.Address;
    pragma Import(StdCall,wglGetProcAddress,"wglGetProcAddress");
 
    function wglCreateContext

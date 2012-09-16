@@ -1,7 +1,6 @@
 pragma Ada_2012;
 
 with RefCount; use RefCount;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Finalization;
 
 package OpenGL.Program is

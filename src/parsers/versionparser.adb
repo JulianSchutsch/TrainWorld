@@ -1,5 +1,3 @@
---with Ada.Text_IO; use Ada.Text_IO;
-
 package body VersionParser is
 
    DigitLimit : constant Natural:=5;
@@ -77,14 +75,16 @@ package body VersionParser is
             return;
          end if;
 
+         if (Limit/=0) and (Depth>=Limit) then
+            return;
+         end if;
+
          if Current/='.' then
             raise InvalidVersionString with "Missing dot at "&Natural'Image(Pos);
          end if;
          Consume;
 
-         if (Limit=0) or (Depth<Limit) then
-            ParseNumber;
-         end if;
+         ParseNumber;
 
       end ParseNumber;
       ------------------------------------------------------------------------

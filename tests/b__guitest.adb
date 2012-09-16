@@ -59,6 +59,7 @@ package body ada_main is
          E140 := E140 - 1;
          F1;
       end;
+      E132 := E132 - 1;
       declare
          procedure F2;
          pragma Import (Ada, F2, "opengl__program__finalize_body");
@@ -86,101 +87,107 @@ package body ada_main is
       begin
          F5;
       end;
-      E115 := E115 - 1;
       declare
          procedure F6;
-         pragma Import (Ada, F6, "globalloop__finalize_spec");
+         pragma Import (Ada, F6, "opengl__finalize_spec");
       begin
          F6;
       end;
-      E111 := E111 - 1;
+      E115 := E115 - 1;
       declare
          procedure F7;
-         pragma Import (Ada, F7, "config__finalize_spec");
+         pragma Import (Ada, F7, "globalloop__finalize_spec");
       begin
          F7;
       end;
-      E109 := E109 - 1;
+      E111 := E111 - 1;
       declare
          procedure F8;
-         pragma Import (Ada, F8, "basics__finalize_spec");
+         pragma Import (Ada, F8, "config__finalize_spec");
       begin
          F8;
       end;
+      E109 := E109 - 1;
       declare
          procedure F9;
-         pragma Import (Ada, F9, "ada__text_io__generic_aux__finalize_body");
+         pragma Import (Ada, F9, "basics__finalize_spec");
       begin
-         E146 := E146 - 1;
          F9;
       end;
       declare
          procedure F10;
-         pragma Import (Ada, F10, "ada__text_io__finalize_body");
+         pragma Import (Ada, F10, "ada__text_io__generic_aux__finalize_body");
       begin
-         E078 := E078 - 1;
+         E146 := E146 - 1;
          F10;
       end;
       declare
          procedure F11;
-         pragma Import (Ada, F11, "ada__text_io__finalize_spec");
+         pragma Import (Ada, F11, "ada__text_io__finalize_body");
       begin
+         E078 := E078 - 1;
          F11;
       end;
       declare
          procedure F12;
-         pragma Import (Ada, F12, "ada__streams__stream_io__finalize_body");
+         pragma Import (Ada, F12, "ada__text_io__finalize_spec");
       begin
-         E126 := E126 - 1;
          F12;
       end;
       declare
          procedure F13;
-         pragma Import (Ada, F13, "system__file_io__finalize_body");
+         pragma Import (Ada, F13, "ada__streams__stream_io__finalize_body");
       begin
-         E093 := E093 - 1;
+         E126 := E126 - 1;
          F13;
       end;
       declare
          procedure F14;
-         pragma Import (Ada, F14, "ada__streams__stream_io__finalize_spec");
+         pragma Import (Ada, F14, "system__file_io__finalize_body");
       begin
+         E093 := E093 - 1;
          F14;
       end;
       declare
          procedure F15;
-         pragma Import (Ada, F15, "system__file_control_block__finalize_spec");
+         pragma Import (Ada, F15, "ada__streams__stream_io__finalize_spec");
+      begin
+         F15;
+      end;
+      declare
+         procedure F16;
+         pragma Import (Ada, F16, "system__file_control_block__finalize_spec");
       begin
          E103 := E103 - 1;
-         F15;
+         F16;
       end;
       E105 := E105 - 1;
       declare
-         procedure F16;
-         pragma Import (Ada, F16, "system__pool_global__finalize_spec");
-      begin
-         F16;
-      end;
-      E080 := E080 - 1;
-      declare
          procedure F17;
-         pragma Import (Ada, F17, "ada__finalization__heap_management__finalize_spec");
+         pragma Import (Ada, F17, "system__pool_global__finalize_spec");
       begin
          F17;
       end;
-      E046 := E046 - 1;
+      E080 := E080 - 1;
       declare
          procedure F18;
-         pragma Import (Ada, F18, "ada__strings__unbounded__finalize_spec");
+         pragma Import (Ada, F18, "ada__finalization__heap_management__finalize_spec");
       begin
          F18;
       end;
-      E071 := E071 - 1;
+      E046 := E046 - 1;
       declare
          procedure F19;
-         pragma Import (Ada, F19, "system__finalization_root__finalize_spec");
+         pragma Import (Ada, F19, "ada__strings__unbounded__finalize_spec");
       begin
          F19;
+      end;
+      E071 := E071 - 1;
+      declare
+         procedure F20;
+         pragma Import (Ada, F20, "system__finalization_root__finalize_spec");
+      begin
+         F20;
       end;
       if LE_Set then
          declare

@@ -24,6 +24,7 @@
 with Xlib; use Xlib;
 with OpenGL; use OpenGL;
 with Interfaces.C;
+with System;
 
 package glX is
 
@@ -69,9 +70,9 @@ package glX is
    pragma Import(C,glXCreateContext,"glXCreateContext");
 
    function glXMakeCurrent
-     (dpy : Display_Access;
+     (dpy      : Display_Access;
       drawable : GLXDrawable_Type;
-      context : GLXContext_Access)
+      context  : GLXContext_Access)
       return Interfaces.C.int; -- FOR BOOLEAN
    pragma Import(C,glXMakeCurrent,"glXMakeCurrent");
 
@@ -84,5 +85,10 @@ package glX is
      (dpy      : Display_Access;
       drawable : GLXDrawable_Type);
    pragma Import(C,glXSwapBuffers,"glXSwapBuffers");
+
+   function glXGetProcAddress
+     (procName : System.Address)
+      return System.Address;
+   pragma Import(C,glXGetProcAddress,"glXGetProcAddress");
 
 end glX;
