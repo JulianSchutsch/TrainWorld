@@ -53,6 +53,7 @@ package body OpenGL.Win32Context is
    overriding
    procedure Process
      (P : in out Context_Process);
+   ---------------------------------------------------------------------------
 
    type Context_Type is new Graphics.Context_Interface with
       record

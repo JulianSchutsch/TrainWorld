@@ -8,8 +8,9 @@ with Basics; use Basics;
 
 package Graphics is
 
-   FailedContextCreation : Exception;
-   InvalidContext        : Exception;
+   FailedContextCreation    : Exception;
+   InvalidContext           : Exception;
+   FailedContextDestruction : Exception;
 
    type MouseButton_Enum is
      (MouseButtonLeft,

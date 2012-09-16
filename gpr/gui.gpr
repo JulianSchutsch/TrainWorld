@@ -7,7 +7,7 @@ project GUI is
   Dir:=GUI'Project_Dir & "/";
   Linker_Switches:=();
 
-  for Languages use ("Ada");
+  for Languages use ("Ada","C");
 
   package Compiler is
     for Default_Switches("Ada") use Switches.Compiler_Switches;
