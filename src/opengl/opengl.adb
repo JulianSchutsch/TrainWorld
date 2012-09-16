@@ -36,6 +36,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glDrawArrays_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glFinish_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetStringi_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glGetError_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -208,6 +209,7 @@ package body OpenGL is
 
    begin
 
+      glGetError    := Conv(DefaultGetProc("glGetError"&NullChar));
       glClear       := Conv(DefaultGetProc("glClear"&NullChar));
       glClearColor  := Conv(DefaultGetProc("glClearColor"&NullChar));
       glViewport    := Conv(DefaultGetProc("glViewport"&NullChar));
@@ -298,7 +300,7 @@ package body OpenGL is
       Error : GLenum_Type;
    begin
 
-      Error:=glGetError;
+      Error:=glGetError.all;
 
       if Error/=0 then
          raise OpenGLError

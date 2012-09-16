@@ -190,12 +190,18 @@ package OpenGL is
      access procedure;
    pragma Convention(StdCall,glFinish_Access);
 
+   type glGetError_Access is
+     access function
+     return GLenum_Type;
+   pragma Convention(StdCall,glGetError_Access);
+
    glClearColor  : glClearColor_Access:=null;
    glClear       : glClear_Access:=null;
    glViewport    : glViewport_Access:=null;
    glDrawArrays  : glDrawArrays_Access:=null;
    glFinish      : glFinish_Access:=null;
    glGetIntegerv : glGetIntegerv_Access:=null;
+   glGetError    : glGetError_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects
@@ -379,11 +385,11 @@ package OpenGL is
    glGetUniformLocation : glGetUniformLocation_Access := null;
    glGetProgramInfoLog  : glGetProgramInfoLog_Access  := null;
 
-   glCreateShader  : glCreateShader_Access  := null;
-   glDeleteShader  : glDeleteShader_Access  := null;
-   glShaderSource  : glShaderSource_Access  := null;
-   glCompileShader : glCompileShader_Access := null;
-   glGetShaderiv   : glGetShaderiv_Access   := null;
+   glCreateShader       : glCreateShader_Access  := null;
+   glDeleteShader       : glDeleteShader_Access  := null;
+   glShaderSource       : glShaderSource_Access  := null;
+   glCompileShader      : glCompileShader_Access := null;
+   glGetShaderiv        : glGetShaderiv_Access   := null;
 
    SupportProgram  : Boolean := False;
 
@@ -399,11 +405,6 @@ package OpenGL is
    -- These functions are like the usual opengl calls, but the
    -- function pointer is loaded on demand.
    -- This is necessary for initialisation
-
-   -- TODO: Do not link static...
-   function glGetError
-     return GLenum_Type;
-   pragma Import(StdCall,glGetError,"glGetError");
 
    procedure LoadFunctions
      (DefaultGetProc   : not null GetProc_Access;
