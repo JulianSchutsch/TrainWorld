@@ -35,6 +35,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glViewport_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glDrawArrays_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glFinish_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glGetStringi_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -82,7 +83,7 @@ package body OpenGL is
    end glGetString;
    ---------------------------------------------------------------------------
 
-   procedure glGetIntegerv
+   procedure PreGetIntegerv
      (pname    : GLenum_Type;
       params  : access GLint_Type;
       GetProc : not null GetProc_Access) is
@@ -91,7 +92,7 @@ package body OpenGL is
 
    begin
       extglGetIntegerv(pname,params);
-   end glGetIntegerv;
+   end PreGetIntegerv;
    ---------------------------------------------------------------------------
 
    function GetVersion
@@ -111,8 +112,8 @@ package body OpenGL is
                raise InvalidOpenGLVersion;
             end if;
             if Version(Version'First)>3 then
-               glGetIntegerv(GL_MAJOR_VERSION,Result.Major'Access,GetProc);
-               glGetIntegerv(GL_MINOR_VERSION,Result.Minor'Access,GetProc);
+               PreGetIntegerv(GL_MAJOR_VERSION,Result.Major'Access,GetProc);
+               PreGetIntegerv(GL_MINOR_VERSION,Result.Minor'Access,GetProc);
             else
                Result.Major:=GLint_Type(Version(Version'First));
                Result.Minor:=GLint_Type(Version(Version'First+1));
@@ -136,7 +137,7 @@ package body OpenGL is
    end IsExtensionSupported;
    ---------------------------------------------------------------------------
 
-   procedure GetExtensionsByGetString
+   procedure ReadExtensionsByGetString
      (GetProc : GetProc_Access) is
 
       ExtStr   : constant String := glGetString(GL_EXTENSIONS,GetProc);
@@ -176,7 +177,25 @@ package body OpenGL is
          Extensions(Position) := U(ExtStr(Start..ExtStr'Last));
       end if;
 
-   end GetExtensionsByGetString;
+   end ReadExtensionsByGetString;
+   ---------------------------------------------------------------------------
+
+   procedure ReadExtensionsByGetStringi is
+      Count : aliased Glint_Type;
+   begin
+      glGetIntegerv(GL_NUM_EXTENSIONS,Count'Access);
+      Extensions:=new Extension_Array(0..Integer(Count)-1);
+      for i in 0..Count-1 loop
+         declare
+            Str : constant chars_ptr:=glGetStringi(GL_EXTENSIONS,i);
+         begin
+            if Str=Null_Ptr then
+               raise InvalidExtensionString;
+            end if;
+            Extensions(Integer(i)):=U(Value(Str));
+         end;
+      end loop;
+   end ReadExtensionsByGetStringi;
    ---------------------------------------------------------------------------
 
    procedure LoadFunctions
@@ -189,16 +208,28 @@ package body OpenGL is
 
    begin
 
-      glClear      := Conv(DefaultGetProc("glClear"&NullChar));
-      glClearColor := Conv(DefaultGetProc("glClearColor"&NullChar));
-      glViewport   := Conv(DefaultGetProc("glViewport"&NullChar));
-      glFinish     := Conv(ExtensionGetProc("glFinish"&NullChar));
-      glDrawArrays := Conv(ExtensionGetProc("glDrawArrays"&NullChar));
+      glClear       := Conv(DefaultGetProc("glClear"&NullChar));
+      glClearColor  := Conv(DefaultGetProc("glClearColor"&NullChar));
+      glViewport    := Conv(DefaultGetProc("glViewport"&NullChar));
+      glFinish      := Conv(DefaultGetProc("glFinish"&NullChar));
+      glGetIntegerv := Conv(DefaultgetProc("glGetIntegerv"&NullChar));
+      glDrawArrays  := Conv(ExtensionGetProc("glDrawArrays"&NullChar));
+      Put_Line("Ext");
+      AssertError;
 
+      if Version.Major>=3 then
+         glGetStringi := Conv(ExtensionGetProc("glGetStringi"&NullChar));
+      end if;
       -- TODO: Check if this is still a valid method or if you
       --  need to apply something new for OGL 3
-      GetExtensionsByGetString(DefaultGetProc);
+      if Version.Major>=3 then
+         ReadExtensionsByGetStringi;
+      else
+         ReadExtensionsByGetString(DefaultGetProc);
+      end if;
 
+      Put_Line("Extension Done");
+      AssertError;
       -- Buffer Objects
       if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
@@ -207,6 +238,8 @@ package body OpenGL is
          glBufferData := Conv(ExtensionGetProc("glBufferData"&NullChar));
       end if;
 
+      Put_line("Buffer Objects");
+      AssertError;
       -- VertexAttrib
       if Version.Major>=2 then
          SupportVertexAttributes:=True;
@@ -215,18 +248,24 @@ package body OpenGL is
          glBindAttribLocation      := Conv(ExtensionGetProc("glBindAttribLocation"&NullChar));
       end if;
 
+      Put_Line("Vertex Array");
+      AssertError;
+
       if (Version.Major>=3) or
         IsExtensionSupported("GL_ARB_vertex_array_object") then
          glBindVertexArray:=Conv(ExtensionGetProc("glBindVertexArray"&NullChar));
          glGenVertexArrays:=Conv(ExtensionGetProc("glGenVertexArrays"&NullChar));
       end if;
 
+      Put_Line("Check GLSL");
+      AssertError;
+
       -- GLSL
       if (Version.Major>=2)then
          SupportProgram := True;
          -- TODO: Check if Get
          declare
-            Version : constant VersionParser.Version_Type:=VersionParser.Parse(glGetString(GL_SHADING_LANGUAGE_VERSION,DefaultGetProc));
+            Version : constant VersionParser.Version_Type:=VersionParser.Parse(glGetString(GL_SHADING_LANGUAGE_VERSION,DefaultGetProc),Limit=>2);
          begin
             if Version'Length/=2 then
                raise InvalidGLSLVersion;
@@ -250,6 +289,7 @@ package body OpenGL is
          glCompileShader      := Conv(ExtensionGetProc("glCompileShader"&NullChar));
          glGetShaderiv        := Conv(ExtensionGetProc("glGetShaderiv"&NullChar));
       end if;
+      AssertError;
 
    end LoadFunctions;
    ---------------------------------------------------------------------------

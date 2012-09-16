@@ -137,7 +137,7 @@ package body OpenGL.Win32Context is
       if Context.DoubleBuffered then
          Result:=SwapBuffers(Context.DeviceContext);
       else
-         glFinish;
+         glFinish.all;
       end if;
 
    end Paint;

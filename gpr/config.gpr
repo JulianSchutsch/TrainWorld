@@ -31,9 +31,9 @@ abstract project Config is
       ("On",
        "Off");
 
-   Plattform   : Plattform_Type:="Linux";
+   Plattform   : Plattform_Type:="WindowsNT";
 
-   Win32OpenGL : Switch_Type:="Off";
-   XOpenGL     : Switch_Type:="On";
+   Win32OpenGL : Switch_Type:="On";
+   XOpenGL     : Switch_Type:="Off";
 
 end Config;

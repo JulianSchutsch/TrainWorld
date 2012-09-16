@@ -47,7 +47,7 @@ procedure GUITest is
      "#version 120"&Character'Val(10)&
      "in vec3 in_Position;"&
      "in vec3 in_Color;"&
-     "out vec3 ex_Color;"&
+     "varying vec3 ex_Color;"&
      "void main(void)"&
      "{"&
      "  gl_Position = vec4(in_Position,1.0);"&
@@ -57,10 +57,9 @@ procedure GUITest is
    FragmentShaderSource : constant String:=
      "#version 120"&Character'Val(10)&
      "in vec3 ex_Color;"&
-     "out vec4 out_Color;"&
      "void main(void)"&
      "{"&
-     "  out_Color=vec4(ex_Color,1.0);"&
+     "  gl_FragColor=vec4(ex_Color,1.0);"&
      "}"&Character'Val(0);
 
    FragmentShader : aliased OpenGL.Program.Shader_Type;
@@ -124,6 +123,7 @@ begin
 --   for i in OpenGL.Extensions'Range loop
 --      Put_Line(Integer'Image(i)&":"&To_String(OpenGL.Extensions(i))&":");
 --   end loop;
+   AssertError;
 
    if OpenGL.SupportProgram then
       Put_Line("GLSL supported");

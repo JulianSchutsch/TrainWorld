@@ -7,7 +7,14 @@ project GUI is
   Dir:=GUI'Project_Dir & "/";
   Linker_Switches:=();
 
-  for Languages use ("Ada","C");
+  Sources:=
+     (Dir & "../src/gui",
+      Dir & "../src/canvas",
+      Dir & "../src/graphics",
+      Dir & "../src/opengl",
+      Dir & "../src/bounds");
+
+   Languages:=("Ada");
 
   package Compiler is
     for Default_Switches("Ada") use Switches.Compiler_Switches;
@@ -19,18 +26,15 @@ project GUI is
      when "Off" =>
   end case;
 
-  case Config.XOpenGL is
-     when "On" =>
-        Linker_Switches:=("-lX11","-lGL");
-    when "Off" =>
-  end case;
+   case Config.XOpenGL is
+      when "On" =>
+         Linker_Switches:=("-lX11","-lGL");
+         Sources:=Sources&(Dir&"../src/xlib");
+         Languages:=Languages&("C");
+      when "Off" =>
+   end case;
 
-  for Source_Dirs use
-    (Dir & "../src/gui",
-     Dir & "../src/canvas",
-     Dir & "../src/graphics",
-     Dir & "../src/opengl",
-     Dir & "../src/bounds",
-     Dir & "../src/xlib");
+   for Source_Dirs use Sources;
+  for Languages use Languages;
 
 end GUI;

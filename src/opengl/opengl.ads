@@ -37,8 +37,9 @@ package OpenGL is
 
    Extensions : Extension_ArrayAccess;
 
-   InvalidOpenGLVersion : Exception;
-   InvalidGLSLVersion   : Exception;
+   InvalidOpenGLVersion   : Exception;
+   InvalidGLSLVersion     : Exception;
+   InvalidExtensionString : Exception;
 
    OpenGLError : Exception;
 
@@ -120,6 +121,7 @@ package OpenGL is
    GL_FALSE : constant GLboolean_Type:=0;
    GL_TRIANGLES : constant GLenum_Type:=4;
 
+   GL_NUM_EXTENSIONS : constant GLenum_Type:=16#821D#;
 
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
@@ -133,6 +135,13 @@ package OpenGL is
         return chars_ptr;
    pragma Convention(StdCall,glGetString_Access);
 
+   type glGetStringi_Access is
+     access function
+       (name : GLenum_Type;
+        index : GLint_Type)
+        return chars_ptr;
+   pragma Convention(StdCall,glGetstringi_Access);
+
    function glGetString
      (name    : GLenum_Type;
       GetProc : not null GetProc_Access)
@@ -144,7 +153,7 @@ package OpenGL is
         params : access GLint_Type);
    pragma Convention(StdCall,glGetIntegerv_Access);
 
-   procedure glGetIntegerv
+   procedure PreGetIntegerv
      (pname : GLenum_Type;
       params : access GLint_Type;
       GetProc : not null GetProc_Access);
@@ -181,11 +190,12 @@ package OpenGL is
      access procedure;
    pragma Convention(StdCall,glFinish_Access);
 
-   glClearColor : glClearColor_Access:=null;
-   glClear      : glClear_Access:=null;
-   glViewport   : glViewport_Access:=null;
-   glDrawArrays : glDrawArrays_Access:=null;
-   glFinish     : glFinish_Access:=null;
+   glClearColor  : glClearColor_Access:=null;
+   glClear       : glClear_Access:=null;
+   glViewport    : glViewport_Access:=null;
+   glDrawArrays  : glDrawArrays_Access:=null;
+   glFinish      : glFinish_Access:=null;
+   glGetIntegerv : glGetIntegerv_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects
@@ -259,7 +269,7 @@ package OpenGL is
    glBindAttribLocation      : glBindAttribLocation_Access:=null;
    glGenVertexArrays         : glGenVertexArrays_Access:=null;
    glBindVertexArray         : glBindVertexArray_Access:=null;
-
+   glGetStringi              : glGetStringi_Access:=null;
 
    SupportVertexAttributes : Boolean:=False;
 
