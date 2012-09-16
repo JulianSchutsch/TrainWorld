@@ -117,7 +117,9 @@ package body OpenGL.GLXContext is
 
       procedure Paint is
       begin
---         OpenGL.Context.Paint(OpenGL.Context.Context_Type(Context.all));
+         if P.Context.OnPaint/=null then
+            P.Context.OnPaint(P.Context.Data);
+         end if;
          if P.Context.DoubleBuffered then
             glX.glXSwapBuffers
               (dpy => P.Context.Display,

@@ -16,25 +16,25 @@ project GUI is
 
    Languages:=("Ada");
 
-  package Compiler is
-    for Default_Switches("Ada") use Switches.Compiler_Switches;
-  end Compiler;
+   package Compiler is
+      for Default_Switches("Ada") use Switches.Compiler_Switches;
+   end Compiler;
 
-  case Config.Win32OpenGL is
-     when "On" =>
-        Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32","-lkernel32");
-     when "Off" =>
-  end case;
+   case Config.Win32OpenGL is
+      when "On" =>
+         Linker_Switches:=("-lgmem","-lopengl32","-lole32","-lgdi32","-lkernel32");
+      when "Off" =>
+   end case;
 
    case Config.XOpenGL is
       when "On" =>
-         Linker_Switches:=("-lX11","-lGL");
-         Sources:=Sources&(Dir&"../src/xlib");
-         Languages:=Languages&("C");
+         Linker_Switches := ("-lX11","-lGL");
+         Sources         := Sources&(Dir&"../src/xlib");
+         Languages       := Languages&("C");
       when "Off" =>
    end case;
 
    for Source_Dirs use Sources;
-  for Languages use Languages;
+   for Languages use Languages;
 
 end GUI;
