@@ -29,15 +29,17 @@ with Config.Test;
 with GImplementationsTest;
 with VersionParser.Test;
 with GlobalLoop.Test;
+with InterfaceTest;
 
-procedure Test is
+procedure CoreTest is
    Tests : constant TestFrameWork.Test_Array:=
      Bytes.Test.Tests&
      Endianess.Test.Tests&
      Config.Test.Tests&
      GImplementationsTest.Tests&
      VersionParser.Test.Tests&
-     GlobalLoop.Test.Tests;
+     GlobalLoop.Test.Tests&
+     InterfaceTest.Tests;
 begin
    TestFrameWork.Run(Tests);
-end Test;
+end CoreTest;

@@ -25,6 +25,7 @@ project CoreTest is
      Dir & "config",
      Dir & "implementations",
      Dir & "parsers",
-     Dir & "globalloop");
+     Dir & "globalloop",
+     Dir & "interfaces");
 
 end CoreTest;

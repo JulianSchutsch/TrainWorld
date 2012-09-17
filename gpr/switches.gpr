@@ -5,8 +5,7 @@ abstract project Switches is
       "-gnatn",
       "-g",
       "-gnatf",
-      "-Wall",
-      "-O0",
-      "-fno-strict-aliasing");
+      "-gnatwa",
+      "-O0");
 
 end Switches;
