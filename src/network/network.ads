@@ -9,19 +9,20 @@ package Network is
    type StateCallBack_Interface is interface;
    type StateCallBack_ClassAccess is access all StateCallBack_Interface'Class;
 
-   procedure NetworkReceive
+   function NetworkReceive
      (T      : in out StateCallBack_Interface;
-      Stream : Streams.ReadStream_ClassAccess) is abstract;
+      Stream : Streams.ReadStream_ClassAccess)
+      return StateCallBack_ClassAccess is abstract;
 
    type ConnectionCallBack_Interface is interface;
    type ConnectionCallBack_ClassAccess is access all ConnectionCallBack_Interface'Class;
 
    procedure NetworkDisconnect
      (T : in out ConnectionCallBack_Interface) is abstract;
-   procedure NetworkConnect
+   function NetworkConnect
      (T      : in out ConnectionCallBack_Interface;
-      Stream : Streams.WriteStream_ClassAccess;
-      State  : out StateCallBack_ClassAccess) is abstract;
+      Stream : Streams.WriteStream_ClassAccess)
+      return StateCalLBack_ClassAccess is abstract;
 
    type ServerCallBack_Interface is interface;
 
