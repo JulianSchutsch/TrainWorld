@@ -6,17 +6,22 @@ with Implementations;
 
 package Network is
 
+   type StateCallBack_Interface is interface;
+   type StateCallBack_ClassAccess is access all StateCallBack_Interface'Class;
+
+   procedure NetworkReceive
+     (T      : in out StateCallBack_Interface;
+      Stream : Streams.ReadStream_ClassAccess) is abstract;
+
    type ConnectionCallBack_Interface is interface;
    type ConnectionCallBack_ClassAccess is access all ConnectionCallBack_Interface'Class;
 
-   procedure NetworkReceive
-     (T      : in out ConnectionCallBack_Interface;
-      Stream : Streams.ReadStream_ClassAccess) is abstract;
    procedure NetworkDisconnect
      (T : in out ConnectionCallBack_Interface) is abstract;
    procedure NetworkConnect
      (T      : in out ConnectionCallBack_Interface;
-      Stream : Streams.WriteStream_ClassAccess) is abstract;
+      Stream : Streams.WriteStream_ClassAccess;
+      State  : out StateCallBack_ClassAccess) is abstract;
 
    type ServerCallBack_Interface is interface;
 
