@@ -11,6 +11,7 @@ package Streams is
    type StreamSize_Type is new Natural;
 
    type ReadStream_Type is abstract new Ada.Finalization.Controlled with null record;
+   type ReadStream_ClassAccess is access all ReadStream_Type'Class;
 
    function Read
      (ReadStream : ReadStream_Type)
@@ -27,6 +28,7 @@ package Streams is
    ---------------------------------------------------------------------------
 
    type WriteStream_Type is abstract new Ada.Finalization.Controlled with null record;
+   type WriteStream_ClassAccess is access all WriteStream_Type'Class;
 
    procedure Write
      (WriteStream : WriteStream_Type;

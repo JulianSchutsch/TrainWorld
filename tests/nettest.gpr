@@ -1,0 +1,27 @@
+with "core";
+with "network";
+with "config";
+with "switches";
+
+project NetTest is
+
+  Dir:=NetTest'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  for Main use ("nettest.adb");
+
+  package Compiler is
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
+  end Compiler;
+
+  package Linker is
+    for Default_Switches("Ada") use
+       Core.Linker_Switches
+      &Network.Linker_Switches;
+  end Linker;
+
+  for Source_Dirs use
+    (Dir & ".");
+
+end NetTest;
