@@ -22,6 +22,7 @@ project NetTest is
   end Linker;
 
   for Source_Dirs use
-    (Dir & ".");
+    (Dir & ".",
+     Dir & "network");
 
 end NetTest;

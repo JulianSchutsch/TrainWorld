@@ -17,18 +17,11 @@
 --   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------------
 
--- Revision History
---   2.Aug 2012 Julian Schutsch
---     - Original version
+package body ClientServerNet is
 
-pragma Ada_2012;
-with ClientServerNet.Test;
-with ClientServerNet.SMPipe;
-with TestFrameWork;
+   procedure X is
+   begin
+      null;
+   end X;
 
-procedure NetTest is
-   Tests : constant TestFrameWork.Test_Array:=ClientServerNet.Test.Tests;
-begin
-   ClientServerNet.SMPipe.Register;
-   TestFrameWork.Run(Tests);
-end NetTest;
+end ClientServerNet;

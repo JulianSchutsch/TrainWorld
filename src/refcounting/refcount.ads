@@ -18,6 +18,10 @@ package RefCount is
             I : Interface_ClassAccess;
          end record;
 
+      not overriding
+      procedure SetNull
+        (Ref : in out Ref_Type);
+
       overriding
       procedure Adjust
         (Ref : in out Ref_Type);

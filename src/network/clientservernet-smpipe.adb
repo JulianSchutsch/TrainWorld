@@ -1,29 +1,75 @@
+-------------------------------------------------------------------------------
+--   Copyright 2012 Julian Schutsch
+--
+--   This file is part of TrainWorld
+--
+--   ParallelSim is free software: you can redistribute it and/or modify
+--   it under the terms of the GNU Affero General Public License as published
+--   by the Free Software Foundation, either version 3 of the License, or
+--   (at your option) any later version.
+--
+--   ParallelSim is distributed in the hope that it will be useful,
+--   but WITHOUT ANY WARRANTY; without even the implied warranty of
+--   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--   GNU Affero General Public License for more details.
+--
+--   You should have received a copy of the GNU Affero General Public License
+--   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------------------
+
+-- Implementation details
+--
+--    Basic fifo streaming:
+--
+--    The stream component of this implementation is separated into two parts:
+--      * Blocks of memory with stream content
+--      * A protected queue of blocks
+--    There is always one current block in a WriteStream which is written to,
+--    and there may be one current block in a ReadStream from which is read.
+--    Once a block is filled to its maximum amount its added to the queue
+--    of blocks and a new block is created for further writting.
+--    The ReadStream reads the current block until its end and then disposes
+--    the memory. It only asks for a new block from the queue if necessary.
+--
+--    Server client address space and connecting:
+--
+--    The protected ServerList is responsible for maintaining a threadsafe
+--    list of Server_Access entries.
+--    Every connection attempt is started within the protection of ServerList
+--    using its Connect method which adds a half connection to a server
+--    on the clients behalf. These half connections are aknowledged by
+--    the server by calling ServerList.ProcessConnections.
+--    This method makes sure that no server delete or client delete during
+--    the connection process can lead to unexpected exceptions since there is
+--    no direct reference between the server and the client involved.
+--
+--    Server client communication
+--
+--    All communication is over a shared component called BlockPipes.
+--    There is one pipe for each direction in BlockPipes.
+--    The ReadStream_Type requires a RollBack and a StoreBuffer to keep
+--    blocks available which have been read, but must be read again due to
+--    a Streams.StreamOverflow exception.
+--
+--    Server client disconnect
+--
+--    The shared component BlockPipes contains a protected counter therefore
+--    BlockPipes is reference counted.
+--    Since no reference between server and client exists this solves
+--    all disconnect issues. The counter can be used to check for one side
+--    disconnect.
+
+pragma Ada_2012;
+
 with Bytes;
 with System;
 with Ada.Unchecked_Deallocation;
 with Basics; use Basics;
-with Network;
 with GlobalLoop;
-with Ada.Text_IO; use Ada.Text_IO;
+with ProtectedBasics;
+with Ada.Finalization;
 
-package body PipeNetwork is
-
-   protected type DualRef_Type is
-      procedure Decrement
-        (ReachedZero : out Boolean);
-   private
-      Counter : Natural:=2;
-   end DualRef_Type;
-
-   protected body DualRef_Type is
-      procedure Decrement
-        (ReachedZero : out Boolean) is
-      begin
-         Counter:=Counter-1;
-         ReachedZero:=Counter=0;
-      end Decrement;
-   end DualRef_Type;
-   ---------------------------------------------------------------------------
+package body ClientServerNet.SMPipe is
 
    type ClientState_Enum is
      (ClientStateJustConnected,
@@ -38,17 +84,30 @@ package body PipeNetwork is
    type Block_Type;
    type Block_Access is access all Block_Type;
 
-   type Block_Type is
+   type Block_Type is new Ada.Finalization.Limited_Controlled with
       record
          Data   : Bytes.Byte_ArrayAccess:=null;
          Amount : Streams.StreamSize_Type:=0;
-         Next   : Block_Access:=null;
+         NextRollBack : Block_Access:=null;
       end record;
+
+   overriding
+   procedure Finalize
+     (Block : in out Block_Type);
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => Block_Type,
       Name   => Block_Access);
    ---------------------------------------------------------------------------
+
+   procedure Finalize
+     (Block : in out Block_Type) is
+   begin
+      Bytes.Free(Block.Data);
+   end Finalize;
+   ---------------------------------------------------------------------------
+
+   package BlockQueue is new ProtectedBasics.Queue(Block_Access,null);
 
    type Server_Config is new Config.Config_Type with
       record
@@ -65,67 +124,83 @@ package body PipeNetwork is
    type Client_ConfigAccess is access all Client_Config;
    ---------------------------------------------------------------------------
 
-   protected type BlockPipe_Type is
-      procedure Put
-        (Block : not null Block_Access);
-      procedure Get
-        (Block : out Block_Access);
-   private
-      First : Block_Access:=null;
-      Last  : Block_Access:=null;
-   end BlockPipe_Type;
-   ---------------------------------------------------------------------------
-
-   protected body BlockPipe_Type is
-
-      procedure Put
-        (Block : not null Block_Access) is
-      begin
-         if Last/=null then
-            Last.Next:=Block;
-         end if;
-         Last:=Block;
-      end Put;
-      ------------------------------------------------------------------------
-
-      procedure Get
-        (Block : out Block_Access) is
-
-      begin
-
-         Block:=First;
-
-         if First/=null then
-            First:=First.Next;
-            if First=null then
-               Last:=null;
-            end if;
-         end if;
-
-      end Get;
-      ------------------------------------------------------------------------
-
-   end BlockPipe_Type;
-
-   type BlockPipe_Access is access all BlockPipe_Type;
-
-   type BlockPipes_Type is
+   type BlockPipes_Type is new Ada.Finalization.Limited_Controlled with
       record
-         ToServer   : aliased BlockPipe_Type;
-         FromServer : aliased BlockPipe_Type;
-         DualRef    : DualRef_Type;
+         ToServer   : aliased BlockQueue.Queue_Type;
+         FromServer : aliased BlockQueue.Queue_Type;
+         Counter    : ProtectedBasics.Counter_Type;
       end record;
    type BlockPipes_Access is access all BlockPipes_Type;
 
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Object => BlockPipes_Type,
-      Name   => BlockPipes_Access);
+   overriding
+   procedure Initialize
+     (BlockPipes : in out BlockPipes_Type);
+
+   overriding
+   procedure Finalize
+     (BlockPipes : in out BlockPipes_Type);
+
+   procedure Release
+     (BlockPipes : in out BlockPipes_Access);
+   ---------------------------------------------------------------------------
+
+   procedure Release
+     (BlockPipes : in out BlockPipes_Access) is
+
+      procedure Free is new Ada.Unchecked_Deallocation
+        (Object => BlockPipes_Type,
+         Name   => BlockPipes_Access);
+      ------------------------------------------------------------------------
+
+      Count : Integer;
+
+   begin
+      BlockPipes.Counter.Decrement(Count);
+      if Count=0 then
+         Free(BlockPipes);
+      end if;
+   end Release;
+   ---------------------------------------------------------------------------
+
+   procedure Finalize
+     (BlockPipes : in out BlockPipes_Type) is
+
+      Block : Block_Access;
+
+   begin
+
+      loop
+         BlockPipes.ToServer.Get(Block);
+         exit when Block=null;
+         Free(Block);
+      end loop;
+
+      loop
+         BlockPipes.FromServer.Get(Block);
+         exit when Block=null;
+         Free(Block);
+      end loop;
+
+   end Finalize;
+   ---------------------------------------------------------------------------
+
+   procedure Initialize
+     (BlockPipes : in out BlockPipes_Type) is
+   begin
+      BlockPipes.Counter.Set(2);
+   end Initialize;
+   ---------------------------------------------------------------------------
 
    type PipeReadStream_Type is new Streams.ReadStream_Interface with
       record
-         Buffer          : Block_Access:=null;
-         Position        : Streams.StreamSize_Type:=0;
-         SourceBlockPipe : BlockPipe_Access:=null;
+         Buffer           : Block_Access:=null;
+         Position         : Streams.StreamSize_Type:=0;
+         SourceBlockPipe  : BlockQueue.Queue_Access:=null;
+         RollBackFirst    : Block_Access:=null;
+         RollBackLast     : Block_Access:=null;
+         RollBackPosition : Streams.StreamSize_Type;
+         StoredFirst      : Block_Access:=null;
+         StoredLast       : Block_Access:=null;
       end record;
 
    overriding
@@ -137,13 +212,31 @@ package body PipeNetwork is
    overriding
    procedure Finalize
      (Stream : in out PipeReadStream_Type);
+
+   pragma Warnings(Off);
+   -- Dispatching is not important here
+   function Empty
+     (Stream : in PipeReadStream_Type)
+      return Boolean;
+
+   procedure RollBack
+     (Stream : in out PipeReadStream_Type);
+
+   procedure BeginRead
+     (Stream : in out PipeReadStream_Type);
+
+   procedure EndRead
+     (Stream : in out PipeReadStream_Type);
+
+   pragma Warnings(On);
    ---------------------------------------------------------------------------
 
    type PipeWriteStream_Type is new Streams.WriteStream_Interface with
       record
          Buffer        : Block_Access     := null;
-         DestBlockPipe : BlockPipe_Access := null;
+         DestBlockPipe : BlockQueue.Queue_Access := null;
       end record;
+   type PipeWriteStream_Access is access all PipeWriteStream_Type;
 
    overriding
    procedure WriteBuffer
@@ -160,6 +253,57 @@ package body PipeNetwork is
      (Stream : in out PipeWriteStream_Type);
    ---------------------------------------------------------------------------
 
+   procedure RollBack
+     (Stream : in out PipeReadStream_Type) is
+   begin
+
+      if Stream.StoredLast/=null then
+         Stream.StoredLast.NextRollBack:=Stream.RollBackFirst;
+      else
+         Stream.StoredFirst:=Stream.RollBackFirst;
+      end if;
+      Stream.StoredLast  := Stream.RollBackLast;
+
+      Stream.Position    := Stream.RollBackPosition;
+      Stream.RollBackFirst := null;
+      Stream.RollBackLast  := null;
+
+   end RollBack;
+   ---------------------------------------------------------------------------
+
+   procedure BeginRead
+     (Stream : in out PipeReadStream_Type) is
+   begin
+
+      Stream.RollBackPosition:=Stream.Position;
+
+   end BeginRead;
+   ---------------------------------------------------------------------------
+
+   procedure EndRead
+     (Stream : in out PipeReadStream_Type) is
+      Current : Block_Access;
+      Next    : Block_Access;
+   begin
+
+      Current:=Stream.RollBackFirst;
+      while Current/=null loop
+         Next:=Current.NextRollBack;
+         Free(Current);
+         Current:=Next;
+      end loop;
+
+   end EndRead;
+   ---------------------------------------------------------------------------
+
+   function Empty
+     (Stream : in PipeReadStream_Type)
+      return Boolean is
+   begin
+      return not (Stream.Buffer/=null and then not Stream.SourceBlockPipe.Empty);
+   end Empty;
+   ---------------------------------------------------------------------------
+
    procedure ReadBuffer
      (Stream     : in out PipeReadStream_Type;
       Buffer     : System.Address;
@@ -172,6 +316,43 @@ package body PipeNetwork is
       ReadAmount      : Streams.StreamSize_Type;
       Pointer         : Bytes.Byte_Access:=Bytes.AddressToByteAccess(Buffer);
 
+      procedure NextBlock is
+      begin
+
+         -- First check if there are stored blocks
+         if Stream.StoredFirst/=null then
+            Stream.Buffer:=Stream.StoredFirst;
+            Stream.StoredFirst:=Stream.StoredFirst.NextRollBack;
+            if Stream.StoredFirst=null then
+               Stream.StoredLast:=null;
+            end if;
+            return;
+         end if;
+
+         -- Get block from protected queue
+         Stream.SourceBlockPipe.Get(Stream.Buffer);
+         Stream.Position := 0;
+         if Stream.Buffer=null then
+            raise Streams.StreamOverflow;
+         end if;
+
+      end NextBlock;
+      ------------------------------------------------------------------------
+
+      procedure PushRollBack is
+      begin
+
+         Stream.Buffer.NextRollBack:=null;
+         if Stream.RollBackLast=null then
+            Stream.RollBackLast.NextRollBack:=Stream.Buffer;
+         else
+            Stream.RollBackFirst:=Stream.Buffer;
+         end if;
+         Stream.RollBackLast:=Stream.Buffer;
+
+      end PushRollBack;
+      ------------------------------------------------------------------------
+
    begin
 
       if BufferSize=0 then
@@ -180,11 +361,7 @@ package body PipeNetwork is
 
       -- Ensure Buffer is filled with something
       if Stream.Buffer=null then
-         Stream.SourceBlockPipe.Get(Stream.Buffer);
-         Stream.Position := 0;
-         if Stream.Buffer=null then
-            raise Streams.StreamOverflow;
-         end if;
+         NextBlock;
       end if;
 
       RemainingAmount:=BufferSize;
@@ -200,15 +377,9 @@ package body PipeNetwork is
          RemainingAmount:=RemainingAmount-ReadAmount;
          exit when RemainingAmount=0;
 
-         Bytes.Free(Stream.Buffer.Data);
-         Free(Stream.Buffer);
+         PushRollBack;
 
-         -- Get next buffer since last had not enough data for the request
-         Stream.SourceBlockPipe.Get(Stream.Buffer);
-         Stream.Position := 0;
-         if Stream.Buffer=null then
-            raise Streams.StreamOverflow;
-         end if;
+         NextBlock;
 
       end loop;
 
@@ -218,7 +389,6 @@ package body PipeNetwork is
    procedure Finalize
      (Stream : in out PipeReadStream_Type) is
    begin
-      Bytes.Free(Stream.Buffer.Data);
       Free(Stream.Buffer);
    end Finalize;
    ---------------------------------------------------------------------------
@@ -234,7 +404,6 @@ package body PipeNetwork is
    procedure Finalize
      (Stream : in out PipeWriteStream_Type) is
    begin
-      Bytes.Free(Stream.Buffer.Data);
       Free(Stream.Buffer);
    end Finalize;
    ---------------------------------------------------------------------------
@@ -252,6 +421,7 @@ package body PipeNetwork is
       Pointer         : Bytes.Byte_Access:=Bytes.AddressToByteAccess(Buffer);
 
    begin
+
       pragma Assert(Pointer/=null);
       loop
          -- Write as much as possible
@@ -271,6 +441,7 @@ package body PipeNetwork is
          Stream.Buffer.Data:=new Bytes.Byte_Array(0..BlockSize-1);
 
       end loop;
+
    end WriteBuffer;
    ---------------------------------------------------------------------------
 
@@ -279,10 +450,12 @@ package body PipeNetwork is
    type ServerConnection_Type is
       record
          BlockPipes    : BlockPipes_Access:=null;
-         ClientAddress : Unbounded_String;
+         ClientAddress : Unbounded_String; -- TODO: necessary?
+         ReceiveState  : StateCallBack_ClassAccess:=null;
+         ReadStream    : PipeReadStream_Type;
          Next          : ServerConnection_Access:=null;
          Last          : ServerConnection_Access:=null;
-         CallBack      : Network.ConnectionCallBack_ClassAccess:=null;
+         CallBack      : ConnectionCallBack_ClassAccess:=null;
       end record;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -303,7 +476,7 @@ package body PipeNetwork is
      (P : in out Server_Process);
    ---------------------------------------------------------------------------
 
-   type Server_Type is new Network.Server_Interface with
+   type Server_Type is new Server_Interface with
       record
          Address        : Unbounded_String;
          Connections    : ServerConnection_Access:=null;
@@ -328,7 +501,7 @@ package body PipeNetwork is
 
    type Client_Process is new GlobalLoop.Process_Type with
       record
-         Client : Client_Access:=null;
+         Client     : Client_Access:=null;
       end record;
 
    overriding
@@ -336,12 +509,13 @@ package body PipeNetwork is
      (P : in out Client_Process);
    ---------------------------------------------------------------------------
 
-   type Client_Type is new Network.Client_Interface with
+   type Client_Type is new Client_Interface with
       record
          BlockPipes   : BlockPipes_Access:=null;
          State        : ClientState_Enum:=ClientStateDisconnected;
          LoopProcess  : Client_Process;
-         ReceiveState : Network.StateCallBack_ClassAccess:=null;
+         ReceiveState : StateCallBack_ClassAccess:=null;
+         ReadStream   : aliased PipeReadStream_Type;
       end record;
 
    overriding
@@ -404,14 +578,19 @@ package body PipeNetwork is
          Server : Server_Access:=First;
 
       begin
+
          -- Find the server by address
-         while Server.Address/=Address loop
-            Server:=Server.Next;
-            if Server=null then
-               Success:=False;
-               return;
+         while Server/=null loop
+            if Server.Address=Address then
+               exit;
             end if;
+            Server:=Server.Next;
          end loop;
+
+         if Server=null then
+            Success:=False;
+            return;
+         end if;
 
          -- Register a half connection to the server
          declare
@@ -420,6 +599,8 @@ package body PipeNetwork is
             Connection.BlockPipes:=new BlockPipes_Type;
 
             Client.BlockPipes:=Connection.BlockPipes;
+            Connection.ReadStream.SourceBlockPipe:=Connection.BlockPipes.ToServer'Access;
+            Client.ReadStream.SourceBlockPipe:=Client.BlockPipes.FromServer'Access;
 
             Connection.Next:=Server.HalfConnections;
             if Server.HalfConnections/=null then
@@ -446,9 +627,9 @@ package body PipeNetwork is
 
          while Connection/=null loop
 
-            NextConnection:=Connection.Next;
-            Connection.Next:=Server.NewConnections;
-            Connection.Last:=null;
+            NextConnection  := Connection.Next;
+            Connection.Next := Server.NewConnections;
+            Connection.Last := null;
             if Server.NewConnections/=null then
                Server.NewConnections.Last:=Connection;
             end if;
@@ -470,8 +651,8 @@ package body PipeNetwork is
    procedure Process
      (P : in out Server_Process) is
 
-      use type Network.ServerCallBack_ClassAccess;
-      use type Network.ConnectionCallBack_ClassAccess;
+      use type ServerCallBack_ClassAccess;
+      use type ConnectionCallBack_ClassAccess;
 
       Server : Server_Access renames P.Server;
 
@@ -485,11 +666,12 @@ package body PipeNetwork is
       -- Process new connections
       if Server.NewConnections/=null then
          declare
-            Connection     : ServerConnection_Access:=null;
-            NextConnection : ServerConnection_Access:=null;
+            Connection     : ServerConnection_Access;
+            NextConnection : ServerConnection_Access;
          begin
             Connection:=Server.NewConnections;
             while Connection/=null loop
+
                NextConnection:=Connection.Next;
                Connection.Next:=Server.Connections;
                Connection.Last:=null;
@@ -497,13 +679,67 @@ package body PipeNetwork is
                   Server.Connections.Last:=Connection;
                end if;
                Server.Connections:=Connection;
+
+               -- Ask for connection callback
                Connection.CallBack:=Server.CallBack.NetworkAccept;
                pragma Assert(Connection.CallBack/=null);
+
+               -- Create and report WriteStream to CallBack+Get receive state
+               declare
+                  WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
+               begin
+                  WriteStream.DestBlockPipe:=Connection.BlockPipes.FromServer'Access;
+                  Connection.ReceiveState:=Connection.CallBack.NetworkConnect
+                    (Streams.WriteStreamRef.MakeRef(Streams.WriteStream_ClassAccess(WriteStream)));
+               end;
+
                Connection:=NextConnection;
             end loop;
             Server.NewConnections:=null;
          end;
       end if;
+
+      declare
+         Connection     : ServerConnection_Access;
+         NextConnection : ServerConnection_Access;
+      begin
+         -- TODO: Wonder if someone could try to free connections
+         --       from the callback while this runs!
+         --       Not possible, but a disconnect call should be added
+         Connection:=Server.Connections;
+         while Connection/=null loop
+            NextConnection:=Connection.Next;
+            if Connection.BlockPipes.Counter.Get=1 then
+
+               Release(Connection.BlockPipes);
+
+               if Connection.Last/=null then
+                  Connection.Last.Next:=Connection.Next;
+               else
+                  Server.Connections:=Connection.Next;
+               end if;
+               if Connection.Next/=null then
+                  Connection.Next.Last:=Connection.Last;
+               end if;
+               Free(Connection);
+
+            else
+
+               while not Empty(Connection.ReadStream) loop
+                  begin
+                     BeginRead(Connection.ReadStream);
+                     Connection.ReceiveState:=Connection.ReceiveState.NetworkReceive(Connection.ReadStream);
+                     EndRead(Connection.ReadStream);
+                  exception
+                     when Streams.StreamOverflow =>
+                        RollBack(Connection.ReadStream);
+                  end;
+               end loop;
+
+            end if;
+            Connection:=NextConnection;
+         end loop;
+      end;
       -- TODO : Process receive
    end Process;
    ---------------------------------------------------------------------------
@@ -511,40 +747,33 @@ package body PipeNetwork is
    procedure Finalize
      (Client : in out Client_Type) is
    begin
-      Put_Line("Client.Finalize");
+
       if Client.BlockPipes/=null then
-         Put_Line("Check BlockPipes");
-         declare
-            ReachedZero : Boolean;
-         begin
-            Client.BlockPipes.DualRef.Decrement(ReachedZero);
-            if ReachedZero then
-               Put_Line("Free BlockPipes");
-               Free(Client.BlockPipes);
-            end if;
-         end;
-         Client.BlockPipes:=null;
+         Release(Client.BlockPipes);
       end if;
-      Put_Line("Client.Finalize/");
+
    end Finalize;
    ---------------------------------------------------------------------------
 
    procedure Process
      (P : in out Client_Process) is
 
-      use type Network.ConnectionCallBack_ClassAccess;
-      use type Network.StateCallBack_ClassAccess;
-
       Client : Client_Access renames P.Client;
 
    begin
+
       pragma Assert(P.Client/=null);
       if Client.CallBack=null then
          return;
       end if;
       if Client.State=ClientStateJustConnected then
-         -- TODO: Create a Pipestream with correct link to the protected Pipe
-         Client.ReceiveState:=Client.CallBack.NetworkConnect(Streams.WriteStreamRef.MakeRef(new PipeWriteStream_Type));
+         declare
+            WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
+         begin
+            WriteStream.DestBlockPipe:=Client.BlockPipes.ToServer'Access;
+            Client.ReceiveState:=Client.CallBack.NetworkConnect
+              (Streams.WriteStreamRef.MakeRef(Streams.WriteStream_ClassAccess(WriteStream)));
+         end;
          pragma Assert(Client.ReceiveState/=null);
          Client.State:=ClientStateConnected;
       end if;
@@ -552,7 +781,18 @@ package body PipeNetwork is
          Client.CallBack.NetworkFailedConnect;
          Client.State:=ClientStateFailedConnect;
       end if;
-      -- TODO : Process receive
+
+      while not Empty(Client.ReadStream) loop
+         begin
+            Beginread(Client.ReadStream);
+            Client.ReceiveState:=Client.ReceiveState.NetworkReceive(Client.ReadStream);
+            EndRead(Client.ReadStream);
+         exception
+            when Streams.StreamOverflow =>
+               RollBack(Client.ReadStream);
+         end;
+      end loop;
+
    end Process;
    ---------------------------------------------------------------------------
 
@@ -561,33 +801,29 @@ package body PipeNetwork is
       Connection     : ServerConnection_Access;
       NextConnection : ServerConnection_Access;
    begin
-      Put_Line("Server.Finalize");
-      -- Ensure no more halfconnection and newconnection are there
+
+      -- Ensure no more halfconnection and newconnection are there by lifting them
+      -- to full connections
       Server.LoopProcess.Process;
+      -- Then free all connections
       Connection:=Server.Connections;
       while Connection/=null loop
          NextConnection:=Connection.Next;
-         declare
-            ReachedZero : Boolean;
-         begin
-            Connection.BlockPipes.DualRef.Decrement(ReachedZero);
-            if ReachedZero then
-               Free(Connection.BlockPipes);
-            end if;
-         end;
+         Release(Connection.BlockPipes);
          Free(Connection);
          Connection:=NextConnection;
       end loop;
       Server.Connections:=null;
+
       ServerList.Remove(Server'Unrestricted_Access);
-      Put_Line("Server.Finalize/");
+
    end Finalize;
    ---------------------------------------------------------------------------
 
    function ServerConstructor
      (GenConfig  : Config.Config_ClassAccess;
       ImplConfig : Config.Config_ClassAccess)
-      return Network.Server_Ref is
+      return Server_Ref is
 
       pragma Unreferenced(GenConfig);
 
@@ -603,8 +839,8 @@ package body PipeNetwork is
       Server.LoopProcess.Server:=Server;
       Server.LoopProcess.Enable;
       ServerList.Add(Server);
-      return R:Network.Server_Ref do
-         R.I:=Network.Server_ClassAccess(Server);
+      return R:Server_Ref do
+         R.I:=Server_ClassAccess(Server);
       end return;
 
    end ServerConstructor;
@@ -613,7 +849,7 @@ package body PipeNetwork is
    function ClientConstructor
      (GenConfig  : Config.Config_ClassAccess;
       ImplConfig : Config.Config_ClassAccess)
-      return Network.Client_Ref is
+      return Client_Ref is
 
       pragma Unreferenced(GenConfig);
 
@@ -634,8 +870,8 @@ package body PipeNetwork is
       else
          Client.State:=ClientStateJustConnected;
       end if;
-      return R:Network.Client_Ref do
-         R.I:=Network.Client_ClassAccess(Client);
+      return R:Client_Ref do
+         R.I:=Client_ClassAccess(Client);
       end return;
 
    end ClientConstructor;
@@ -660,8 +896,6 @@ package body PipeNetwork is
      (Configuration : in out Config.ConfigNode_Type;
       Address       : Unbounded_String) is
 
-      use type Network.Server_ClassAccess;
-
    begin
 
       Configuration.SetImplConfig
@@ -674,9 +908,9 @@ package body PipeNetwork is
 
    procedure Register is
    begin
-      Network.ServerImplementations.Register(ImplementationName,ServerConstructor'Access);
-      Network.ClientImplementations.Register(ImplementationName,ClientConstructor'Access);
+      ServerImplementations.Register(ImplementationName,ServerConstructor'Access);
+      ClientImplementations.Register(ImplementationName,ClientConstructor'Access);
    end Register;
    ---------------------------------------------------------------------------
 
-end PipeNetwork;
+end ClientServerNet.SMPipe;

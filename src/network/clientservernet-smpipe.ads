@@ -18,17 +18,33 @@
 -------------------------------------------------------------------------------
 
 -- Revision History
---   2.Aug 2012 Julian Schutsch
+--   18.Sep 2012 Julian Schutsch
 --     - Original version
 
-pragma Ada_2012;
-with ClientServerNet.Test;
-with ClientServerNet.SMPipe;
-with TestFrameWork;
+-- Reason for implementation
+--   This implementation can act as a replacement for real network connections
+--   in communication between tasks.
+--   It uses shared memory to create anonymous pipes between client and server.
 
-procedure NetTest is
-   Tests : constant TestFrameWork.Test_Array:=ClientServerNet.Test.Tests;
-begin
-   ClientServerNet.SMPipe.Register;
-   TestFrameWork.Run(Tests);
-end NetTest;
+-- Usage
+--   Every server created is registered globally with a unique address string by
+--   which clients can connect to the server.
+
+with Config;
+with Streams;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
+package ClientServerNet.SMPipe is
+
+   procedure Register;
+
+   procedure CreateServerConfig
+     (Configuration : in out Config.ConfigNode_Type;
+      Address       : Unbounded_String;
+      BufferSize    : Streams.StreamSize_Type:=1024);
+
+   procedure CreateClientConfig
+     (Configuration : in out Config.ConfigNode_Type;
+      Address       : Unbounded_String);
+
+end ClientServerNet.SMPipe;
