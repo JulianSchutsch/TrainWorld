@@ -21,14 +21,10 @@
 --   2.Aug 2012 Julian Schutsch
 --     - Original version
 
-pragma Warnings(off);
 pragma Ada_2012;
-
-with Network; use Network;
-with Ada.Text_IO; use Ada.Text_IO;
+with Netdemo;
 
 procedure NetTest is
-
 begin
-   null;
+   NetDemo.Run;
 end NetTest;

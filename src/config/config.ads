@@ -28,6 +28,8 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Config is
 
+   MissingConfig : Exception;
+
    type ConfigPath_Type is array (Integer range <>) of Unbounded_String;
 
    type Config_Type is tagged null record;

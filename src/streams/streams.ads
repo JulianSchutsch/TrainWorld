@@ -1,6 +1,5 @@
-with Ada.Finalization;
 with System;
-with Types; use Types;
+with RefCount;
 
 package Streams is
 
@@ -10,34 +9,30 @@ package Streams is
 
    type StreamSize_Type is new Natural;
 
-   type ReadStream_Type is abstract new Ada.Finalization.Controlled with null record;
-   type ReadStream_ClassAccess is access all ReadStream_Type'Class;
-
-   function Read
-     (ReadStream : ReadStream_Type)
-      return Integer32 is abstract;
+   type ReadStream_Interface is abstract new RefCount.Ref_Interface with null record;
+   type ReadStream_ClassAccess is access all ReadStream_Interface'Class;
 
    procedure ReadBuffer
-     (ReadStream : ReadStream_Type;
+     (ReadStream : in out ReadStream_Interface;
       Buffer     : System.Address;
       BufferSize : StreamSize_Type) is abstract;
-
-   function Size
-     (ReadStream : ReadStream_Type)
-      return StreamSize_Type is abstract;
    ---------------------------------------------------------------------------
 
-   type WriteStream_Type is abstract new Ada.Finalization.Controlled with null record;
-   type WriteStream_ClassAccess is access all WriteStream_Type'Class;
+   package ReadStreamRef is new RefCount.Ref(ReadStream_Interface,ReadStream_ClassAccess);
 
-   procedure Write
-     (WriteStream : WriteStream_Type;
-      Int         : Integer32) is abstract;
+   subtype ReadStream_Ref is ReadStreamRef.Ref_Type;
+
+   type WriteStream_Interface is abstract new RefCount.Ref_Interface with null record;
+   type WriteStream_ClassAccess is access all WriteStream_Interface'Class;
 
    procedure WriteBuffer
-     (WriteStream : WriteStream_Type;
+     (WriteStream : in out WriteStream_Interface;
       Buffer      : System.Address;
       BufferSize  : StreamSize_Type) is abstract;
    ---------------------------------------------------------------------------
+
+   package WriteStreamRef is new RefCount.Ref(WriteStream_Interface,WriteStream_ClassAccess);
+
+   subtype WriteStream_Ref is WriteStreamRef.Ref_Type;
 
 end Streams;

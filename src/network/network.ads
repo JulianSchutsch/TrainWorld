@@ -19,18 +19,27 @@ package Network is
 
    procedure NetworkDisconnect
      (T : in out ConnectionCallBack_Interface) is abstract;
+
+   procedure NetworkFailedConnect
+     (T : in out ConnectionCallBack_Interface) is abstract;
+
    function NetworkConnect
      (T      : in out ConnectionCallBack_Interface;
-      Stream : Streams.WriteStream_ClassAccess)
-      return StateCalLBack_ClassAccess is abstract;
+      Stream : Streams.WriteStream_Ref)
+      return StateCallBack_ClassAccess is abstract;
 
    type ServerCallBack_Interface is interface;
+   type ServerCallBack_ClassAccess is access all ServerCalLBack_Interface'Class;
 
    function NetworkAccept
      (T : in out ServerCallBack_Interface)
       return ConnectionCallBack_ClassAccess is abstract;
 
-   type Server_Interface is new RefCount.Ref_Interface with null record;
+   type Server_Interface is new RefCount.Ref_Interface with
+      record
+         CallBack : ServerCallBack_ClassAccess;
+      end record;
+
    type Server_ClassAccess is access all Server_Interface'Class;
 
    package ServerRef is new RefCount.Ref(Server_Interface,Server_ClassAccess);
@@ -38,9 +47,9 @@ package Network is
 
    type Client_Interface is new RefCount.Ref_Interface with
       record
-         StreamOut : Streams.WriteStream_ClassAccess;
-         StreamIn  : Streams.ReadStream_ClassAccess;
+         CallBack : ConnectionCallBack_ClassAccess:=null;
       end record;
+
    type Client_ClassAccess is access all Client_Interface'Class;
 
    package ClientRef is new RefCount.Ref(Client_Interface,Client_ClassAccess);

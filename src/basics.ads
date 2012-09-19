@@ -4,6 +4,8 @@ with Ada.Finalization;
 
 package Basics is
 
+   type UnboundedString_Array is array(Integer range <>) of Unbounded_String;
+
    type C_Type is new Ada.Finalization.Controlled with null record;
    type C_ClassAccess is access all C_Type'Class;
 

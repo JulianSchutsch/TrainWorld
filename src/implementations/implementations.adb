@@ -29,9 +29,13 @@ package body Implementations is
          if List.First=List_Pack.No_Element then
             raise ImplementationNotFound;
          end if;
-         return List_Pack.Element(List.First).Constructor
-           (ConfigNode.GetConfig,
-            ConfigNode.GetImplConfig(Implementation));
+         declare
+            First : constant List_Entry:=List_Pack.Element(List.First);
+         begin
+            return First.Constructor
+              (ConfigNode.GetConfig,
+               ConfigNode.GetImplConfig(First.Name));
+         end;
       end if;
 
       Cursor:=List.First;

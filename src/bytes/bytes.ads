@@ -39,11 +39,10 @@ package Bytes is
    type Byte_Type is mod 2**8;
    type Byte_Access is access all Byte_Type;
    type Byte_Array is array(Integer range <>) of aliased Byte_Type;
+   type Byte_ArrayAccess is access all Byte_Array;
    pragma Convention(C,Byte_Array);
 
    type LittleEndianCardinal32_Access is access all Endianess.LittleEndianCardinal32;
-
-   type Byte_Array_Access is access all Byte_Array;
 
    function AddressToIntAccess is new Ada.Unchecked_Conversion
      (Source => System.Address,
@@ -59,7 +58,7 @@ package Bytes is
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => Byte_Array,
-      Name   => Byte_Array_Access);
+      Name   => Byte_ArrayAccess);
 
    function "-"
      (Left  : Byte_Access;
