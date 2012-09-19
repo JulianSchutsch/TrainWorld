@@ -1,0 +1,22 @@
+with "core";
+with "config";
+with "switches";
+
+project Network is
+
+  Dir:=Network'Project_Dir & "/";
+  Linker_Switches:=();
+
+  Sources:=
+     (Dir & "../src/network");
+
+   Languages:=("Ada");
+
+   package Compiler is
+      for Default_Switches("Ada") use Switches.Compiler_Switches;
+   end Compiler;
+
+   for Source_Dirs use Sources;
+   for Languages use Languages;
+
+end Network;
