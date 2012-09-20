@@ -1,6 +1,63 @@
 with Ada.Unchecked_Deallocation;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body ProtectedBasics is
+
+   protected body PollingBarrier_Type is
+
+      procedure SetMemberCount
+        (Count : Natural) is
+      begin
+         MemberCount := Count;
+      end SetMemberCount;
+      ------------------------------------------------------------------------
+
+      function GetMemberCount
+        return Integer is
+      begin
+         return MemberCount;
+      end GetMemberCount;
+      ------------------------------------------------------------------------
+
+      procedure EnterBarrier is
+      begin
+
+         BarrierCount:=BarrierCount+1;
+
+         Put_Line("BarrierCount:"&Integer'Image(BarrierCount));
+         Put_Line("BarrierRewindMax:"&Integer'Image(BarrierRewindMax));
+         Put_Line("BarrierRewind:"&Integer'Image(BarrierRewind));
+         if BarrierCount+2*BarrierRewindMax-BarrierRewind>MemberCount then
+            raise TooManyBarrierEnters;
+         end if;
+
+         if BarrierCount=MemberCount then
+            BarrierRewind    := BarrierCount;
+            BarrierRewindMax := BarrierRewind;
+            BarrierCount     := 0;
+            BarrierMode      := BarrierModeCheck;
+         end if;
+      end EnterBarrier;
+      ------------------------------------------------------------------------
+
+      procedure CheckBarrier
+        (Success : out Boolean) is
+      begin
+         Success := BarrierMode=BarrierModeCheck;
+         if BarrierRewind=0 then
+            raise TooManyBarrierChecks;
+         end if;
+         if Success then
+            BarrierRewind := BarrierRewind-1;
+            if BarrierRewind=0 then
+               BarrierMode      := BarrierModeEnter;
+               BarrierRewindMax := 0;
+            end if;
+         end if;
+      end CheckBarrier;
+
+   end PollingBarrier_Type;
+   ---------------------------------------------------------------------------
 
    protected body Counter_Type is
 

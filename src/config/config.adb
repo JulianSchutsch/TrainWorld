@@ -249,7 +249,6 @@ package body Config is
       declare
          n : constant ImplConfig_Access:=new ImplConfig_Type;
       begin
-         Put_Line("Insert Impl Config:"&To_String(Implementation));
          n.Next                := ConfigNode.ImplConfig;
          n.Implementation      := Implementation;
          n.Config              := Config;

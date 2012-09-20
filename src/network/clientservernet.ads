@@ -26,6 +26,7 @@ pragma Ada_2012;
 with Streams;
 with RefCount;
 with Implementations;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package ClientServerNet is
 
@@ -55,7 +56,8 @@ package ClientServerNet is
    type ServerCallBack_ClassAccess is access all ServerCalLBack_Interface'Class;
 
    function NetworkAccept
-     (T : in out ServerCallBack_Interface)
+     (T             : in out ServerCallBack_Interface;
+      ClientAddress : Unbounded_String)
       return ConnectionCallBack_ClassAccess is abstract;
 
    type Server_Interface is new RefCount.Ref_Interface with

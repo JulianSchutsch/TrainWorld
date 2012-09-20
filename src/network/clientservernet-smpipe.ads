@@ -32,7 +32,6 @@
 
 with Config;
 with Streams;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package ClientServerNet.SMPipe is
 
@@ -45,6 +44,7 @@ package ClientServerNet.SMPipe is
 
    procedure CreateClientConfig
      (Configuration : in out Config.ConfigNode_Type;
-      Address       : Unbounded_String);
+      ClientAddress : Unbounded_String;
+      ServerAddress : Unbounded_String);
 
 end ClientServerNet.SMPipe;

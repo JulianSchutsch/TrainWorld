@@ -68,6 +68,7 @@ with Basics; use Basics;
 with GlobalLoop;
 with ProtectedBasics;
 with Ada.Finalization;
+--with Ada.Text_IO; use Ada.Text_IO;
 
 package body ClientServerNet.SMPipe is
 
@@ -119,7 +120,8 @@ package body ClientServerNet.SMPipe is
 
    type Client_Config is new Config.Config_Type with
       record
-         Address : Unbounded_String;
+         ClientAddress : Unbounded_String;
+         ServerAddress : Unbounded_String;
       end record;
    type Client_ConfigAccess is access all Client_Config;
    ---------------------------------------------------------------------------
@@ -450,7 +452,7 @@ package body ClientServerNet.SMPipe is
    type ServerConnection_Type is
       record
          BlockPipes    : BlockPipes_Access:=null;
-         ClientAddress : Unbounded_String; -- TODO: necessary?
+         ClientAddress : Unbounded_String;
          ReceiveState  : StateCallBack_ClassAccess:=null;
          ReadStream    : PipeReadStream_Type;
          Next          : ServerConnection_Access:=null;
@@ -530,9 +532,10 @@ package body ClientServerNet.SMPipe is
       procedure Remove
         (Server : Server_Access);
       procedure Connect
-        (Client  : Client_Access;
-         Address : Unbounded_String;
-         Success : out Boolean);
+        (Client        : Client_Access;
+         ClientAddress : Unbounded_String;
+         ServerAddress : Unbounded_String;
+         Success       : out Boolean);
       procedure ProcessConnect
         (Server : Server_Access);
 
@@ -571,9 +574,10 @@ package body ClientServerNet.SMPipe is
 
       -- Called only by clients!
       procedure Connect
-        (Client  : Client_Access;
-         Address : Unbounded_String;
-         Success : out Boolean) is
+        (Client        : Client_Access;
+         ClientAddress : Unbounded_String;
+         ServerAddress : Unbounded_String;
+         Success       : out Boolean) is
 
          Server : Server_Access:=First;
 
@@ -581,7 +585,7 @@ package body ClientServerNet.SMPipe is
 
          -- Find the server by address
          while Server/=null loop
-            if Server.Address=Address then
+            if Server.Address=ServerAddress then
                exit;
             end if;
             Server:=Server.Next;
@@ -596,7 +600,9 @@ package body ClientServerNet.SMPipe is
          declare
             Connection : constant ServerConnection_Access:=new ServerConnection_Type;
          begin
+
             Connection.BlockPipes:=new BlockPipes_Type;
+            Connection.ClientAddress:=ClientAddress;
 
             Client.BlockPipes:=Connection.BlockPipes;
             Connection.ReadStream.SourceBlockPipe:=Connection.BlockPipes.ToServer'Access;
@@ -681,7 +687,7 @@ package body ClientServerNet.SMPipe is
                Server.Connections:=Connection;
 
                -- Ask for connection callback
-               Connection.CallBack:=Server.CallBack.NetworkAccept;
+               Connection.CallBack:=Server.CallBack.NetworkAccept(Connection.ClientAddress);
                pragma Assert(Connection.CallBack/=null);
 
                -- Create and report WriteStream to CallBack+Get receive state
@@ -710,6 +716,8 @@ package body ClientServerNet.SMPipe is
          while Connection/=null loop
             NextConnection:=Connection.Next;
             if Connection.BlockPipes.Counter.Get=1 then
+
+               Connection.CallBack.NetworkDisconnect;
 
                Release(Connection.BlockPipes);
 
@@ -782,6 +790,15 @@ package body ClientServerNet.SMPipe is
          Client.State:=ClientStateFailedConnect;
       end if;
 
+      if Client.BlockPipes=null then
+         return;
+      end if;
+
+      if Client.BlockPipes.Counter.Get=1 then
+         Client.CallBack.NetworkDisconnect;
+         Release(Client.BlockPipes);
+      end if;
+
       while not Empty(Client.ReadStream) loop
          begin
             Beginread(Client.ReadStream);
@@ -809,7 +826,10 @@ package body ClientServerNet.SMPipe is
       Connection:=Server.Connections;
       while Connection/=null loop
          NextConnection:=Connection.Next;
-         Release(Connection.BlockPipes);
+         if Connection.BlockPipes/=null then
+            Connection.CallBack.NetworkDisconnect;
+            Release(Connection.BlockPipes);
+         end if;
          Free(Connection);
          Connection:=NextConnection;
       end loop;
@@ -864,7 +884,11 @@ package body ClientServerNet.SMPipe is
       end if;
       Client.LoopProcess.Client:=Client;
       Client.LoopProcess.Enable;
-      ServerList.Connect(Client,IConfig.Address,Success);
+      ServerList.Connect
+        (Client        => Client,
+         ClientAddress => IConfig.ClientAddress,
+         ServerAddress => IConfig.ServerAddress,
+         Success       => Success);
       if not Success then
          Client.State:=ClientStateJustFailedConnect;
       else
@@ -894,14 +918,16 @@ package body ClientServerNet.SMPipe is
 
    procedure CreateClientConfig
      (Configuration : in out Config.ConfigNode_Type;
-      Address       : Unbounded_String) is
+      ClientAddress : Unbounded_String;
+      ServerAddress : Unbounded_String) is
 
    begin
 
       Configuration.SetImplConfig
         (ImplementationName,
          new Client_Config'(
-           Address => Address));
+           ClientAddress => ClientAddress,
+           ServerAddress => ServerAddress));
 
    end CreateClientConfig;
    ---------------------------------------------------------------------------
