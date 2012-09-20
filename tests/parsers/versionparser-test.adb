@@ -32,14 +32,16 @@ package body VersionParser.Test is
          DotCase       : array(1..Length-1) of DotCase_Enum:=(others => DotCase_Enum'First);
          Result        : Version_Type(1..Length);
 
-         function Increment(Index : Integer:=NumberCase'First)
-                            return Boolean;
+         function Increment
+           (Index : Integer:=NumberCase'First)
+            return Boolean;
 
-         function IncrementPos(Index : Integer)
-                               return Boolean is
+         function IncrementPos
+           (Index : Integer)
+            return Boolean is
          begin
 
-            pragma Assert(Index<DotCase'Last);
+            pragma Assert(Index<=DotCase'Last);
 
             if DotCase(Index)/=DotCase_Enum'Last then
                DotCase(Index):=DotCase_Enum'Succ(DotCase(Index));

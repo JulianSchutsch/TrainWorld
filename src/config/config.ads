@@ -101,8 +101,17 @@ package Config is
      (ConfigNode : in out ConfigNode_Type;
       Path       : ConfigPath_Type)
       return ConfigNode_Access
-   with  Post => (GetPath'Result=null) or
-     (GetPath'Result.GetName=Path(Path'Last));
+   with  Post =>
+     (GetPath'Result=null) or
+     (
+        (GetPath'Result/=null) and then
+        (
+           (Path'Length=0) or
+           (
+              (Path'Length/=0)and then GetPath'Result.GetName=Path(Path'Last)
+           )
+        )
+     );
 
    not overriding
    function CreatePath

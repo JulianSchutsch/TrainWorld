@@ -200,6 +200,8 @@ package body Config is
             p:=next;
          end loop;
 
+         ConfigNode.ChildNodes:=null;
+
       end;
 
    end Finalize;
