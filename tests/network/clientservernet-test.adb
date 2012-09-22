@@ -117,7 +117,7 @@ package body ClientServerNet.Test is
       Stream.ReadBuffer
         (Buffer     => Connection.ReceiveBuffer(Connection.ReceiveFilled)'Address,
          BufferSize => Streams.StreamSize_Type(ReadAmount));
-      if Random(Rnd)<0.5 then
+      if Random(Rnd)<0.1 then
          raise Streams.StreamOverflow;
       end if;
       Connection.ReceiveFilled:=Connection.ReceiveFilled+ReadAmount;

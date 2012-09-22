@@ -78,7 +78,7 @@ package body ClientServerNet.SMPipe is
       ClientStateFailedConnect,
       ClientStateDisconnected);
 
-   BlockSize          : constant:=1024;
+   BlockSize          : constant:=1024*256;
    ImplementationName : constant Unbounded_String:=U("Pipe");
 
    type Block_Type;
@@ -204,7 +204,6 @@ package body ClientServerNet.SMPipe is
          RollBackPosition : Streams.StreamSize_Type;
          StoredFirst      : Block_Access:=null;
          StoredLast       : Block_Access:=null;
-         DebugBuffer      : Block_Access:=null;
       end record;
 
    overriding
@@ -261,44 +260,8 @@ package body ClientServerNet.SMPipe is
      (Stream : in out PipeWriteStream_Type);
    ---------------------------------------------------------------------------
 
-   function CountRollBack
-     (Stream : PipeReadStream_Type)
-      return Natural is
-         p : Block_Access;
-         Count : Natural:=0;
-      begin
-         p:=Stream.RollBackFirst;
-         while p/=null loop
-            Count:=Count+1;
-            p:=p.NextRollBack;
-         end loop;
-         return Count;
-      end CountRollBack;
-   ------------------------------------------------------------------------
-
-   function CountStored
-     (Stream : PipeReadStream_Type)
-      return Natural is
-         p     : Block_Access;
-         Count : Natural:=0;
-      begin
-         p:=Stream.StoredFirst;
-         while p/=null loop
-            Count:=Count+1;
-            p:=p.NextRollBack;
-         end loop;
-         return Count;
-      end CountStored;
-      -------------------------------------------------------------------------
-
    procedure RollBack
      (Stream : in out PipeReadStream_Type) is
-
-      RollBackC1 : Natural;
-      RollBackC2 : Natural;
-      RolLBackC3 : Natural;
-      StoredC3   : Natural;
-      OldBuffer : constant Block_Access:=Stream.Buffer;
 
    begin
 
@@ -308,8 +271,6 @@ package body ClientServerNet.SMPipe is
 
       if Stream.Buffer/=null then
 
-         RollBackC1:=CountRollBack(Stream);
-
          Stream.Buffer.NextRollBack:=null;
          if Stream.RollBackLast/=null then
             Stream.RollBackLast.NextRollBack:=Stream.Buffer;
@@ -318,14 +279,10 @@ package body ClientServerNet.SMPipe is
          end if;
          Stream.RollBackLast:=Stream.Buffer;
 
-         pragma Assert(CountRollBack(Stream)=RollBackC1+1);
-
       end if;
 
       pragma Assert((Stream.RollBackFirst/=null and Stream.RollBackLast/=null)
                     or (Stream.RollBackFirst=null and Stream.RollBackLast=null));
-
-      RollBackC2:=CountRollBack(Stream);
 
       -- Extract first Buffer from RollBack
       Stream.Buffer:=Stream.RollBackFirst;
@@ -335,23 +292,10 @@ package body ClientServerNet.SMPipe is
          if Stream.RollBackFirst=null then
             Stream.RollBackLast:=null;
          end if;
-         pragma Assert(CountRollBack(Stream)=RollBackC2-1);
-      end if;
-
-      -- Big Assert
-      if OldBuffer/=null then
-         if Stream.RollBackFirst/=null then
-            pragma Assert(Stream.RollBackLast=OldBuffer);
-         else
-            pragma Assert(Stream.Buffer=OldBuffer);
-         end if;
       end if;
 
       pragma Assert((Stream.RollBackFirst/=null and Stream.RollBackLast/=null)
                     or (Stream.RollBackFirst=null and Stream.RollBackLast=null));
-
-      RollBackC3 := CountRollBack(Stream);
-      StoredC3   := CountStored(Stream);
 
       -- Move RollBacks to beginning of the Storage
       if Stream.RollBackLast/=null then
@@ -369,13 +313,7 @@ package body ClientServerNet.SMPipe is
       Stream.RollBackFirst := null;
       Stream.RollBackLast  := null;
 
-      pragma Assert(CountRollBack(Stream)=0);
-      pragma Assert(CountStored(Stream)=RollBackC3+StoredC3);
-
-      -- Set Position
-
       Stream.Position    := Stream.RollBackPosition;
-      pragma Assert(Stream.Buffer=Stream.DebugBuffer);
 
    end RollBack;
    ---------------------------------------------------------------------------
@@ -385,7 +323,6 @@ package body ClientServerNet.SMPipe is
    begin
 
       Stream.RollBackPosition:=Stream.Position;
-      Stream.DebugBuffer:=Stream.Buffer;
 
    end BeginRead;
    ---------------------------------------------------------------------------
@@ -409,7 +346,6 @@ package body ClientServerNet.SMPipe is
       end loop;
       Stream.RollBackFirst:=null;
       Stream.RollBackLast:=null;
-      pragma Assert(CountRollBack(Stream)=0);
 
    end EndRead;
    ---------------------------------------------------------------------------
@@ -444,26 +380,16 @@ package body ClientServerNet.SMPipe is
       ReadAmount      : Streams.StreamSize_Type;
       Pointer         : Bytes.Byte_Access:=Bytes.AddressToByteAccess(Buffer);
 
-      StoredD : Integer:=0;
-      RollBackD : Integer:=0;
-
       procedure NextBlock is
-         C:Natural;
       begin
 
          -- First check if there are stored blocks
          if Stream.StoredFirst/=null then
-            C:=CountStored(Stream);
             Stream.Buffer:=Stream.StoredFirst;
             Stream.StoredFirst:=Stream.StoredFirst.NextRollBack;
             if Stream.StoredFirst=null then
                Stream.StoredLast:=null;
             end if;
-            if Stream.DebugBuffer=null then
-               Stream.DebugBuffer:=Stream.Buffer;
-            end if;
-            pragma Assert(C-1=CountStored(Stream));
-            StoredD:=StoredD-1;
             return;
          end if;
 
@@ -472,20 +398,15 @@ package body ClientServerNet.SMPipe is
          if Stream.Buffer=null then
             raise Streams.StreamOverflow;
             end if;
-         if Stream.DebugBuffer=null then
-            Stream.DebugBuffer:=Stream.Buffer;
-         end if;
 
       end NextBlock;
       ------------------------------------------------------------------------
 
       procedure PushRollBack is
-         C: Natural;
       begin
          pragma Assert(Stream.Buffer/=null);
          pragma Assert((Stream.RollBackFirst/=null and Stream.RollBackLast/=null)
                        or (Stream.RollBackFirst=null and Stream.RollBackLast=null));
-         C:=CountRollBack(Stream);
 
          Stream.Buffer.NextRollBack:=null;
 
@@ -499,23 +420,14 @@ package body ClientServerNet.SMPipe is
 
          pragma Assert((Stream.RollBackFirst/=null and Stream.RollBackLast/=null)
                        or (Stream.RollBackFirst=null and Stream.RollBackLast=null));
-         pragma Assert(C+1=CountRollBack(Stream));
 
          Stream.Buffer:=null;
          Stream.Position:=0;
 
-         RollBackD:=RollBackD+1;
-
       end PushRollBack;
       ------------------------------------------------------------------------
 
-      StoredC : Natural;
-      RollBackC : Natural;
-
    begin
-
-      StoredC:=CountStored(Stream);
-      RollBackC:=CountRollBack(Stream);
 
       pragma Assert((Stream.RollBackFirst/=null and Stream.RollBackLast/=null)
                     or (Stream.RollBackFirst=null and Stream.RollBackLast=null));
@@ -554,9 +466,6 @@ package body ClientServerNet.SMPipe is
       if Stream.Position=Stream.Buffer.Amount then
          PushRollBack;
       end if;
-
-      pragma Assert(StoredC+StoredD=CountStored(Stream));
-      pragma Assert(RollBackC+RollBackD=CountRollBack(Stream));
 
    end ReadBuffer;
    ---------------------------------------------------------------------------
