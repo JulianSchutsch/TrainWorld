@@ -33,7 +33,7 @@
 with Config;
 with Streams;
 
-package ClientServerNet.SMPipe is
+package ClientServerStream.SMPipe is
 
    procedure Register;
 
@@ -47,4 +47,4 @@ package ClientServerNet.SMPipe is
       ClientAddress : Unbounded_String;
       ServerAddress : Unbounded_String);
 
-end ClientServerNet.SMPipe;
+end ClientServerStream.SMPipe;

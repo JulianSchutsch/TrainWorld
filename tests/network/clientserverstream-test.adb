@@ -1,7 +1,6 @@
 pragma Ada_2012;
 
-with ClientServerNet;
-with ClientServerNet.SMPipe;
+with ClientServerStream.SMPipe;
 with Config;
 with Streams;
 with GlobalLoop;
@@ -13,7 +12,7 @@ with Bytes;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Exceptions;
 
-package body ClientServerNet.Test is
+package body ClientServerStream.Test is
 
    Exc : Exception;
 
@@ -28,7 +27,7 @@ package body ClientServerNet.Test is
    type Connection_Type;
    type Connection_Access is access all Connection_Type;
 
-   type State_Type is new ClientServerNet.StateCallBack_Interface with
+   type State_Type is new StateCallBack_Interface with
       record
          Server     : ServerControl_Access := null;
          Connection : Connection_Access := null;
@@ -38,10 +37,10 @@ package body ClientServerNet.Test is
    function NetworkReceive
      (State  : in out State_Type;
       Stream : in out Streams.ReadStream_Interface'Class)
-      return ClientServerNet.StateCallBack_ClassAccess;
+      return StateCallBack_ClassAccess;
    ---------------------------------------------------------------------------
 
-   type Connection_Type is new ClientServerNet.ConnectionCallBack_Interface with
+   type Connection_Type is new ConnectionCallBack_Interface with
       record
          ClientAddress   : Integer;
          ServerAddress   : Integer; -- We set a -1 here if its a connection on the server's side
@@ -63,7 +62,7 @@ package body ClientServerNet.Test is
    function NetworkConnect
      (Connection : in out Connection_Type;
       Stream     : Streams.WriteStream_Ref)
-      return ClientServerNet.StateCallBack_ClassAccess;
+      return StateCallBack_ClassAccess;
 
    overriding
    procedure NetworkFailedConnect
@@ -74,7 +73,7 @@ package body ClientServerNet.Test is
       Name   => Connection_Access);
    ---------------------------------------------------------------------------
 
-   type ServerControl_Type is new ClientServerNet.ServerCallBack_Interface with
+   type ServerControl_Type is new ServerCallBack_Interface with
       record
          Connected        : Connected_Array:=(others => False);
          Supposed         : Connected_Array:=(others => False);
@@ -85,7 +84,7 @@ package body ClientServerNet.Test is
    function NetworkAccept
      (ServerControl : in out ServerControl_Type;
       ClientAddress : Unbounded_String)
-      return ClientServerNet.ConnectionCallBack_ClassAccess;
+      return ConnectionCallBack_ClassAccess;
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => ServerControl_Type,
@@ -96,7 +95,7 @@ package body ClientServerNet.Test is
    function NetworkReceive
      (State  : in out State_Type;
       Stream : in out Streams.ReadStream_Interface'Class)
-      return ClientServerNet.StateCallback_ClassAccess is
+      return StateCallback_ClassAccess is
 
       Connection : Connection_Access renames State.Connection;
 
@@ -129,7 +128,7 @@ package body ClientServerNet.Test is
    function NetworkConnect
      (Connection : in out Connection_Type;
       Stream     : Streams.WriteStream_Ref)
-      return ClientServerNet.StateCallBack_ClassAccess is
+      return StateCallBack_ClassAccess is
    begin
       if Connection.FailedConnect then
          ReportIssue("Connect after FailedConnect");
@@ -184,7 +183,7 @@ package body ClientServerNet.Test is
    function NetworkAccept
      (ServerControl : in out ServerControl_Type;
       ClientAddress : Unbounded_String)
-      return ClientServerNet.ConnectionCallBack_ClassAccess is
+      return ConnectionCallBack_ClassAccess is
 
       ClientInt  : constant Integer:=Integer'Value(To_String(ClientAddress));
       Connection : constant Connection_Access:=new Connection_Type;
@@ -201,8 +200,8 @@ package body ClientServerNet.Test is
    end NetworkAccept;
    ---------------------------------------------------------------------------
 
-   type Server_Array is array(Integer range <>) of ClientServerNet.Server_Ref;
-   type Client_Array is array(Integer range <>) of ClientServerNet.Client_Ref;
+   type Server_Array is array(Integer range <>) of Server_Ref;
+   type Client_Array is array(Integer range <>) of Client_Ref;
 
    type ServerControl_Array is array(Integer range <>) of ServerControl_Access;
    type Connection_Array is array(Integer range <>) of Connection_Access;
@@ -212,7 +211,7 @@ package body ClientServerNet.Test is
       return Config.ConfigNode_Type is
    begin
       return C:Config.ConfigNode_Type do
-         ClientServerNet.SMPipe.CreateServerConfig(C,U(Integer'Image(Address)));
+         ClientServerStream.SMPipe.CreateServerConfig(C,U(Integer'Image(Address)));
       end return;
    end CreateServerConfigSMPipe;
    ---------------------------------------------------------------------------
@@ -223,7 +222,7 @@ package body ClientServerNet.Test is
       return Config.ConfigNode_Type is
    begin
       return C:Config.ConfigNode_Type do
-         ClientServerNet.SMPipe.CreateClientConfig
+         ClientServerStream.SMPipe.CreateClientConfig
            (Configuration => C,
             ClientAddress => U(Integer'Image(ClientAddress)),
             ServerAddress => U(Integer'Image(ServerAddress)));
@@ -301,7 +300,7 @@ package body ClientServerNet.Test is
                   Server : constant Integer:=Random(RandomServer);
                begin
                   if Servers(Server).I=null then
-                     Servers(Server):=ClientServerNet.ServerImplementations.Utilize(CreateServerConfig(Server));
+                     Servers(Server):=ServerImplementations.Utilize(CreateServerConfig(Server));
                      ServerC(Server):=new ServerControl_Type;
                      Servers(Server).I.CallBack:=ServerCallBack_ClassAccess(ServerC(Server));
                   else
@@ -327,7 +326,7 @@ package body ClientServerNet.Test is
 
                      CheckAddress:=Client;
 
-                     Clients(Client):=ClientServerNet.ClientImplementations.Utilize(CreateClientConfig(Client,Server));
+                     Clients(Client):=ClientImplementations.Utilize(CreateClientConfig(Client,Server));
                      ClientC(Client):=new Connection_Type;
                      Clients(Client).I.CallBack:=ConnectionCallBack_ClassAccess(ClientC(Client));
                      ClientC(Client).ServerAddress:=Server;
@@ -499,7 +498,7 @@ package body ClientServerNet.Test is
       begin
          Reset(RndGen);
          begin
-            Server:=ClientServerNet.ServerImplementations.Utilize(CreateServerConfig(0));
+            Server:=ServerImplementations.Utilize(CreateServerConfig(0));
             Server.I.CallBack:=ServerC'Unrestricted_Access;
             Barrier.Join(BarrierState);
             while Barrier.GetMemberCount/=2 loop
@@ -567,7 +566,7 @@ package body ClientServerNet.Test is
       while Barrier.GetMemberCount/=2 loop
          Delay Duration'Small;
       end loop;
-      Client:=ClientServerNet.ClientImplementations.Utilize(CreateClientConfig(1,0));
+      Client:=ClientImplementations.Utilize(CreateClientConfig(1,0));
       Client.I.CallBack:=ClientC'Unrestricted_Access;
       while not ClientC.Connected loop
          GlobalLoop.Process;
@@ -620,4 +619,4 @@ package body ClientServerNet.Test is
    end TransferMonteCarloSMPipe;
    ---------------------------------------------------------------------------
 
-end ClientServerNet.Test;
+end ClientServerStream.Test;

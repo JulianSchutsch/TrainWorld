@@ -1,7 +1,7 @@
 with TestFrameWork; use TestFrameWork;
 with Basics; use Basics;
 
-package ClientServerNet.Test is
+package ClientServerStream.Test is
 
    procedure ConnectionMonteCarloSMPipe;
    procedure TransferMonteCarloSMPipe;
@@ -11,4 +11,4 @@ package ClientServerNet.Test is
        Test => ConnectionMonteCarloSMPipe'Access),
       (Name => U("ClientServerNet.TransferMonteCarloSMPipe"),
        Test => TransferMonteCarloSMPipe'Access));
-end ClientServerNet.Test;
+end ClientServerStream.Test;

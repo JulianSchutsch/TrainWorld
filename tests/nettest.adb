@@ -22,13 +22,13 @@
 --     - Original version
 
 pragma Ada_2012;
-with ClientServerNet.Test;
-with ClientServerNet.SMPipe;
+with ClientServerStream.Test;
+with ClientServerStream.SMPipe;
 with TestFrameWork;
 
 procedure NetTest is
-   Tests : constant TestFrameWork.Test_Array:=ClientServerNet.Test.Tests;
+   Tests : constant TestFrameWork.Test_Array:=ClientServerStream.Test.Tests;
 begin
-   ClientServerNet.SMPipe.Register;
+   ClientServerStream.SMPipe.Register;
    TestFrameWork.Run(Tests);
 end NetTest;

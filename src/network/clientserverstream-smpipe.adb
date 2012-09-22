@@ -43,7 +43,7 @@
 --    the connection process can lead to unexpected exceptions since there is
 --    no direct reference between the server and the client involved.
 --
---    Server client communication
+--    Server client communication:
 --
 --    All communication is over a shared component called BlockPipes.
 --    There is one pipe for each direction in BlockPipes.
@@ -51,7 +51,7 @@
 --    blocks available which have been read, but must be read again due to
 --    a Streams.StreamOverflow exception.
 --
---    Server client disconnect
+--    Server client disconnect:
 --
 --    The shared component BlockPipes contains a protected counter therefore
 --    BlockPipes is reference counted.
@@ -69,7 +69,7 @@ with GlobalLoop;
 with ProtectedBasics;
 with Ada.Finalization;
 
-package body ClientServerNet.SMPipe is
+package body ClientServerStream.SMPipe is
 
    type ClientState_Enum is
      (ClientStateJustConnected,
@@ -1042,4 +1042,4 @@ package body ClientServerNet.SMPipe is
    end Register;
    ---------------------------------------------------------------------------
 
-end ClientServerNet.SMPipe;
+end ClientServerStream.SMPipe;

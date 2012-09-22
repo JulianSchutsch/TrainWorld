@@ -21,6 +21,71 @@
 --   18.Sep 2012 Julian Schutsch
 --     - Original version
 
+-- Usage
+--   This package provides an interface to all implementations which provide
+--   dual direction stream connections in a client server architecture.
+--
+--   Before use the client must be associated with a connection callback by
+--   setting Client_Ref.I.CallBack and the server must be associated with
+--   a server callback using Server_Ref.I.CallBack.
+--
+--   Both the client and the server hook themselves to the GlobalLoop.
+--   GlobalLoop.Process must be called periodically.
+--
+--   Connection process:
+--
+--            Client                             Server
+--
+--      Initiate a connection           Bind to address and wait for
+--    immediately after creation         connections after creation
+--               |                                   |
+--    Call either NetworkConnect       On connection call NetworkAccept
+--     or NetworkFailedConnect        which returns a Connection-CallBack
+--    NetworkConnect must return                     |
+--           a state.                    Call NetworkConnection on the
+--                                     Connection-CallBack which returns
+--                                                a state
+--
+--
+--  Disconnect:
+--
+--     For both client and server call NetworkDisconnect of the Connection
+--     callback.
+--
+--  Sending data:
+--
+--     With a call to NetworkConnect a WriteStream_Ref is passed which can be
+--     used to send data at any time. Sending is Not required to be threadsafe.
+--     There must be no limit on the amount of data which can be send at the
+--     same time.
+--
+--  Receiving data:
+--
+--     Each connection is in a given state (StateCallBack_Interface).
+--     Once data has been received the NetworkReceive method of the
+--     current state is called.
+--     One can read data from the passed ReadStream_Interface without
+--     checking for presence of data in the stream, but one must follow within
+--     a single NetworkReceive call:
+--
+--       1. Read all data first
+--       2. Apply changes according to this data
+--       3. Return new state
+--
+--     If not enough data is available in the stream, a StreamOverflow
+--     exception will be thrown which is catched by network implementation
+--     which must perform a rollback.
+--     Once new data is received the same state is called with the same
+--     position in the ReadStream as before.
+--
+--     The new state retured by NetworkReceive can be used to create chains
+--     of states.
+--
+--  Failures:
+--
+--    If a connection failed (NetworkFailedConnect) ther must be no further
+--    callbacks from the network implementation for this connection.
+
 pragma Ada_2012;
 
 with Streams;
@@ -28,7 +93,7 @@ with RefCount;
 with Implementations;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-package ClientServerNet is
+package ClientServerStream is
 
    type StateCallBack_Interface is interface;
    type StateCallBack_ClassAccess is access all StateCallBack_Interface'Class;
@@ -85,4 +150,4 @@ package ClientServerNet is
 
    procedure X;
 
-end ClientServerNet;
+end ClientServerStream;

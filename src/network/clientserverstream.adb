@@ -17,11 +17,11 @@
 --   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------------
 
-package body ClientServerNet is
+package body ClientServerStream is
 
    procedure X is
    begin
       null;
    end X;
 
-end ClientServerNet;
+end ClientServerStream;
