@@ -144,8 +144,8 @@ begin
    Put_Line("Compile Vertex Shader:"&To_String(VertexShader.GetCompileLog));
 
    Program.Create
-     ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeRef(VertexShader'Unrestricted_Access),
-       OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeRef(FragmentShader'Unrestricted_Access)));
+     ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeConstRef(VertexShader'Unrestricted_Access),
+       OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeConstRef(FragmentShader'Unrestricted_Access)));
    Put_Line("Link:"&To_String(Program.GetLinkLog));
    Program.BindAttribLocation(0,"in_Position");
    Program.BindAttribLocation(1,"in_Color");

@@ -116,12 +116,13 @@ package body VersionParser is
             return;
          end if;
 
+         if Result'Length=1 then
+            return;
+         end if;
          pragma Assert(Current='.');
          Consume;
 
-         if Result'Length/=1 then
-            ReadNumber(Result(Result'First+1..Result'Last));
-         end if;
+         ReadNumber(Result(Result'First+1..Result'Last));
 
       end ReadNumber;
 
@@ -130,7 +131,9 @@ package body VersionParser is
       ParseNumber;
       Pos:=StringData'First;
       return Result:Version_Type(1..Depth) do
-         ReadNumber(Result);
+         if Depth/=0 then
+            ReadNumber(Result);
+         end if;
       end return;
 
    end Parse;
