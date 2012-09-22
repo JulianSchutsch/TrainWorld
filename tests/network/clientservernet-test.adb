@@ -8,7 +8,10 @@ with GlobalLoop;
 with Ada.Numerics.Discrete_Random;
 with Ada.Numerics.Float_Random;
 with Ada.Unchecked_Deallocation;
---with Ada.Text_IO; use Ada.Text_IO;
+with ProtectedBasics;
+with Bytes;
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Exceptions;
 
 package body ClientServerNet.Test is
 
@@ -22,17 +25,35 @@ package body ClientServerNet.Test is
    type ServerControl_Type;
    type ServerControl_Access is access all ServerControl_Type;
 
+   type Connection_Type;
+   type Connection_Access is access all Connection_Type;
+
+   type State_Type is new ClientServerNet.StateCallBack_Interface with
+      record
+         Server     : ServerControl_Access := null;
+         Connection : Connection_Access := null;
+      end record;
+
+   overriding
+   function NetworkReceive
+     (State  : in out State_Type;
+      Stream : in out Streams.ReadStream_Interface'Class)
+      return ClientServerNet.StateCallBack_ClassAccess;
+   ---------------------------------------------------------------------------
+
    type Connection_Type is new ClientServerNet.ConnectionCallBack_Interface with
       record
-         ClientAddress : Integer;
-         ServerAddress : Integer; -- We set a -1 here if its a connection on the server's side
-         Server        : ServerControl_Access:=null;
-         WriteStream   : Streams.WriteStream_Ref;
-         FailedConnect : Boolean:=False;
-         Connected     : Boolean:=False;
-         Disconnected  : Boolean:=False;
+         ClientAddress   : Integer;
+         ServerAddress   : Integer; -- We set a -1 here if its a connection on the server's side
+         Server          : ServerControl_Access:=null;
+         WriteStream     : Streams.WriteStream_Ref;
+         FailedConnect   : Boolean:=False;
+         Connected       : Boolean:=False;
+         Disconnected    : Boolean:=False;
+         State           : State_Type;
+         ReceiveBuffer   : Bytes.Byte_ArrayAccess:=null;
+         ReceiveFilled   : Natural:=0;
       end record;
-   type Connection_Access is access all Connection_Type;
 
    overriding
    procedure NetworkDisconnect
@@ -55,8 +76,9 @@ package body ClientServerNet.Test is
 
    type ServerControl_Type is new ClientServerNet.ServerCallBack_Interface with
       record
-         Connected : Connected_Array:=(others => False);
-         Supposed  : Connected_Array:=(others => False);
+         Connected        : Connected_Array:=(others => False);
+         Supposed         : Connected_Array:=(others => False);
+         LatestConnection : Connection_Access:=null;
       end record;
 
    overriding
@@ -69,6 +91,41 @@ package body ClientServerNet.Test is
      (Object => ServerControl_Type,
       Name   => ServerControl_Access);
 
+   ---------------------------------------------------------------------------
+
+   function NetworkReceive
+     (State  : in out State_Type;
+      Stream : in out Streams.ReadStream_Interface'Class)
+      return ClientServerNet.StateCallback_ClassAccess is
+
+      Connection : Connection_Access renames State.Connection;
+
+      Rnd        : Ada.Numerics.Float_Random.Generator;
+      MaxAmount  : constant Natural:=Connection.ReceiveBuffer'Last-Connection.ReceiveFilled+1;
+      ReadAmount : Natural;
+
+      use Ada.Numerics.Float_Random;
+
+   begin
+
+      Reset(Rnd);
+      ReadAmount:=Integer(Float'Rounding(Random(Rnd)*Float(MaxAmount)));
+      if ReadAmount=0 then
+         return State'Unrestricted_Access;
+      end if;
+
+      Put_Line("Task:"&Integer'Image(Connection.ReceiveFilled)&"->"&Integer'Image(Connection.ReceiveBuffer'Last+1));
+      Stream.ReadBuffer
+        (Buffer     => Connection.ReceiveBuffer(Connection.ReceiveFilled)'Address,
+         BufferSize => Streams.StreamSize_Type(ReadAmount));
+      if Random(Rnd)<0.5 then
+         Put_Line("Cause overflow");
+         raise Streams.StreamOverflow;
+      end if;
+      Connection.ReceiveFilled:=Connection.ReceiveFilled+ReadAmount;
+      return State'Unrestricted_Access;
+
+   end NetworkReceive;
    ---------------------------------------------------------------------------
 
    function NetworkConnect
@@ -87,7 +144,13 @@ package body ClientServerNet.Test is
       end if;
       Connection.WriteStream:=Stream;
       Connection.Connected:=True;
-      return null; -- TODO:Incorrect! Return default state instead.
+      Connection.State.Connection:=Connection'Unrestricted_Access;
+      Connection.State.Server:=Connection.Server;
+      if Connection.Server/=null then
+         Connection.Server.LatestConnection:=Connection'Unrestricted_Access;
+      end if;
+
+      return Connection.State'Unrestricted_Access;
    end NetworkConnect;
    ---------------------------------------------------------------------------
 
@@ -370,33 +433,186 @@ package body ClientServerNet.Test is
    end ConnectionMonteCarlo;
    ---------------------------------------------------------------------------
 
+   pragma Warnings(off);
    procedure TransferMonteCarlo
      (CreateClientConfig : CreateClientConfig_Access;
       CreateServerConfig : CreateServerConfig_Access) is
 
-      ServerActive : Boolean:=False;
+      use Ada.Numerics.Float_Random;
+      use type Streams.WriteStream_ClassAccess;
+
+      LoopCount     : constant:=1000;
+      MaxDataAmount : constant:=10000.0;
+
+      Barrier      : ProtectedBasics.PollingBarrier_Type;
+      RandomData   : Bytes.Byte_ArrayAccess;
+
+      procedure SendRandomData
+        (Stream : Streams.WriteStream_Ref) is
+         RndGen  : Ada.Numerics.Float_Random.Generator;
+      begin
+         Reset(RndGen);
+         declare
+            Remaining  : Integer:=RandomData'Length;
+            SendLength : Integer;
+            Position   : Integer:=RandomData'First;
+         begin
+            while Remaining/=0 loop
+               SendLength:= Integer(Float'Rounding(Random(RndGen)*Float(Remaining)));
+               Stream.I.WriteBuffer
+                 (Buffer     => RandomData(Position)'Address,
+                  BufferSize => Streams.StreamSize_Type(SendLength));
+               Remaining := Remaining-SendLength;
+               Position  := Position+SendLength;
+            end loop;
+         end;
+         Stream.I.Flush;
+      end SendRandomData;
+      ------------------------------------------------------------------------
+
+      procedure CreateReceiveBuffer
+        (Connection : Connection_Access) is
+      begin
+         Connection.ReceiveBuffer := new Bytes.Byte_Array(RandomData'Range);
+         Connection.ReceiveFilled := Connection.ReceiveBuffer'First;
+      end CreateReceiveBuffer;
+      ------------------------------------------------------------------------
+
+      procedure CompareReceiveBuffer
+        (Connection : Connection_Access) is
+         use type Bytes.Byte_Type;
+      begin
+         for i in RandomData'Range loop
+            if Connection.ReceiveBuffer(i)/=RandomData(i) then
+               ReportIssue("Difference at "&Integer'Image(i));
+            end if;
+         end loop;
+      end CompareReceiveBuffer;
+      ------------------------------------------------------------------------
 
       task ServerTask;
       task body ServerTask is
          Server  : Server_Ref;
          ServerC : aliased ServerControl_Type;
+         RndGen  : Ada.Numerics.Float_Random.Generator;
+         Success : Boolean;
+         BarrierState : ProtectedBasics.BarrierState_Enum;
+         WriteStream  : Streams.WriteStream_Ref;
       begin
-         Server:=ClientServerNet.ServerImplementations.Utilize(CreateServerConfig(0));
-         Server.I.CallBack:=ServerC'Unrestricted_Access;
-         ServerActive:=True;
-         -- Transfer test
+         Reset(RndGen);
+         Put_Line("ServerTask");
+         begin
+            Server:=ClientServerNet.ServerImplementations.Utilize(CreateServerConfig(0));
+            Server.I.CallBack:=ServerC'Unrestricted_Access;
+            Barrier.Join(BarrierState);
+            while Barrier.GetMemberCount/=2 loop
+               Delay Duration'Small;
+            end loop;
+            while ServerC.LatestConnection=null loop
+               GlobalLoop.Process;
+               Delay Duration'Small;
+            end loop;
+            WriteStream:=ServerC.LatestConnection.WriteStream;
+
+            pragma Assert(WriteStream.I/=null);
+
+            for Loops in 1..LoopCount loop
+
+               -- Generate large chunk of data
+               declare
+                  Length : constant Integer:=Integer(Float'Rounding(Random(RndGen)*MaxDataAmount));
+               begin
+                  RandomData:=new Bytes.Byte_Array(0..Length-1);
+                  for i in RandomData'Range loop
+                     RandomData(i) := Bytes.Byte_Type(Float'Rounding(Random(RndGen)*255.0));
+                  end loop;
+                  Put_Line("Random Block of Length:"&Integer'Image(Length));
+               end;
+               loop
+                  Barrier.TestBarrier(BarrierState,Success);
+                  exit when Success;
+               end loop;
+
+               CreateReceiveBuffer(ServerC.LatestConnection);
+               -- Send large chunk of data in random large pieces
+               SendRandomData(WriteStream);
+
+               -- Receive large chunk of data
+--               while ServerC.LatestConnection.ReceiveFilled<=ServerC.LatestConnection.ReceiveBuffer'Last loop
+--                  Put_Line("SR:"&Integer'Image(ServerC.LatestConnection.ReceiveFilled)&":"&Integer'Image(serverC.LatestConnection.ReceiveBuffer'Last+1));
+--                  GlobalLoop.Process;
+--               end loop;
+--               CompareReceiveBuffer(ServerC.LatestConnection);
+               Put_Line("SERVERBARRIER******"&Integer'Image(ServerC.LatestConnection.ReceiveFilled));
+               -- Barrier
+               loop
+                  Barrier.TestBarrier(BarrierState,Success);
+                  exit when Success;
+               end loop;
+               Bytes.Free(ServerC.LatestConnection.ReceiveBuffer);
+               Bytes.Free(RandomData);
+            end loop;
+         exception
+            when E:others =>
+               Put_Line("SERVEREXCEPTION");
+               Put_Line(Ada.Exceptions.Exception_Message(E));
+         end;
+         Put_Line("ENDOFSERVER");
          Server.SetNull;
       end ServerTask;
 
-      Client  : Client_Ref;
-      ClientC : aliased Connection_Type;
+      Client       : Client_Ref;
+      ClientC      : aliased Connection_Type;
+      Success      : Boolean;
+      BarrierState : ProtectedBasics.BarrierState_Enum;
+      WriteStream  : Streams.WriteStream_Ref;
 
    begin
-      while not ServerActive loop
+      Barrier.Join(BarrierState);
+      while Barrier.GetMemberCount/=2 loop
+         Delay Duration'Small;
+      end loop;
+      Put_Line("Create Client");
+      Client:=ClientServerNet.ClientImplementations.Utilize(CreateClientConfig(1,0));
+      Client.I.CallBack:=ClientC'Unrestricted_Access;
+      Put_Line("Wait for connection to server");
+      while not ClientC.Connected loop
+         GlobalLoop.Process;
          delay Duration'Small;
       end loop;
-      Client:=ClientServerNet.ClientImplementations.Utilize(CreateClientConfig(-1,0));
-      Client.I.CallBack:=ClientC'Unrestricted_Access;
+      WriteStream:=ClientC.WriteStream;
+      pragma Assert(WriteStream.I/=null);
+      for Loops in 1..LoopCount loop
+         -- Wait for random data
+         loop
+            Barrier.TestBarrier(BarrierState,Success);
+            exit when Success;
+         end loop;
+
+         Put_Line("Client.CreateReceiveBuffer");
+
+         CreateReceiveBuffer(ClientC'Unrestricted_Access);
+
+--         SendRandomData(WriteStream);
+
+         while ClientC.ReceiveFilled<=ClientC.ReceiveBuffer'Last loop
+--            Put_Line("CL"&Integer'Image(ClientC.ReceiveFilled)&"::"&Integer'Image(ClientC.ReceiveBuffer'Last+1));
+            GlobalLoop.Process;
+         end loop;
+         CompareReceiveBuffer(ClientC'Unrestricted_Access);
+         Put_Line("CLIENTBARRIER*****"&Integer'Image(ClientC.ReceiveFilled));
+
+         loop
+            Barrier.TestBarrier(BarrierState,Success);
+            exit when Success;
+         end loop;
+         Bytes.Free(ClientC.ReceiveBuffer);
+      end loop;
+      Put_Line("ENDOFCLIENT");
+   exception
+      when E:others =>
+         Put_Line("EXCEPTIONM");
+         Put_Line(Ada.Exceptions.Exception_Message(E));
    end TransferMonteCarlo;
 
    procedure ConnectionMonteCarloSMPipe is

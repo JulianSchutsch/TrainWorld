@@ -1,16 +1,9 @@
 with Ada.Unchecked_Deallocation;
-with Ada.Text_IO; use Ada.Text_IO;
+--with Ada.Text_IO; use Ada.Text_IO;
 
 package body ProtectedBasics is
 
    protected body PollingBarrier_Type is
-
-      procedure SetMemberCount
-        (Count : Natural) is
-      begin
-         MemberCount := Count;
-      end SetMemberCount;
-      ------------------------------------------------------------------------
 
       function GetMemberCount
         return Integer is
@@ -19,42 +12,62 @@ package body ProtectedBasics is
       end GetMemberCount;
       ------------------------------------------------------------------------
 
-      procedure EnterBarrier is
+      procedure Join
+        (State : in out BarrierState_Enum) is
       begin
-
-         BarrierCount:=BarrierCount+1;
-
-         Put_Line("BarrierCount:"&Integer'Image(BarrierCount));
-         Put_Line("BarrierRewindMax:"&Integer'Image(BarrierRewindMax));
-         Put_Line("BarrierRewind:"&Integer'Image(BarrierRewind));
-         if BarrierCount+2*BarrierRewindMax-BarrierRewind>MemberCount then
-            raise TooManyBarrierEnters;
-         end if;
-
-         if BarrierCount=MemberCount then
-            BarrierRewind    := BarrierCount;
-            BarrierRewindMax := BarrierRewind;
-            BarrierCount     := 0;
-            BarrierMode      := BarrierModeCheck;
-         end if;
-      end EnterBarrier;
+         State:=BarrierStateNull;
+         StateCounts(BarrierStateNull):=StateCounts(BarrierStateNull)+1;
+         MemberCount:=MemberCount+1;
+         pragma Assert(StateCounts(BarrierStateNull)+StateCounts(BarrierState1)+StateCounts(BarrierState2)=MemberCount);
+      end Join;
       ------------------------------------------------------------------------
 
-      procedure CheckBarrier
-        (Success : out Boolean) is
+      procedure Leave
+        (State : in out BarrierState_Enum) is
       begin
-         Success := BarrierMode=BarrierModeCheck;
-         if BarrierRewind=0 then
-            raise TooManyBarrierChecks;
+         StateCounts(State):=StateCounts(State)-1;
+         State:=BarrierStateInvalid;
+         MemberCount:=MemberCount-1;
+         pragma Assert(StateCounts(BarrierStateNull)+StateCounts(BarrierState1)+StateCounts(BarrierState2)=MemberCount);
+      end Leave;
+      ------------------------------------------------------------------------
+
+      procedure TestBarrier
+        (State : in out BarrierState_Enum;
+         Pass  : out Boolean) is
+      begin
+
+         pragma Assert(State/=BarrierStateInvalid);
+         pragma Assert(State=BarrierState1 or State=BarrierState2 or State=BarrierStateNull);
+         -- Is it necesary to add this asker to the current barrier?
+         if State=BarrierStateNull then
+            StateCounts(BarrierStateNull):=StateCounts(BarrierStateNull)-1;
+            State:=CurrentBarrier;
+            StateCounts(State):=StateCounts(State)+1;
          end if;
-         if Success then
-            BarrierRewind := BarrierRewind-1;
-            if BarrierRewind=0 then
-               BarrierMode      := BarrierModeEnter;
-               BarrierRewindMax := 0;
+
+         pragma Assert(CurrentBarrier=BarrierState1 or CurrentBarrier=BarrierState2);
+         -- Test if the current barrier is complete
+         if StateCounts(CurrentBarrier)=MemberCount then
+            if CurrentBarrier=BarrierState1 then
+               CurrentBarrier:=BarrierState2;
+            else
+               CurrentBarrier:=BarrierState1;
             end if;
          end if;
-      end CheckBarrier;
+
+         pragma Assert(State=BarrierState1 or State=BarrierState2);
+         -- Check if the barrier has been switched to pass/next
+         Pass:=State/=CurrentBarrier;
+         if Pass then
+            StateCounts(State):=StateCounts(State)-1;
+            State:=BarrierStateNull;
+            StateCounts(BarrierStateNull):=StateCounts(BarrierStateNull)+1;
+         end if;
+         pragma Assert(StateCounts(BarrierStateNull)+StateCounts(BarrierState1)+StateCounts(BarrierState2)=MemberCount);
+
+      end TestBarrier;
+      ------------------------------------------------------------------------
 
    end PollingBarrier_Type;
    ---------------------------------------------------------------------------
@@ -103,6 +116,8 @@ package body ProtectedBasics is
 
             if Last/=null then
                Last.Next:=NewEntry;
+            else
+               First:=NewEntry;
             end if;
             Last:=NewEntry;
 

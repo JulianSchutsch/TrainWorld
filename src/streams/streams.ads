@@ -31,6 +31,9 @@ package Streams is
       BufferSize  : StreamSize_Type) is abstract;
    ---------------------------------------------------------------------------
 
+   procedure Flush
+     (WriteStream : in out WriteStream_Interface) is abstract;
+
    package WriteStreamRef is new RefCount.Ref(WriteStream_Interface,WriteStream_ClassAccess);
 
    subtype WriteStream_Ref is WriteStreamRef.Ref_Type;

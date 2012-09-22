@@ -52,34 +52,34 @@ package ProtectedBasics is
 
    end Queue;
 
-   type BarrierMode_Enum is
-     (BarrierModeEnter,
-      BarrierModeCheck);
+   type BarrierState_Enum is
+     (BarrierStateInvalid,
+      BarrierStateNull,
+      BarrierState1,
+      BarrierState2);
 
-   TooManyBarrierChecks : Exception;
-   TooManyBarrierEnters : Exception;
-   InvalidBarrierCheck  : Exception;
+   type BarrierStateCount_Array is array(BarrierState_Enum) of Natural;
 
    protected type PollingBarrier_Type is
 
-      procedure SetMemberCount
-        (Count : Natural);
+      procedure Join
+        (State : in out BarrierState_Enum);
+
+      procedure Leave
+        (State : in out BarrierState_Enum);
+
+      procedure TestBarrier
+        (State : in out BarrierState_Enum;
+         Pass  : out Boolean);
 
       function GetMemberCount
         return Integer;
 
-      procedure EnterBarrier;
-
-      procedure CheckBarrier
-        (Success : out Boolean);
-
    private
 
       MemberCount      : Natural:=0;
-      BarrierCount     : Natural:=0;
-      BarrierRewindMax : Natural:=0;
-      BarrierRewind    : Natural:=0;
-      BarrierMode      : BarrierMode_Enum:=(BarrierModeEnter);
+      StateCounts      : BarrierStateCount_Array:=(others => 0);
+      CurrentBarrier   : BarrierState_Enum:=(BarrierState1);
 
    end PollingBarrier_Type;
    ---------------------------------------------------------------------------
