@@ -114,12 +114,10 @@ package body ClientServerNet.Test is
          return State'Unrestricted_Access;
       end if;
 
-      Put_Line("Task:"&Integer'Image(Connection.ReceiveFilled)&"->"&Integer'Image(Connection.ReceiveBuffer'Last+1));
       Stream.ReadBuffer
         (Buffer     => Connection.ReceiveBuffer(Connection.ReceiveFilled)'Address,
          BufferSize => Streams.StreamSize_Type(ReadAmount));
       if Random(Rnd)<0.5 then
-         Put_Line("Cause overflow");
          raise Streams.StreamOverflow;
       end if;
       Connection.ReceiveFilled:=Connection.ReceiveFilled+ReadAmount;
@@ -441,7 +439,7 @@ package body ClientServerNet.Test is
       use Ada.Numerics.Float_Random;
       use type Streams.WriteStream_ClassAccess;
 
-      LoopCount     : constant:=1000;
+      LoopCount     : constant:=10000;
       MaxDataAmount : constant:=10000.0;
 
       Barrier      : ProtectedBasics.PollingBarrier_Type;
@@ -500,7 +498,6 @@ package body ClientServerNet.Test is
          WriteStream  : Streams.WriteStream_Ref;
       begin
          Reset(RndGen);
-         Put_Line("ServerTask");
          begin
             Server:=ClientServerNet.ServerImplementations.Utilize(CreateServerConfig(0));
             Server.I.CallBack:=ServerC'Unrestricted_Access;
@@ -526,7 +523,7 @@ package body ClientServerNet.Test is
                   for i in RandomData'Range loop
                      RandomData(i) := Bytes.Byte_Type(Float'Rounding(Random(RndGen)*255.0));
                   end loop;
-                  Put_Line("Random Block of Length:"&Integer'Image(Length));
+--                  Put_Line("Random Block of Length:"&Integer'Image(Length));
                end;
                loop
                   Barrier.TestBarrier(BarrierState,Success);
@@ -538,12 +535,10 @@ package body ClientServerNet.Test is
                SendRandomData(WriteStream);
 
                -- Receive large chunk of data
---               while ServerC.LatestConnection.ReceiveFilled<=ServerC.LatestConnection.ReceiveBuffer'Last loop
---                  Put_Line("SR:"&Integer'Image(ServerC.LatestConnection.ReceiveFilled)&":"&Integer'Image(serverC.LatestConnection.ReceiveBuffer'Last+1));
---                  GlobalLoop.Process;
---               end loop;
---               CompareReceiveBuffer(ServerC.LatestConnection);
-               Put_Line("SERVERBARRIER******"&Integer'Image(ServerC.LatestConnection.ReceiveFilled));
+               while ServerC.LatestConnection.ReceiveFilled<=ServerC.LatestConnection.ReceiveBuffer'Last loop
+                  GlobalLoop.Process;
+               end loop;
+               CompareReceiveBuffer(ServerC.LatestConnection);
                -- Barrier
                loop
                   Barrier.TestBarrier(BarrierState,Success);
@@ -556,8 +551,8 @@ package body ClientServerNet.Test is
             when E:others =>
                Put_Line("SERVEREXCEPTION");
                Put_Line(Ada.Exceptions.Exception_Message(E));
+               raise;
          end;
-         Put_Line("ENDOFSERVER");
          Server.SetNull;
       end ServerTask;
 
@@ -572,10 +567,8 @@ package body ClientServerNet.Test is
       while Barrier.GetMemberCount/=2 loop
          Delay Duration'Small;
       end loop;
-      Put_Line("Create Client");
       Client:=ClientServerNet.ClientImplementations.Utilize(CreateClientConfig(1,0));
       Client.I.CallBack:=ClientC'Unrestricted_Access;
-      Put_Line("Wait for connection to server");
       while not ClientC.Connected loop
          GlobalLoop.Process;
          delay Duration'Small;
@@ -589,18 +582,14 @@ package body ClientServerNet.Test is
             exit when Success;
          end loop;
 
-         Put_Line("Client.CreateReceiveBuffer");
-
          CreateReceiveBuffer(ClientC'Unrestricted_Access);
 
---         SendRandomData(WriteStream);
+         SendRandomData(WriteStream);
 
          while ClientC.ReceiveFilled<=ClientC.ReceiveBuffer'Last loop
---            Put_Line("CL"&Integer'Image(ClientC.ReceiveFilled)&"::"&Integer'Image(ClientC.ReceiveBuffer'Last+1));
             GlobalLoop.Process;
          end loop;
          CompareReceiveBuffer(ClientC'Unrestricted_Access);
-         Put_Line("CLIENTBARRIER*****"&Integer'Image(ClientC.ReceiveFilled));
 
          loop
             Barrier.TestBarrier(BarrierState,Success);
@@ -608,11 +597,11 @@ package body ClientServerNet.Test is
          end loop;
          Bytes.Free(ClientC.ReceiveBuffer);
       end loop;
-      Put_Line("ENDOFCLIENT");
    exception
       when E:others =>
-         Put_Line("EXCEPTIONM");
+         Put_Line("CLIENTEXCEPTION");
          Put_Line(Ada.Exceptions.Exception_Message(E));
+         raise;
    end TransferMonteCarlo;
 
    procedure ConnectionMonteCarloSMPipe is

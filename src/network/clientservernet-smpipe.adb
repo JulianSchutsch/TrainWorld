@@ -68,7 +68,6 @@ with Basics; use Basics;
 with GlobalLoop;
 with ProtectedBasics;
 with Ada.Finalization;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body ClientServerNet.SMPipe is
 
@@ -309,7 +308,6 @@ package body ClientServerNet.SMPipe is
 
       if Stream.Buffer/=null then
 
-         Put_Line("RollBack with Stream.Buffer/=null");
          RollBackC1:=CountRollBack(Stream);
 
          Stream.Buffer.NextRollBack:=null;
@@ -472,7 +470,6 @@ package body ClientServerNet.SMPipe is
          -- Get block from protected queue
          Stream.SourceBlockPipe.Get(Stream.Buffer);
          if Stream.Buffer=null then
-            Put_Line("No more block");
             raise Streams.StreamOverflow;
             end if;
          if Stream.DebugBuffer=null then
@@ -545,8 +542,6 @@ package body ClientServerNet.SMPipe is
          end loop;
 
          RemainingAmount:=RemainingAmount-ReadAmount;
-         Put_Line("ReadStream:"&Streams.StreamSize_Type'Image(ReadAmount)&":::"&Streams.StreamSize_Type'Image(Stream.Buffer.Amount)
-                  &Streams.StreamSize_Type'Image(Stream.Position)&"->"&Streams.StreamSize_Type'Image(RemainingAmount));
          exit when RemainingAmount=0;
 
          PushRollBack;
@@ -557,7 +552,6 @@ package body ClientServerNet.SMPipe is
       pragma Assert(Stream.Position<=Stream.Buffer.Amount);
 
       if Stream.Position=Stream.Buffer.Amount then
-         Put_Line("PushRollBack(Last)");
          PushRollBack;
       end if;
 
