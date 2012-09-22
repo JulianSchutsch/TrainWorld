@@ -27,8 +27,7 @@
 --   It uses shared memory to create anonymous pipes between client and server.
 
 -- Usage
---   Every server created is registered globally with a unique address string by
---   which clients can connect to the server.
+--   Every server created is registered with an unique address.
 
 with Config;
 with Streams;

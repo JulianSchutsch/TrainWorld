@@ -58,7 +58,7 @@
 --    Since no reference between server and client exists this solves
 --    all disconnect issues. The counter can be used to check for one side
 --    disconnect.
-
+--
 pragma Ada_2012;
 
 with Bytes;
@@ -205,6 +205,7 @@ package body ClientServerStream.SMPipe is
          StoredFirst      : Block_Access:=null;
          StoredLast       : Block_Access:=null;
       end record;
+   type PipeReadStream_Access is access all PipeReadStream_Type;
 
    overriding
    procedure ReadBuffer
@@ -552,10 +553,12 @@ package body ClientServerStream.SMPipe is
          BlockPipes    : BlockPipes_Access:=null;
          ClientAddress : Unbounded_String;
          ReceiveState  : StateCallBack_ClassAccess:=null;
-         ReadStream    : PipeReadStream_Type;
+         ReadStreamP   : PipeReadStream_Access:=null;
+         ReadStream    : Streams.ReadStream_Ref;
          Next          : ServerConnection_Access:=null;
          Last          : ServerConnection_Access:=null;
          CallBack      : ConnectionCallBack_ClassAccess:=null;
+         WriteStream   : Streams.WriteStream_Ref;
       end record;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -615,7 +618,9 @@ package body ClientServerStream.SMPipe is
          State        : ClientState_Enum:=ClientStateDisconnected;
          LoopProcess  : Client_Process;
          ReceiveState : StateCallBack_ClassAccess:=null;
-         ReadStream   : aliased PipeReadStream_Type;
+         ReadStreamP  : PipeReadStream_Access:=null;
+         ReadStream   : Streams.ReadStream_Ref;
+         WriteStream  : Streams.WriteStream_Ref;
       end record;
 
    overriding
@@ -643,20 +648,46 @@ package body ClientServerStream.SMPipe is
 
    protected body ServerList_Type is
 
+      function Exists
+        (Address : Unbounded_String)
+         return Boolean is
+
+         Server : Server_Access:=First;
+
+      begin
+
+         while Server/=null loop
+            if Server.Address=Address then
+               return True;
+            end if;
+            Server:=Server.Next;
+         end loop;
+         return False;
+
+      end Exists;
+      ------------------------------------------------------------------------
+
       procedure Add
         (Server : Server_Access) is
       begin
+
+         if Exists(Server.Address) then
+            raise AddressAllreadyInUse;
+         end if;
+
          Server.Next:=First;
          if First/=null then
             First.Last:=Server;
          end if;
          First:=Server;
+
       end Add;
       ------------------------------------------------------------------------
 
       procedure Remove
         (Server : Server_Access) is
       begin
+
          if Server.Next/=null then
             Server.Next.Last:=Server.Last;
          end if;
@@ -667,6 +698,7 @@ package body ClientServerStream.SMPipe is
          end if;
          Server.Next:=null;
          Server.Last:=null;
+
       end Remove;
       ------------------------------------------------------------------------
 
@@ -703,8 +735,14 @@ package body ClientServerStream.SMPipe is
             Connection.ClientAddress:=ClientAddress;
 
             Client.BlockPipes:=Connection.BlockPipes;
-            Connection.ReadStream.SourceBlockPipe:=Connection.BlockPipes.ToServer'Access;
-            Client.ReadStream.SourceBlockPipe:=Client.BlockPipes.FromServer'Access;
+
+            Connection.ReadStreamP:=new PipeReadStream_Type;
+            Connection.ReadStream:=Streams.ReadStreamRef.MakeNewRef(Streams.ReadStream_ClassAccess(Connection.ReadStreamP));
+            Connection.ReadStreamP.SourceBlockPipe:=Connection.BlockPipes.ToServer'Access;
+
+            Client.ReadStreamP:=new PipeReadStream_Type;
+            Client.ReadStream:=Streams.ReadStreamRef.MakeNewRef(Streams.readStream_ClassAccess(Client.ReadStreamP));
+            Client.ReadStreamP.SourceBlockPipe:=Client.BlockPipes.FromServer'Access;
 
             Connection.Next:=Server.HalfConnections;
             if Server.HalfConnections/=null then
@@ -792,10 +830,11 @@ package body ClientServerStream.SMPipe is
                declare
                   WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
                begin
+                  Connection.WriteStream:=Streams.WriteStreamRef.MakeNewRef(Streams.WriteStream_ClassAccess(WriteStream));
                   WriteStream.DestBlockPipe:=Connection.BlockPipes.FromServer'Access;
-                  Connection.ReceiveState:=Connection.CallBack.NetworkConnect
-                    (Streams.WriteStreamRef.MakeRef(Streams.WriteStream_ClassAccess(WriteStream)));
                end;
+
+               Connection.ReceiveState:=Connection.CallBack.NetworkConnect(Connection.WriteStream);
 
                Connection:=NextConnection;
             end loop;
@@ -832,16 +871,18 @@ package body ClientServerStream.SMPipe is
 
             else
 
-               while not Empty(Connection.ReadStream) loop
+               while not Empty(Connection.ReadStreamP.all) loop
                   begin
-                     BeginRead(Connection.ReadStream);
-                     Connection.ReceiveState:=Connection.ReceiveState.NetworkReceive(Connection.ReadStream);
-                     EndRead(Connection.ReadStream);
+                     BeginRead(Connection.ReadStreamP.all);
+                     Connection.ReceiveState:=Connection.ReceiveState.NetworkReceive(Connection.ReadStream.I.all);
+                     EndRead(Connection.ReadStreamP.all);
                   exception
                      when Streams.StreamOverflow =>
-                        RollBack(Connection.ReadStream);
+                        RollBack(Connection.ReadStreamP.all);
                   end;
                end loop;
+
+               Connection.WriteStream.I.Flush;
 
             end if;
             Connection:=NextConnection;
@@ -880,9 +921,9 @@ package body ClientServerStream.SMPipe is
             WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
          begin
             WriteStream.DestBlockPipe:=Client.BlockPipes.ToServer'Access;
-            Client.ReceiveState:=Client.CallBack.NetworkConnect
-              (Streams.WriteStreamRef.MakeRef(Streams.WriteStream_ClassAccess(WriteStream)));
+            Client.WriteStream:=Streams.WriteStreamRef.MakeNewRef(Streams.WriteStream_ClassAccess(WriteStream));
          end;
+         Client.ReceiveState:=Client.CallBack.NetworkConnect(Client.WriteStream);
          pragma Assert(Client.ReceiveState/=null);
          Client.State:=ClientStateConnected;
       end if;
@@ -902,16 +943,17 @@ package body ClientServerStream.SMPipe is
          return;
       end if;
 
-      while not Empty(Client.ReadStream) loop
+      while not Empty(Client.ReadStreamP.all) loop
          begin
-            Beginread(Client.ReadStream);
-            Client.ReceiveState:=Client.ReceiveState.NetworkReceive(Client.ReadStream);
-            EndRead(Client.ReadStream);
+            Beginread(Client.ReadStreamP.all);
+            Client.ReceiveState:=Client.ReceiveState.NetworkReceive(Client.ReadStream.I.all);
+            EndRead(Client.ReadStreamP.all);
          exception
             when Streams.StreamOverflow =>
-               RollBack(Client.ReadStream);
+               RollBack(Client.ReadStreamP.all);
          end;
       end loop;
+      Client.WriteStream.I.Flush;
 
    end Process;
    ---------------------------------------------------------------------------

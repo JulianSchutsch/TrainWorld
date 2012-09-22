@@ -10,7 +10,6 @@ package body RefCount is
         (Ref : in out Ref_Type) is
       begin
          Finalize(Ref);
-         Ref.I:=null;
       end SetNull;
       ------------------------------------------------------------------------
 
@@ -36,11 +35,22 @@ package body RefCount is
             if Ref_Access(Ref.I).Count=0 then
                Free(Ref.I);
             end if;
+            Ref.I:=null;
          end if;
       end Finalize;
       ------------------------------------------------------------------------
 
-      function MakeRef
+      function MakeNewRef
+        (Object : Interface_ClassAccess)
+         return Ref.Ref_Type is
+      begin
+         return R:Ref_Type do
+            R.I:=Object;
+         end return;
+      end MakeNewRef;
+      ------------------------------------------------------------------------
+
+      function MakeConstRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type is
       begin
@@ -48,7 +58,7 @@ package body RefCount is
             R.I:=Object;
             Ref_Access(Object).Count:=Ref_Access(Object).Count+1;
          end return;
-      end MakeRef;
+      end MakeConstRef;
       ------------------------------------------------------------------------
 
    end Ref;

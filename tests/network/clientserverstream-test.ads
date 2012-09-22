@@ -11,4 +11,7 @@ package ClientServerStream.Test is
        Test => ConnectionMonteCarloSMPipe'Access),
       (Name => U("ClientServerNet.TransferMonteCarloSMPipe"),
        Test => TransferMonteCarloSMPipe'Access));
+
+   -- TODO: Corner cases:
+   --     Same name used twice for server.
 end ClientServerStream.Test;

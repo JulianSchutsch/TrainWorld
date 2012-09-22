@@ -58,6 +58,8 @@
 --     used to send data at any time. Sending is Not required to be threadsafe.
 --     There must be no limit on the amount of data which can be send at the
 --     same time.
+--     The implementation is required to flush the WriteStream buffer on each
+--     GlobalLoop call.
 --
 --  Receiving data:
 --
@@ -94,6 +96,8 @@ with Implementations;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package ClientServerStream is
+
+   AddressAllreadyInUse : Exception;
 
    type StateCallBack_Interface is interface;
    type StateCallBack_ClassAccess is access all StateCallBack_Interface'Class;

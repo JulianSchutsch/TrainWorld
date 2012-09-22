@@ -1,3 +1,5 @@
+pragma Ada_2012;
+
 with System;
 with RefCount;
 

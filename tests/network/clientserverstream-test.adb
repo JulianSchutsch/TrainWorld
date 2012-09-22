@@ -438,7 +438,7 @@ package body ClientServerStream.Test is
       use Ada.Numerics.Float_Random;
       use type Streams.WriteStream_ClassAccess;
 
-      LoopCount     : constant:=10000;
+      LoopCount     : constant:=100;
       MaxDataAmount : constant:=10000.0;
 
       Barrier      : ProtectedBasics.PollingBarrier_Type;
@@ -463,7 +463,6 @@ package body ClientServerStream.Test is
                Position  := Position+SendLength;
             end loop;
          end;
-         Stream.I.Flush;
       end SendRandomData;
       ------------------------------------------------------------------------
 
@@ -494,7 +493,6 @@ package body ClientServerStream.Test is
          RndGen  : Ada.Numerics.Float_Random.Generator;
          Success : Boolean;
          BarrierState : ProtectedBasics.BarrierState_Enum;
-         WriteStream  : Streams.WriteStream_Ref;
       begin
          Reset(RndGen);
          begin
@@ -508,9 +506,6 @@ package body ClientServerStream.Test is
                GlobalLoop.Process;
                Delay Duration'Small;
             end loop;
-            WriteStream:=ServerC.LatestConnection.WriteStream;
-
-            pragma Assert(WriteStream.I/=null);
 
             for Loops in 1..LoopCount loop
 
@@ -531,7 +526,7 @@ package body ClientServerStream.Test is
 
                CreateReceiveBuffer(ServerC.LatestConnection);
                -- Send large chunk of data in random large pieces
-               SendRandomData(WriteStream);
+               SendRandomData(ServerC.LatestConnection.WriteStream);
 
                -- Receive large chunk of data
                while ServerC.LatestConnection.ReceiveFilled<=ServerC.LatestConnection.ReceiveBuffer'Last loop
@@ -559,7 +554,6 @@ package body ClientServerStream.Test is
       ClientC      : aliased Connection_Type;
       Success      : Boolean;
       BarrierState : ProtectedBasics.BarrierState_Enum;
-      WriteStream  : Streams.WriteStream_Ref;
 
    begin
       Barrier.Join(BarrierState);
@@ -572,8 +566,6 @@ package body ClientServerStream.Test is
          GlobalLoop.Process;
          delay Duration'Small;
       end loop;
-      WriteStream:=ClientC.WriteStream;
-      pragma Assert(WriteStream.I/=null);
       for Loops in 1..LoopCount loop
          -- Wait for random data
          loop
@@ -583,7 +575,7 @@ package body ClientServerStream.Test is
 
          CreateReceiveBuffer(ClientC'Unrestricted_Access);
 
-         SendRandomData(WriteStream);
+         SendRandomData(ClientC.WriteStream);
 
          while ClientC.ReceiveFilled<=ClientC.ReceiveBuffer'Last loop
             GlobalLoop.Process;
@@ -596,6 +588,7 @@ package body ClientServerStream.Test is
          end loop;
          Bytes.Free(ClientC.ReceiveBuffer);
       end loop;
+      Client.SetNull;
    exception
       when E:others =>
          Put_Line("CLIENTEXCEPTION");

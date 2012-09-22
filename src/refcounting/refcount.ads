@@ -31,7 +31,11 @@ package RefCount is
         (Ref : in out Ref_Type);
       ------------------------------------------------------------------------
 
-      function MakeRef
+      function MakeConstRef
+        (Object : Interface_ClassAccess)
+         return Ref.Ref_Type;
+
+      function MakeNewRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type;
 
