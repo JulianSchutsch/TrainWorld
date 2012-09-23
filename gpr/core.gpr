@@ -1,12 +1,14 @@
 with "config";
 with "switches";
 with "plaincore";
+with "config";
 
 project Core is
 
   Dir:=Core'Project_Dir & "/";
 
   Linker_Switches:=();
+  Sources:=();
 
   for Languages use ("Ada");
 
@@ -14,8 +16,14 @@ project Core is
     for Default_Switches("Ada") use Switches.Compiler_Switches;
   end Compiler;
 
-  for Source_Dirs use
-    (Dir&"../src/win32",
-     Dir&"../src/unix");
+  case Config.Plattform is
+     when "Unknown" =>
+     when "Linux"|"BSD" =>
+        Sources:=Sources&(Dir&"../src/unix");
+     when "WindowsNT" =>
+        Sources:=Sources&(Dir&"../src/win32");
+   end case;
+
+   for Source_Dirs use Sources;
 
 end Core;

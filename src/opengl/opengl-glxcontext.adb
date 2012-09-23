@@ -9,6 +9,8 @@ with Graphics; use Graphics;
 with GlobalLoop;
 with Config;
 with Basics; use Basics;
+with DynamicLibraries;
+pragma Unreferenced(DynamicLibraries);
 
 package body OpenGL.GLXContext is
 
