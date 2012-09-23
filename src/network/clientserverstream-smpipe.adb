@@ -28,8 +28,16 @@
 --    and there may be one current block in a ReadStream from which is read.
 --    Once a block is filled to its maximum amount its added to the queue
 --    of blocks and a new block is created for further writting.
---    The ReadStream reads the current block until its end and then disposes
---    the memory. It only asks for a new block from the queue if necessary.
+--    The ReadStream reads the current block until its end and then pushes it
+--    to the rollback list.
+--    It only asks for a new block from the queue if necessary.
+--
+--    If a StreamOverflow is detected, the entire rollback list is moved
+--    to the stored list. The stored list then serves as priority source
+--    before getting any new blocks from the protected queue.
+--
+--    If a read started with BeginRead (all of them) is terminated by a
+--    EndRead then all RollBack Blocks are freed.
 --
 --    Server client address space and connecting:
 --
