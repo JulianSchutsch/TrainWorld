@@ -25,16 +25,10 @@ pragma Ada_2012;
 with ClientServerStream.Test;
 with ClientServerStream.SMPipe;
 with TestFrameWork;
-with ExceptionOutput;
-with Ada.Text_IO; use Ada.Text_IO;
 
 procedure NetTest is
    Tests : constant TestFrameWork.Test_Array:=ClientServerStream.Test.Tests;
 begin
    ClientServerStream.SMPipe.Register;
    TestFrameWork.Run(Tests);
-exception
-   when E:others =>
-      Put_Line("Exception catcher..");
-      ExceptionOutput.Put(E);
 end NetTest;
