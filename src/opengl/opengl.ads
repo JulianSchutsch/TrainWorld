@@ -415,6 +415,11 @@ package OpenGL is
      (Name : String)
       return Boolean;
 
+   -- This function is published since some OGL implementations expect
+   -- a query of the extensions prior to the existence of any context.
+   procedure ReadExtensionsByGetString
+     (GetProc : GetProc_Access);
+
    procedure AssertError;
 
    GLSLVersion : GLSLVersion_Type;

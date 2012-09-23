@@ -25,6 +25,12 @@ package Graphics is
       WindowTypeFullDesktopWindow,
       WindowTypeFullScreen);
 
+   type BufferKind_Enum is
+     (BufferKindDefault,
+      BufferKindSingle,
+      BufferKindDouble,
+      BufferKindTriple);
+
    type Context_OnClose is
      access procedure
        (Data : C_ClassAccess);
@@ -62,14 +68,15 @@ package Graphics is
 
    type Context_Config is new Config.Config_Type with
       record
-         WindowType             : WindowType_Enum  := WindowTypeWindow;
+         WindowType             : WindowType_Enum:=WindowTypeWindow;
+         BufferKind             : BufferKind_Enum:=BufferKindDefault;
          Height                 : Natural:=1024;
          Width                  : Natural:=768;
          RedBits                : Natural:=8;
          GreenBits              : Natural:=8;
          BlueBits               : Natural:=8;
          AlphaBits              : Natural:=8;
-         DepthBits              : Natural:=32;
+         DepthBits              : Natural:=24;
          StencilBits            : Natural:=0;
          WindowTitle            : Unbounded_String:=U("Win");
          ApplicationTitle       : Unbounded_String:=U("App");
@@ -80,13 +87,14 @@ package Graphics is
    procedure CreateConfig
      (Configuration    : in out Config.ConfigNode_Type;
       WindowType       : WindowType_Enum:=WindowTypeWindow;
+      BufferKind       : BufferKind_Enum:=BufferKindDefault;
       Height           : Natural:=1024;
       Width            : Natural:=768;
       RedBits          : Natural:=8;
       GreenBits        : Natural:=8;
       BlueBits         : Natural:=8;
       AlphaBits        : Natural:=8;
-      DepthBits        : Natural:=32;
+      DepthBits        : Natural:=24;
       StencilBits      : Natural:=0;
       WindowTitle      : Unbounded_String:=U("Win");
       ApplicationTitle : Unbounded_String:=U("App"));

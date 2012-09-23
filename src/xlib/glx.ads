@@ -35,17 +35,46 @@ package glX is
    GLX_DOUBLEBUFFER : constant:=5;
    GLX_DEPTH_SIZE   : constant:=12;
    GLX_NONE         : constant:=101;
+   GLX_DRAWABLE_TYPE : constant:=16#8010#;
+   GLX_WINDOW_BIT    : constant:=1;
+   GLX_RENDER_TYPE   : constant:=16#8011#;
+   GLX_RGBA_BIT      : constant:=1;
+   GLX_X_RENDERABLE  : constant:=16#8012#;
+   GLX_X_VISUAL_TYPE : constant:=22;
+   GLX_TRUE_COLOR    : constant:=16#8002#;
+   GLX_STENCIL_SIZE  : constant:=13;
 
-   type GLXContext_Type is
-      record
-         null;
-      end record;
-   type GLXContext_Access is access GLXContext_Type;
+   type GLXContext_Type is null record;
+   type GLXContext_Access is access all GLXContext_Type;
 
    type GLXDrawable_Type is new Xlib.XID_Type;
 
-   -- PORTABILITY : Boolean may not be defined as expected, working
+   type GLXFBConfigRec_Type is null record;
+   type GLXFBConfigRec_Access is access all GLXFBConfigRec_Type;
+   type GLXFBConfig_Type is array(0..Natural'Last) of GLXFBConfigRec_Access;
+   pragma Convention(C,GLXFBConfig_Type);
+   type GLXFBConfig_Access is access all GLXFBConfig_Type;
+
+   -- TODO PORTABILITY : Boolean may not be defined as expected, working
    --               on Debian Sqeeze so far
+
+   type glXGetProcAddressARB_Access is
+     access function
+       (procName : System.Address)
+        return System.Address;
+   pragma Convention(C,glXGetProcAddressARB_Access);
+
+   glXGetProcAdddressARB : glXGetProcAddressARB_Access:=null;
+
+   type glXCreateContextAttribsARB_Access is
+     access function
+       (dpy           : Display_Access;
+        config        : GLXFBConfig_Access;
+        share_context : GLXContext_Access;
+        direct        : Interfaces.C.int;
+        attrib_list   : access Interfaces.C.int)
+        return GLXContext_Access;
+   pragma Convention(C,glXCreateContextAttribsARB_Access);
 
    function glXQueryVersion
      (dpy   : Display_Access;
@@ -90,5 +119,21 @@ package glX is
      (procName : System.Address)
       return System.Address;
    pragma Import(C,glXGetProcAddress,"glXGetProcAddress");
+
+   function glXChooseFBConfig
+     (dpy         : Display_Access;
+      screen      : Interfaces.C.int;
+      attrib_list : access Interfaces.C.int;
+      nelements   : access Interfaces.C.int)
+      return GLXFBConfig_Access;
+   pragma Import(C,glXChooseFBConfig,"glXChooseFBConfig");
+
+   function glXGetVisualFromFBConfig
+     (dpy : Display_Access;
+      config : GLXFBConfigRec_Access)
+      return XVisualInfo_Access;
+   pragma Import(C,glXGetVisualFromFBConfig,"glXGetVisualFromFBConfig");
+
+   procedure LoadGLX;
 
 end glX;

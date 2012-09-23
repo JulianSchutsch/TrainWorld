@@ -58,15 +58,6 @@ package body OpenGL.GLXContext is
    type CIntArray is array(Natural range <>) of aliased Interfaces.C.int;
    pragma Convention(C,CIntArray);
 
-   XVisualAttribs : CIntArray:=
-     (GLX.GLX_RGBA,
-      GLX.GLX_RED_SIZE,8,
-      GLX.GLX_GREEN_SIZE,8,
-      GLX.GLX_BLUE_SIZE,8,
-      GLX.GLX_DOUBLEBUFFER,
-      GLX.GLX_DEPTH_SIZE,1,
-      0);
-
    type Context_Type;
    type Context_Access is access all Context_Type;
 
@@ -97,6 +88,9 @@ package body OpenGL.GLXContext is
          DoubleBuffered      : Boolean               := True;
          WMHints             : XWMHints_Access       := null;
          MapNotified         : Boolean               := False;
+         FBConfig            : GLX.GLXFBConfig_Access := null;
+         FBConfigCount       : aliased Interfaces.C.int:=0;
+         FBConfigEntry       : Natural:=0;
          LoopProcess         : Context_Process;
       end record;
 
@@ -171,8 +165,6 @@ package body OpenGL.GLXContext is
                end if;
 
             when Expose =>
-               Put("Expose");
-               New_Line;
                Paint;
 
             when ButtonPress =>
@@ -440,7 +432,6 @@ null;
       Context    : constant Context_Access:=new Context_Type;
       ContextRef : Context_Ref;
       GConfig    : Graphics.Context_Config;
-      pragma Unreferenced(GConfig);
 
    begin
 
@@ -497,13 +488,63 @@ null;
 
       Context.Screen:=DefaultScreen(Context.Display);
 
-      Context.Visual:=GLX.glXChooseVisual
-        (dpy        => Context.Display,
-         screen     => Context.Screen,
-         attribList => XVisualAttribs(0)'Access);
+      -- Update XVisualAttribs structure...
+      declare
+
+         -- This array must be long enough to take every possible option, see
+         -- counting below
+         Attribs   : CIntArray(0..99);
+         Position  : Integer:=Attribs'First;
+
+         procedure Push
+           (Value : Interfaces.C.int) is
+         begin
+            Attribs(Position):= Value;
+            Position         := Position+1;
+         end Push;
+         ---------------------------------------------------------------------
+
+      begin
+         Push(GLX.GLX_X_RENDERABLE); Push(1);
+         Push(GLX.GLX_DRAWABLE_TYPE); Push(GLX.GLX_WINDOW_BIT);
+         Push(GLX.GLX_RENDER_TYPE); Push(GLX.GLX_RGBA_BIT);
+
+         Push(GLX.GLX_RED_SIZE); Push(Interfaces.C.int(GConfig.RedBits));
+         Push(GLX.GLX_GREEN_SIZE); Push(Interfaces.C.int(GConfig.GreenBits));
+         Push(GLX.GLX_BLUE_SIZE); Push(Interfaces.C.int(GConfig.BlueBits));
+         Push(GLX.GLX_DEPTH_SIZE); Push(Interfaces.C.int(GConfig.DepthBits));
+         if GConfig.StencilBits/=0 then
+            Push(GLX.GLX_STENCIL_SIZE); Push(Interfaces.C.int(GConfig.StencilBits));
+         end if;
+         if GConfig.BufferKind/=BufferKindSingle then
+            Push(GLX.GLX_DOUBLEBUFFER); Push(1);
+         end if;
+         Push(0);
+
+         Context.FBConfig:=glXChooseFBConfig
+           (dpy         => Context.Display,
+            screen      => Context.Screen,
+            attrib_list => Attribs(Attribs'First)'Access,
+            nelements   => Context.FBConfigCount'Access);
+         if Context.FBConfig=null then
+            raise FailedContextCreation
+              with "Could not create context with given attributes. glXChooseFBConfig returned null";
+         end if;
+         if Context.FBConfigCount=0 then
+            Context.FBConfig:=null;
+            raise FailedContextCreation
+              with "Could no create context with given attributes. glXChooseFBConfig returned zero elements";
+         end if;
+         -- TODO: Wonder if there is some sane metric to choose among the available instead of just picking the first.
+         Context.FBConfigEntry:=0;
+         Context.Visual:=glXGetVisualFromFBConfig
+           (dpy    => Context.Display,
+            config => Context.FBConfig(Context.FBConfigEntry));
+      end;
+
       if Context.Visual=null then
          raise FailedContextCreation
-           with "Failed call to glXChooseVisual"
+           with "Failed call to glXGetVisualFromFBConfig"
              &ErrorCodeString;
       end if;
 
@@ -538,8 +579,8 @@ null;
                screen  => Context.Visual.screen),
             x       => 0,
             y       => 0,
-            width   => 640,
-            height  => 480,
+            width   => Interfaces.C.unsigned(GConfig.Width),
+            height  => Interfaces.C.unsigned(GConfig.Height),
             border_width => 0,
             depth   => Context.Visual.depth,
             class   => InputOutput,
@@ -558,6 +599,11 @@ null;
              &ErrorCodeString;
       end if;
 
+      -- TODO: replace constant XSizeHints by a dynamic version
+      --       since they threaten to extend the structure.
+      --       This structure may also be used for extended stuff like
+      --       minimum window size and maximum window size and maybe
+      --       used in the window-style.
       declare
          SizeHints : aliased XSizeHints_Type;
       begin
@@ -600,17 +646,36 @@ null;
              &ErrorCodeString;
       end if;
 
-      Context.GLXContext:=glX.glXCreateContext
-        (dpy       => Context.Display,
-         vis       => Context.Visual,
-         shareList => null,
-         direct    => 1);
+      ------------------------------------------------------
+      -- OpenGL Switch!!! --
+      ------------------
+      -- TODO: This may be replaced by a glxQueryExtensionString
+      OpenGL.ReadExtensionsByGetString(GLXGetProc'Access);
 
-      if Context.GLXContext=null then
-         raise FailedContextCreation
-           with "Call to XCreateContext failed"
-             &ErrorCodeString;
-      end if;
+--      declare
+--         Version : OpenGL.OpenGLVersion_Type:=OpenGL.GetVersion(GLXGetProc'Access);
+      begin
+--         if (Version.Major>=3) and OpenGL.IsExtensionSupported("GLX_ARB_create_context") then
+--            declare
+--              glXCreateContextAttribsARB : GLX.glXCreateContextAttribsARB_Access:=
+            -- Do it the new way
+--         else
+
+            Context.GLXContext:=glX.glXCreateContext
+              (dpy       => Context.Display,
+               vis       => Context.Visual,
+               shareList => null,
+               direct    => 1);
+
+            if Context.GLXContext=null then
+               raise FailedContextCreation
+                 with "Call to XCreateContext failed"
+                 &ErrorCodeString;
+            end if;
+
+--         end if;
+
+      end;
 
       XMapWindow
         (display => Context.Display,

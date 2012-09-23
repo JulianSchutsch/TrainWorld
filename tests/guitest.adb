@@ -111,7 +111,8 @@ begin
    Configuration.SetImplementation( U("OpenGL"));
    Graphics.CreateConfig
      (Configuration => Configuration,
-      WindowType    => Graphics.WindowTypeWindow);
+      WindowType    => Graphics.WindowTypeWindow,
+      BufferKind    => Graphics.BufferKindDefault);
 
    Put_Line("Find");
    C:=Graphics.Implementations.Utilize(Configuration);

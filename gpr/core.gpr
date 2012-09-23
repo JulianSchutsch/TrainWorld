@@ -15,6 +15,7 @@ project Core is
   end Compiler;
 
   for Source_Dirs use
-    (Dir&"../src/win32");
+    (Dir&"../src/win32",
+     Dir&"../src/unix");
 
 end Core;
