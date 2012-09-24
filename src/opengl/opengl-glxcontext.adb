@@ -76,8 +76,6 @@ package body OpenGL.GLXContext is
       record
          Display             : Display_Access        := null;
          DestroyedSignalSend : Boolean               := False;
-         GLXMajor            : aliased GLint_Type    := 0;
-         GLXMinor            : aliased GLint_Type    := 0;
          Screen              : Interfaces.C.int      := 0;
          Visual              : XVisualInfo_Access    := null;
          ColorMap            : ColorMap_Type         := 0;
@@ -368,6 +366,11 @@ null;
            (Context.Visual.all'Address);
       end if;
 
+      if Context.FBConfig/=null then
+         XFree
+           (Context.FBConfig.all'Address);
+      end if;
+
       if Context.GLXContext/=null then
 
          if glX.glXMakeCurrent
@@ -447,31 +450,21 @@ null;
             raise FailedContextCreation with "Failed to load GLX:"&Ada.Exceptions.Exception_Message(E);
       end;
 
-      if glX.glXQueryVersion
-        (dpy   => Context.Display,
-         major => Context.GLXMajor'Access,
-         minor => Context.GLXMinor'Access)=0 then
-
-         raise FailedContextCreation
-           with "Failed call to glXQueryVersion"
-             &ErrorCodeString;
-
-      end if;
       Put("GLX Version:");
-      Put(Integer(Context.GLXMajor));
+      Put(Integer(GLX.VersionMajor));
       Put(".");
-      Put(Integer(Context.GLXMinor));
+      Put(Integer(GLX.VersionMinor));
       New_Line;
       if not
         (
-           ((Context.GLXMajor=1) and (Context.GLXMinor>=2))
-         or (Context.GLXMajor>1)) then
+           ((GLX.VersionMajor=1) and (GLX.VersionMinor>=3))
+         or (GLX.VersionMajor>=2)) then
 
          raise FailedContextCreation
            with "GLX version is too small. Found "
-             &GLint_Type'Image(Context.GLXMajor)&"."
-             &GLint_Type'Image(Context.GLXMinor)
-             &", but needed 1.2";
+             &GLint_Type'Image(GLX.VersionMajor)&"."
+             &GLint_Type'Image(GLX.VersionMinor)
+             &", but needed 1.3";
 
       end if;
 

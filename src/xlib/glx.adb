@@ -1,9 +1,6 @@
-with DynamicLibraries;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body glX is
-
-   LibraryHandle : DynamicLibraries.Handle_Type;
 
    function Conv is new Ada.Unchecked_Conversion(System.Address,GLXGetProcAddressARB_Access);
 
@@ -45,21 +42,16 @@ package body glX is
 
       use type Interfaces.C.int;
 
-      Major : aliased GLint_Type;
-      Minor : aliased GLint_Type;
-
    begin
-      --TODO: Add queryextension
-      -- TODO: Check if Lib is allready open
-      LibraryHandle.Open("libX11.so");
+
       if glXQueryVersion
         (dpy   => Display,
-         major => Major'Unrestricted_Access,
-         minor => Minor'Unrestricted_Access)=0 then
+         major => VersionMajor'Access,
+         minor => VersionMinor'Access)=0 then
          raise FailedGLXLoading with "call to glXQueryVersion failed";
       end if;
 
-      if (major>=2) or ((major=1) and (minor>=4)) then
+      if (VersionMajor>=2) or ((VersionMajor=1) and (VersionMinor>=4)) then
 
          Put_Line("GetProcAddressARB");
          glXGetProcAddressARB:=Conv(GetProcAddress("glXGetProcAddressARB"&Character'Val(0)));
@@ -68,6 +60,7 @@ package body glX is
          end if;
 
       end if;
+
    end LoadGLX;
    ---------------------------------------------------------------------------
 

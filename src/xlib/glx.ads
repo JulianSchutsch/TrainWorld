@@ -180,4 +180,7 @@ package glX is
    procedure LoadGLX
      (Display : Display_Access);
 
+   VersionMajor : aliased GLint_Type:=0;
+   VersionMinor : aliased GLint_Type:=0;
+
 end glX;
