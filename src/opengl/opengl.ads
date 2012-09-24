@@ -417,8 +417,8 @@ package OpenGL is
 
    -- This function is published since some OGL implementations expect
    -- a query of the extensions prior to the existence of any context.
-   procedure ReadExtensionsByGetString
-     (GetProc : GetProc_Access);
+   procedure ProcessExtensionString
+     (ExtStr : String);
 
    procedure AssertError;
 

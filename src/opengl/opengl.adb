@@ -138,14 +138,11 @@ package body OpenGL is
    end IsExtensionSupported;
    ---------------------------------------------------------------------------
 
-   procedure ReadExtensionsByGetString
-     (GetProc : GetProc_Access) is
-
-      ExtStr   : constant String := glGetString(GL_EXTENSIONS,GetProc);
+   procedure ProcessExtensionString
+     (ExtStr : String) is
       Start    : Integer := ExtStr'First;
       Count    : Natural := 0;
       Position : Natural := 0;
-
    begin
 
       for i in ExtStr'Range loop
@@ -178,6 +175,14 @@ package body OpenGL is
          Extensions(Position) := U(ExtStr(Start..ExtStr'Last));
       end if;
 
+   end ProcessExtensionString;
+   ---------------------------------------------------------------------------
+
+   procedure ReadExtensionsByGetString
+     (GetProc : GetProc_Access) is
+
+   begin
+      ProcessExtensionString(glGetString(GL_EXTENSIONS,GetProc));
    end ReadExtensionsByGetString;
    ---------------------------------------------------------------------------
 

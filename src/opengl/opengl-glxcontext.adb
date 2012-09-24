@@ -398,27 +398,6 @@ null;
    end Finalize;
    ---------------------------------------------------------------------------
 
-   function GLXGetProc
-     (Str : String)
-      return System.Address is
-
-      use type System.Address;
-
-      Result : System.Address;
-
-   begin
-
-      pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
---      Put_Line("GetProc:"&Str&":");
-      Result := GLXGetProcAddress(Str(Str'First)'Address);
-      if Result=System.Null_Address then
-         raise FailedContextCreation with "GLXGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
-      end if;
-      return Result;
-
-   end GLXGetProc;
-   ---------------------------------------------------------------------------
-
    function ContextConstructor
      (GenConfig  : Config.Config_ClassAccess;
       ImplConfig : Config.Config_ClassAccess)
@@ -433,6 +412,8 @@ null;
       Context    : constant Context_Access:=new Context_Type;
       ContextRef : Context_Ref;
       GConfig    : Graphics.Context_Config;
+
+      CompatibleOpenGL : Boolean:=True;
 
    begin
 
@@ -657,8 +638,9 @@ null;
       ------------------------------------------------------
       -- OpenGL Switch!!! --
       ------------------
-      -- TODO: This may be replaced by a glxQueryExtensionString
-      OpenGL.ReadExtensionsByGetString(GLXGetProc'Access);
+      OpenGL.ProcessExtensionString(GLX.QueryExtensionsString
+        (Display => Context.Display,
+         Screen  => Context.Screen));
 
       -- TODO: GLX should load the functions itself...
       Put_Line("***********************************************************");
@@ -689,14 +671,16 @@ null;
                share_context => null,
                direct => 1,
                attrib_list => Attribs(Attribs'First)'Access);
-            if Context.GLXContext=null then
-               raise FailedContextCreation with "Callto glXCreateContextAttribsARB faled"&ErrorCodeString;
+            if Context.GLXContext/=null then
+               Put_Line("Created OGL >3 context");
+               CompatibleOpenGL:=False;
             end if;
 
          end;
-         Put_Line("Created an OpenGL 3 or higher context");
 
-      else
+      end if;
+
+      if Context.GLXContext=null then
 
          Context.GLXContext:=glX.glXCreateContext
            (dpy       => Context.Display,
@@ -803,12 +787,20 @@ null;
              &ErrorCodeString;
       end if;
 
-      OpenGL.LoadFunctions
-        (DefaultGetProc   => GLXGetProc'Access,
-         ExtensionGetProc => GLXGetProc'Access,
-         Compatible       => True);
+      if GLX.glXGetProcAddressARB/=null then
+         OpenGL.LoadFunctions
+           (DefaultGetProc   => GLX.GetProcAddressARB'Access,
+            ExtensionGetProc => GLX.GetProcAddressARB'Access,
+            Compatible       => CompatibleOpenGL);
+      else
+         OpenGL.LoadFunctions
+           (DefaultGetProc   => GLX.GetProcAddress'Access,
+            ExtensionGetProc => GLX.GetProcAddress'Access,
+            Compatible       => CompatibleOpenGL);
+      end if;
 
       return ContextRef;
+
    end ContextConstructor;
    ---------------------------------------------------------------------------
 

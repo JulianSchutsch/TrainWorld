@@ -76,7 +76,11 @@ package glX is
    glXGetProcAddressARB : glXGetProcAddressARB_Access:=null;
 
    function GetProcAddressARB
-     (Name : string)
+     (Name : String)
+      return System.Address;
+
+   function GetProcAddress
+     (Name : String)
       return System.Address;
 
    type glXCreateContextAttribsARB_Access is
@@ -97,6 +101,17 @@ package glX is
       minor : GLint_Access)
       return Interfaces.C.int; -- FOR BOOLEAN
    pragma Import(C,glXQueryVersion,"glXQueryVersion");
+
+   function glXQueryExtensionsString
+     (dpy    : Display_Access;
+      screen : Interfaces.C.int)
+      return Interfaces.C.Strings.chars_ptr;
+   pragma Import(C,glXQueryExtensionsString,"glXQueryExtensionsString");
+
+   function QueryExtensionsString
+     (Display : Display_Access;
+      Screen  : Interfaces.C.int)
+      return String;
 
    function glXChooseVisual
      (dpy        : Display_Access;
@@ -131,7 +146,7 @@ package glX is
    pragma Import(C,glXSwapBuffers,"glXSwapBuffers");
 
    function glXGetProcAddress
-     (procName : System.Address)
+     (procName : access Interfaces.C.char)
       return System.Address;
    pragma Import(C,glXGetProcAddress,"glXGetProcAddress");
 
