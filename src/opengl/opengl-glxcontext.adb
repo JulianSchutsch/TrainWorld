@@ -56,8 +56,22 @@ package body OpenGL.GLXContext is
       return 0;
    end ErrorHandler;
 
-   type CIntArray is array(Natural range <>) of aliased Interfaces.C.int;
-   pragma Convention(C,CIntArray);
+   type CInt_Array is array(Natural range <>) of aliased Interfaces.C.int;
+   pragma Convention(C,CInt_Array);
+
+   type CIntStack_Type(Maximum : Natural) is
+      record
+         Data   : CInt_Array(0..Maximum);
+         Filled : Natural:=0;
+      end record;
+
+   procedure Push
+     (Stack : in out CIntStack_Type;
+      Value : Interfaces.C.int) is
+   begin
+      Stack.Data(Stack.Filled):=Value;
+      Stack.Filled:=Stack.Filled+1;
+   end Push;
 
    type Context_Type;
    type Context_Access is access all Context_Type;
@@ -470,43 +484,33 @@ null;
 
       Context.Screen:=DefaultScreen(Context.Display);
 
-      -- Update XVisualAttribs structure...
       declare
 
          -- This array must be long enough to take every possible option, see
          -- counting below
-         Attribs   : CIntArray(0..99);
-         Position  : Integer:=Attribs'First;
-
-         procedure Push
-           (Value : Interfaces.C.int) is
-         begin
-            Attribs(Position):= Value;
-            Position         := Position+1;
-         end Push;
-         ---------------------------------------------------------------------
+         Attribs   : CIntStack_Type(99);
 
       begin
-         Push(GLX.GLX_X_RENDERABLE); Push(1);
-         Push(GLX.GLX_DRAWABLE_TYPE); Push(GLX.GLX_WINDOW_BIT);
-         Push(GLX.GLX_RENDER_TYPE); Push(GLX.GLX_RGBA_BIT);
+         Push(Attribs,GLX.GLX_X_RENDERABLE); Push(Attribs,1);
+         Push(Attribs,GLX.GLX_DRAWABLE_TYPE); Push(Attribs,GLX.GLX_WINDOW_BIT);
+         Push(Attribs,GLX.GLX_RENDER_TYPE); Push(Attribs,GLX.GLX_RGBA_BIT);
 
-         Push(GLX.GLX_RED_SIZE); Push(Interfaces.C.int(GConfig.RedBits));
-         Push(GLX.GLX_GREEN_SIZE); Push(Interfaces.C.int(GConfig.GreenBits));
-         Push(GLX.GLX_BLUE_SIZE); Push(Interfaces.C.int(GConfig.BlueBits));
-         Push(GLX.GLX_DEPTH_SIZE); Push(Interfaces.C.int(GConfig.DepthBits));
+         Push(Attribs,GLX.GLX_RED_SIZE); Push(Attribs,Interfaces.C.int(GConfig.RedBits));
+         Push(Attribs,GLX.GLX_GREEN_SIZE); Push(Attribs,Interfaces.C.int(GConfig.GreenBits));
+         Push(Attribs,GLX.GLX_BLUE_SIZE); Push(Attribs,Interfaces.C.int(GConfig.BlueBits));
+         Push(Attribs,GLX.GLX_DEPTH_SIZE); Push(Attribs,Interfaces.C.int(GConfig.DepthBits));
          if GConfig.StencilBits/=0 then
-            Push(GLX.GLX_STENCIL_SIZE); Push(Interfaces.C.int(GConfig.StencilBits));
+            Push(Attribs,GLX.GLX_STENCIL_SIZE); Push(Attribs,Interfaces.C.int(GConfig.StencilBits));
          end if;
          if GConfig.BufferKind/=BufferKindSingle then
-            Push(GLX.GLX_DOUBLEBUFFER); Push(1);
+            Push(Attribs,GLX.GLX_DOUBLEBUFFER); Push(Attribs,1);
          end if;
-         Push(0);
+         Push(Attribs,0);
 
          Context.FBConfig:=glXChooseFBConfig
            (dpy         => Context.Display,
             screen      => Context.Screen,
-            attrib_list => Attribs(Attribs'First)'Access,
+            attrib_list => Attribs.Data(Attribs.Data'First)'Access,
             nelements   => Context.FBConfigCount'Access);
          if Context.FBConfig=null then
             raise FailedContextCreation
@@ -640,30 +644,21 @@ null;
       if OpenGL.IsExtensionSupported("GLX_ARB_create_context") then
          declare
             glXCreateContextAttribsARB : constant GLX.glXCreateContextAttribsARB_Access:=GLX.Conv(GLX.GetProcAddressARB("glXCreateContextAttribsARB"&Character'Val(0)));
-            Attribs : CIntArray(0..99);
-            Position : Integer:=Attribs'First;
-            -- Shared Code, refactor TODO
-            procedure Push
-              (Value : Interfaces.C.int) is
-            begin
-               Attribs(Position):=Value;
-               Position:=Position+1;
-            end Push;
-               ---------------------------------------------------------------
+            Attribs : CIntStack_Type(99);
 
          begin
 
             -- TODO: Get actual ogl version somehow... or set this to max somehow
-            Push(GLX.GLX_CONTEXT_MAJOR_VERSION_ARB); Push(Interfaces.C.int(3));
-            Push(GLX.GLX_CONTEXT_MINOR_VERSION_ARB); Push(Interfaces.C.int(2));
-            Push(GLX.GLX_CONTEXT_FLAGS_ARB); Push(GLX.GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
-            Push(0);
+            Push(Attribs,GLX.GLX_CONTEXT_MAJOR_VERSION_ARB); Push(Attribs,Interfaces.C.int(3));
+            Push(Attribs,GLX.GLX_CONTEXT_MINOR_VERSION_ARB); Push(Attribs,Interfaces.C.int(2));
+            Push(Attribs,GLX.GLX_CONTEXT_FLAGS_ARB); Push(Attribs,GLX.GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
+            Push(Attribs,0);
             Context.GLXContext:=glXCreateContextAttribsARB
               (dpy => Context.Display,
                config => Context.FBConfig(Context.FBConfigEntry),
                share_context => null,
                direct => 1,
-               attrib_list => Attribs(Attribs'First)'Access);
+               attrib_list => Attribs.Data(Attribs.Data'First)'Access);
             if Context.GLXContext/=null then
                Put_Line("Created OGL >3 context");
                CompatibleOpenGL:=False;
