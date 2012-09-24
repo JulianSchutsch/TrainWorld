@@ -9,8 +9,7 @@ with Graphics; use Graphics;
 with GlobalLoop;
 with Config;
 with Basics; use Basics;
-with DynamicLibraries;
-pragma Unreferenced(DynamicLibraries);
+with Ada.Exceptions;
 
 package body OpenGL.GLXContext is
 
@@ -410,7 +409,7 @@ null;
    begin
 
       pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
-      Put_Line("GetProc:"&Str&":");
+--      Put_Line("GetProc:"&Str&":");
       Result := GLXGetProcAddress(Str(Str'First)'Address);
       if Result=System.Null_Address then
          raise FailedContextCreation with "GLXGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
@@ -459,6 +458,13 @@ null;
          raise FailedContextCreation
            with "Failed call to XSetErrorHandler";
       end if;
+
+      begin
+         LoadGLX(Context.Display);
+      exception
+         when E:others =>
+            raise FailedContextCreation with "Failed to load GLX:"&Ada.Exceptions.Exception_Message(E);
+      end;
 
       if glX.glXQueryVersion
         (dpy   => Context.Display,
@@ -654,30 +660,57 @@ null;
       -- TODO: This may be replaced by a glxQueryExtensionString
       OpenGL.ReadExtensionsByGetString(GLXGetProc'Access);
 
---      declare
---         Version : OpenGL.OpenGLVersion_Type:=OpenGL.GetVersion(GLXGetProc'Access);
-      begin
---         if (Version.Major>=3) and OpenGL.IsExtensionSupported("GLX_ARB_create_context") then
---            declare
---              glXCreateContextAttribsARB : GLX.glXCreateContextAttribsARB_Access:=
-            -- Do it the new way
---         else
+      -- TODO: GLX should load the functions itself...
+      Put_Line("***********************************************************");
+      if OpenGL.IsExtensionSupported("GLX_ARB_create_context") then
+         declare
+            glXCreateContextAttribsARB : constant GLX.glXCreateContextAttribsARB_Access:=GLX.Conv(GLX.GetProcAddressARB("glXCreateContextAttribsARB"&Character'Val(0)));
+            Attribs : CIntArray(0..99);
+            Position : Integer:=Attribs'First;
+            -- Shared Code, refactor TODO
+            procedure Push
+              (Value : Interfaces.C.int) is
+            begin
+               Attribs(Position):=Value;
+               Position:=Position+1;
+            end Push;
+               ---------------------------------------------------------------
 
-            Context.GLXContext:=glX.glXCreateContext
-              (dpy       => Context.Display,
-               vis       => Context.Visual,
-               shareList => null,
-               direct    => 1);
+         begin
 
+            -- TODO: Get actual ogl version somehow... or set this to max somehow
+            Push(GLX.GLX_CONTEXT_MAJOR_VERSION_ARB); Push(Interfaces.C.int(3));
+            Push(GLX.GLX_CONTEXT_MINOR_VERSION_ARB); Push(Interfaces.C.int(2));
+            Push(GLX.GLX_CONTEXT_FLAGS_ARB); Push(GLX.GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
+            Push(0);
+            Context.GLXContext:=glXCreateContextAttribsARB
+              (dpy => Context.Display,
+               config => Context.FBConfig(Context.FBConfigEntry),
+               share_context => null,
+               direct => 1,
+               attrib_list => Attribs(Attribs'First)'Access);
             if Context.GLXContext=null then
-               raise FailedContextCreation
-                 with "Call to XCreateContext failed"
-                 &ErrorCodeString;
+               raise FailedContextCreation with "Callto glXCreateContextAttribsARB faled"&ErrorCodeString;
             end if;
 
---         end if;
+         end;
+         Put_Line("Created an OpenGL 3 or higher context");
 
-      end;
+      else
+
+         Context.GLXContext:=glX.glXCreateContext
+           (dpy       => Context.Display,
+            vis       => Context.Visual,
+            shareList => null,
+            direct    => 1);
+
+         if Context.GLXContext=null then
+            raise FailedContextCreation
+              with "Call to XCreateContext failed"
+              &ErrorCodeString;
+         end if;
+
+      end if;
 
       XMapWindow
         (display => Context.Display,

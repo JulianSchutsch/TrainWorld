@@ -74,12 +74,14 @@ package body DynamicLibraries is
    end Close;
    ---------------------------------------------------------------------------
 
-   function GetProc
+   function GetSymbol
      (Handle : in out Handle_Type;
       Name   : String)
       return System.Address is
+      use type Interfaces.C.char;
       CName : Interfaces.C.char_array:=Interfaces.C.To_C(Name);
    begin
+      pragma Assert(CName(CName'Last)=Interfaces.C.char'Val(0));
 
       if Handle.Internal=null then
          raise HandleNotOpen;
@@ -88,7 +90,7 @@ package body DynamicLibraries is
         (handle => Handle.Internal,
          symbol => CName(CName'First)'Access);
 
-   end GetProc;
+   end GetSymbol;
    ---------------------------------------------------------------------------
 
 end DynamicLibraries;

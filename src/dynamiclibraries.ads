@@ -27,7 +27,7 @@ package DynamicLibraries is
    procedure Close
      (Handle : in out Handle_Type);
 
-   function GetProc
+   function GetSymbol
      (Handle : in out Handle_Type;
       Name   : String)
       return System.Address;

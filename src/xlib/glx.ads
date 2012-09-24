@@ -24,9 +24,13 @@
 with Xlib; use Xlib;
 with OpenGL; use OpenGL;
 with Interfaces.C;
+with Interfaces.C.Strings;
 with System;
+with Ada.Unchecked_Conversion;
 
 package glX is
+
+   FailedglXLoading : Exception;
 
    GLX_RGBA         : constant:=4;
    GLX_RED_SIZE     : constant:=8;
@@ -44,6 +48,11 @@ package glX is
    GLX_TRUE_COLOR    : constant:=16#8002#;
    GLX_STENCIL_SIZE  : constant:=13;
 
+   GLX_CONTEXT_MAJOR_VERSION_ARB : constant:=16#2091#;
+   GLX_CONTEXT_MINOR_VERSION_ARB : constant:=16#2092#;
+   GLX_CONTEXT_FLAGS_ARB         : constant:=16#2094#;
+   GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB : constant:=2;
+
    type GLXContext_Type is null record;
    type GLXContext_Access is access all GLXContext_Type;
 
@@ -60,21 +69,27 @@ package glX is
 
    type glXGetProcAddressARB_Access is
      access function
-       (procName : System.Address)
+       (procName : access Interfaces.C.char)
         return System.Address;
    pragma Convention(C,glXGetProcAddressARB_Access);
 
-   glXGetProcAdddressARB : glXGetProcAddressARB_Access:=null;
+   glXGetProcAddressARB : glXGetProcAddressARB_Access:=null;
+
+   function GetProcAddressARB
+     (Name : string)
+      return System.Address;
 
    type glXCreateContextAttribsARB_Access is
      access function
        (dpy           : Display_Access;
-        config        : GLXFBConfig_Access;
+        config        : GLXFBConfigRec_Access;
         share_context : GLXContext_Access;
         direct        : Interfaces.C.int;
         attrib_list   : access Interfaces.C.int)
         return GLXContext_Access;
    pragma Convention(C,glXCreateContextAttribsARB_Access);
+
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glXCreateContextAttribsARB_Access);
 
    function glXQueryVersion
      (dpy   : Display_Access;
@@ -134,6 +149,20 @@ package glX is
       return XVisualInfo_Access;
    pragma Import(C,glXGetVisualFromFBConfig,"glXGetVisualFromFBConfig");
 
-   procedure LoadGLX;
+   function glXQueryExtension
+     (dpy : Display_Access;
+      errorBase : access Interfaces.C.int;
+      eventBase : access Interfaces.C.int)
+      return Interfaces.C.int;
+   pragma Import(C,glXQueryExtension,"glXQueryExtension");
+
+   function glXQueryExtensionString
+     (dpy    : Display_Access;
+      screen : Interfaces.C.int)
+      return Interfaces.C.Strings.chars_ptr;
+   pragma Import(C,glXQueryExtensionString,"glXQueryExtensionString");
+
+   procedure LoadGLX
+     (Display : Display_Access);
 
 end glX;
