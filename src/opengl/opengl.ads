@@ -431,6 +431,11 @@ package OpenGL is
         params : access GLint_Type);
    pragma Convention(StdCall,glGetShaderiv_Access);
 
+   type glUniform1i_Access is
+     access procedure
+       (location : GLint_Type;
+        v0       : GLint_Type);
+
    glCreateProgram      : glCreateProgram_Access      := null;
    glDeleteProgram      : glDeleteProgram_Access      := null;
    glUseProgram         : glUseProgram_Access         := null;
@@ -447,6 +452,8 @@ package OpenGL is
    glShaderSource       : glShaderSource_Access  := null;
    glCompileShader      : glCompileShader_Access := null;
    glGetShaderiv        : glGetShaderiv_Access   := null;
+
+   glUniform1i : glUniform1i_Access:=null;
 
    SupportProgram  : Boolean := False;
 

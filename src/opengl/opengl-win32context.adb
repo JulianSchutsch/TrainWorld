@@ -411,7 +411,6 @@ null;
 
    begin
 
-      pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
       Put_Line("GetProc:"&Str&":");
       Result := wglGetProcAddress(CName(CName'First)'Access);
       if Result=System.Null_Address then
@@ -530,6 +529,7 @@ null;
            &DWORD_Type'Image(GetLastError);
       end if;
 
+      -- TODO : Wait for WM_CREATE message before this.
       Context.DeviceContext:=GetDC(Context.WindowHandle);
       if Context.DeviceContext=NULLHANDLE then
          raise Graphics.FailedContextCreation with "Failed call to GetDC with "
@@ -630,7 +630,7 @@ null;
 
          if wglDeleteContext(Context.RenderContext)/=Standard.Win32.TRUE then
             if wglDeleteContext(NewContext)/=Standard.Win32.TRUE then
-               null;
+               null; -- TODO: Add Error note to list.
             end if;
             raise Graphics.FailedContextCreation with "Failed call to wglDeleteContext for help context";
          end if;

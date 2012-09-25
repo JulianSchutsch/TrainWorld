@@ -12,6 +12,18 @@ package body OpenGL.Program is
      (ShaderVertex   => GL_VERTEX_SHADER,
       ShaderFragment => GL_FRAGMENT_SHADER);
 
+   function GetUniformLocation
+     (Program : Program_Type;
+      Name    : String)
+      return GLint_Type is
+
+      CName : Interfaces.C.char_array:=Interfaces.C.To_C(Name);
+
+   begin
+      return glGetUniformLocation(Program.ID,CName(CName'First)'Access);
+   end GetUniformLocation;
+   ---------------------------------------------------------------------------
+
    procedure BindAttribLocation
      (Program : Program_Type;
       Index   : GLuint_Type;

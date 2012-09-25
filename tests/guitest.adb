@@ -21,8 +21,6 @@
 --   2.Aug 2012 Julian Schutsch
 --     - Original version
 
-pragma Warnings(Off);
-
 pragma Ada_2012;
 
 with Graphics;
@@ -37,6 +35,7 @@ with OpenGL.Program;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
 with OpenGL.Textures;
+pragma Warnings(Off);
 
 procedure GUITest is
 
@@ -47,23 +46,25 @@ procedure GUITest is
    pragma Warnings(Off,Terminated);
 
    VertexShaderSource : constant String:=
-     "#version 130"&Character'Val(10)&
+     "#version 150"&Character'Val(10)&
      "in vec3 in_Position;"&
-     "in vec3 in_Color;"&
-     "out vec3 ex_Color;"&
+     "in vec2 in_TexCoord;"&
+     "out vec2 ex_TexCoord;"&
      "void main(void)"&
      "{"&
      "  gl_Position = vec4(in_Position,1.0);"&
-     "  ex_Color = in_Color;"&
+     "  ex_TexCoord = in_TexCoord;"&
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
-     "#version 130"&Character'Val(10)&
-     "in vec3 ex_Color;"&
+     "#version 150"&Character'Val(10)&
+     "in vec2 ex_TexCoord;"&
      "out vec4 out_Color;"&
+     "uniform sampler2D tex;"&
      "void main(void)"&
      "{"&
-     "  out_Color=vec4(ex_Color,1.0);"&
+     "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
+--     "  out_Color=vec4(ex_TexCoord,1.0,1.0);"&
      "}"&Character'Val(0);
 
    FragmentShader : aliased OpenGL.Program.Shader_Type;
@@ -82,14 +83,16 @@ procedure GUITest is
      (0.0,0.8,-1.0,
       -0.8,-0.8,-1.0,
       0.8,-0.8,-1.0);
-   Col : GLfloat_Array(0..8):=
-     (1.0,0.0,0.0,
-      0.0,1.0,0.0,
-      0.0,0.0,1.0);
+   Tex : GLfloat_Array(0..5):=
+     (0.0,0.0,
+      0.0,1.0,
+      1.0,0.0);
 
    VertBuffer : aliased GLuint_Type;
-   ColBuffer  : aliased GLuint_Type;
-   VertArray  : aliased GLuint_Type;
+   TexBuffer  : aliased GLuint_Type;
+   AttArray  : aliased GLuint_Type;
+   TexUniform : aliased GLint_Type;
+   MyTexture : OpenGL.Textures.BGRATexture_Type;
 
    procedure OnContextPaint
      (Data : C_ClassAccess) is
@@ -98,14 +101,14 @@ procedure GUITest is
       glViewport(0,0,400,400);
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
+      MyTexture.Bind;
       Program.UseProgram;
-      glBindVertexArray(VertArray);
+      glBindVertexArray(AttArray);
       glDrawArrays(GL_TRIANGLES,0,3);
       glBindVertexArray(0);
       AssertError;
    end OnContextPaint;
    ---------------------------------------------------------------------------
-
 
 begin
 
@@ -122,12 +125,6 @@ begin
 
    C.I.OnClose:=OnContextClose'Unrestricted_Access;
    C.I.OnPaint:=OnContextPaint'Unrestricted_Access;
-
---   Put_Line("Extensions:");
---   for i in OpenGL.Extensions'Range loop
---      Put_Line(Integer'Image(i)&":"&To_String(OpenGL.Extensions(i))&":");
---   end loop;
-   AssertError;
 
    if OpenGL.SupportProgram then
       Put_Line("GLSL supported");
@@ -152,11 +149,11 @@ begin
        OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeConstRef(FragmentShader'Unrestricted_Access)));
    Put_Line("Link:"&To_String(Program.GetLinkLog));
    Program.BindAttribLocation(0,"in_Position");
-   Program.BindAttribLocation(1,"in_Color");
+   Program.BindAttribLocation(1,"in_TexCoord");
    Program.UseProgram;
 
-   glGenVertexArrays(1,VertArray'Access);
-   glBindVertexArray(VertArray);
+   glGenVertexArrays(1,AttArray'Access);
+   glBindVertexArray(AttArray);
 
    glGenBuffers(1,VertBuffer'Access);
    glBindBuffer(GL_ARRAY_BUFFER,VertBuffer);
@@ -164,14 +161,26 @@ begin
    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,System.Null_Address);
    glEnableVertexAttribArray(0);
 
-   glGenBuffers(1,ColBuffer'Access);
-   glBindBuffer(GL_ARRAY_BUFFER,ColBuffer);
-   glBufferData(GL_ARRAY_BUFFER,Col'Size/8,Col(0)'Address,GL_STATIC_DRAW);
-   glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,System.Null_Address);
+   glGenBuffers(1,TexBuffer'Access);
+   glBindBuffer(GL_ARRAY_BUFFER,TexBuffer);
+   glBufferData(GL_ARRAY_BUFFER,Tex'Size/8,Tex(0)'Address,GL_STATIC_DRAW);
+   glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,System.Null_Address);
    glEnableVertexAttribArray(1);
 
    glBindVertexArray(0);
 
+   TexUniform:=Program.GetUniformLocation("tex");
+   Program.UseProgram;
+   glUniform1i(TexUniform,0);
+
+   MyTexture.Create
+     (Height => 10,
+      Width => 10);
+
+   MyTexture.Clear
+     (Color => (Red=>255,Green=>0,Blue=>255,Alpha=>255));
+
+   MyTexture.Upload;
 
    while not Terminated loop
       GlobalLoop.Process;

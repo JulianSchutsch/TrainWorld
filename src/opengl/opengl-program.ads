@@ -82,6 +82,12 @@ package OpenGL.Program is
       Index   : GLuint_Type;
       Name    : String);
 
+   not overriding
+   function GetUniformLocation
+     (Program : Program_Type;
+      Name    : String)
+      return GLint_Type;
+
    overriding
    procedure Finalize
      (Program : in out Program_Type);
