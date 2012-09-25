@@ -41,7 +41,7 @@ package Win32.OpenGL32 is
    ERROR_INVALID_PROFILE_ARB : constant := 16#2096#;
 
    function wglGetProcAddress
-     (Str : System.Address)
+     (Str : access Interfaces.C.char)
       return System.Address;
    pragma Import(StdCall,wglGetProcAddress,"wglGetProcAddress");
 

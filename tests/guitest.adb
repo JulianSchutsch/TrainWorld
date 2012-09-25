@@ -21,6 +21,8 @@
 --   2.Aug 2012 Julian Schutsch
 --     - Original version
 
+pragma Warnings(Off);
+
 pragma Ada_2012;
 
 with Graphics;
@@ -34,6 +36,7 @@ with Interfaces.C;
 with OpenGL.Program;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
+with OpenGL.Textures;
 
 procedure GUITest is
 
@@ -44,10 +47,10 @@ procedure GUITest is
    pragma Warnings(Off,Terminated);
 
    VertexShaderSource : constant String:=
-     "#version 120"&Character'Val(10)&
-     "attribute vec3 in_Position;"&
-     "attribute vec3 in_Color;"&
-     "varying vec3 ex_Color;"&
+     "#version 130"&Character'Val(10)&
+     "in vec3 in_Position;"&
+     "in vec3 in_Color;"&
+     "out vec3 ex_Color;"&
      "void main(void)"&
      "{"&
      "  gl_Position = vec4(in_Position,1.0);"&
@@ -55,11 +58,12 @@ procedure GUITest is
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
-     "#version 120"&Character'Val(10)&
-     "varying vec3 ex_Color;"&
+     "#version 130"&Character'Val(10)&
+     "in vec3 ex_Color;"&
+     "out vec4 out_Color;"&
      "void main(void)"&
      "{"&
-     "  gl_FragColor=vec4(ex_Color,1.0);"&
+     "  out_Color=vec4(ex_Color,1.0);"&
      "}"&Character'Val(0);
 
    FragmentShader : aliased OpenGL.Program.Shader_Type;
@@ -86,7 +90,6 @@ procedure GUITest is
    VertBuffer : aliased GLuint_Type;
    ColBuffer  : aliased GLuint_Type;
    VertArray  : aliased GLuint_Type;
-
 
    procedure OnContextPaint
      (Data : C_ClassAccess) is

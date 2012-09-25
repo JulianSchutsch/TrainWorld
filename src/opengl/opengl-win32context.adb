@@ -386,9 +386,11 @@ null;
 
       Result : System.Address;
 
+      CName : Interfaces.C.char_array:=Interfaces.C.To_C(Str);
+
    begin
 
-      Result := GetProcAddress(LibraryHandle,Str(Str'First)'Address);
+      Result := GetProcAddress(LibraryHandle,CName(CName'First)'Access);
       if result=System.Null_Address then
          raise FailedContextCreation with "GetProcAddress return null for """&Str(Str'First..Str'Last-1)&"""";
       end if;
@@ -405,11 +407,13 @@ null;
 
       Result : System.Address;
 
+      CName : Interfaces.C.char_array:=Interfaces.C.To_C(Str);
+
    begin
 
       pragma Assert(Str/="" and Str(Str'Last)=Character'Val(0));
       Put_Line("GetProc:"&Str&":");
-      Result := wglGetProcAddress(Str(Str'First)'Address);
+      Result := wglGetProcAddress(CName(CName'First)'Access);
       if Result=System.Null_Address then
          raise FailedContextCreation with "wglGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
       end if;

@@ -37,6 +37,12 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glFinish_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetStringi_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetError_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glGenTextures_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glBindTexture_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glTexParameteri_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glDeleteTextures_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glTexImage2D_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glTexSubImage2D_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -214,14 +220,21 @@ package body OpenGL is
 
    begin
 
-      glGetError    := Conv(DefaultGetProc("glGetError"&NullChar));
-      glClear       := Conv(DefaultGetProc("glClear"&NullChar));
-      glClearColor  := Conv(DefaultGetProc("glClearColor"&NullChar));
-      glViewport    := Conv(DefaultGetProc("glViewport"&NullChar));
-      glFinish      := Conv(DefaultGetProc("glFinish"&NullChar));
-      glGetIntegerv := Conv(DefaultgetProc("glGetIntegerv"&NullChar));
-      glDrawArrays  := Conv(ExtensionGetProc("glDrawArrays"&NullChar));
-      Put_Line("Ext");
+      -- TODO: It is not entirely safe to say what can be loaded with ExtensionProc
+      --       This needs testing and research
+      glGetError       := Conv(DefaultGetProc("glGetError"&NullChar));
+      glClear          := Conv(DefaultGetProc("glClear"&NullChar));
+      glClearColor     := Conv(DefaultGetProc("glClearColor"&NullChar));
+      glViewport       := Conv(DefaultGetProc("glViewport"&NullChar));
+      glFinish         := Conv(DefaultGetProc("glFinish"&NullChar));
+      glGetIntegerv    := Conv(DefaultgetProc("glGetIntegerv"&NullChar));
+      glTexParameteri  := Conv(DefaultGetProc("glTexParameteri"&NullChar));
+      glDrawArrays     := Conv(ExtensionGetProc("glDrawArrays"&NullChar));
+      glGenTextures    := Conv(ExtensionGetProc("glGenTextures"&NullChar));
+      glBindTexture    := Conv(ExtensionGetProc("glBindTexture"&NullChar));
+      glDeleteTextures := Conv(ExtensionGetProc("glDeleteTextures"&NullChar));
+      glTexImage2D     := Conv(DefaultGetProc("glTexImage2D"&NullChar));
+      glTexSubImage2D  := Conv(ExtensionGetProc("glTexSubImage2D"&NullChar));
       AssertError;
 
       if Version.Major>=3 then
@@ -235,7 +248,6 @@ package body OpenGL is
          ReadExtensionsByGetString(DefaultGetProc);
       end if;
 
-      Put_Line("Extension Done");
       AssertError;
       -- Buffer Objects
       if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then

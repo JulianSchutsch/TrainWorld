@@ -115,7 +115,7 @@ package Win32.Kernel32 is
 
    function GetProcAddress
      (hModule : HMODULE_Type;
-      lpProcName : System.Address)
+      lpProcName : access Interfaces.C.char)
       return System.Address;
    pragma Import(StdCall,GetProcAddress,"GetProcAddress");
 

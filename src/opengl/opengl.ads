@@ -195,13 +195,70 @@ package OpenGL is
      return GLenum_Type;
    pragma Convention(StdCall,glGetError_Access);
 
-   glClearColor  : glClearColor_Access:=null;
-   glClear       : glClear_Access:=null;
-   glViewport    : glViewport_Access:=null;
-   glDrawArrays  : glDrawArrays_Access:=null;
-   glFinish      : glFinish_Access:=null;
-   glGetIntegerv : glGetIntegerv_Access:=null;
-   glGetError    : glGetError_Access:=null;
+   type glGenTextures_Access is
+     access procedure
+       (n        : GLsizei_Type;
+        textures : access GLuint_Type);
+   pragma Convention(StdCall,glGenTextures_Access);
+
+   type glBindTexture_Access is
+     access procedure
+       (target  : GLenum_Type;
+        texture : GLuint_Type);
+   pragma Convention(StdCall,glBindTexture_Access);
+
+   type glTexParameteri_Access is
+     access procedure
+       (target : GLenum_Type;
+        pname  : GLenum_Type;
+        param  : GLint_Type);
+   pragma Convention(StdCall,glTexParameteri_Access);
+
+   type glDeleteTextures_Access is
+     access procedure
+       (n        : GLsizei_Type;
+        textures : access GLuint_Type);
+   pragma Convention(StdCall,glDeleteTextures_Access);
+
+   type glTexImage2D_Access is
+     access procedure
+       (target         : GLenum_Type;
+        level          : GLint_Type;
+        internalFormat : GLint_Type;
+        width          : GLsizei_Type;
+        height         : GLsizei_Type;
+        border         : GLint_Type;
+        format         : GLenum_Type;
+        ttype          : GLenum_Type;
+        data           : System.Address);
+   pragma Convention(StdCall,glTexImage2D_Access);
+
+   type glTexSubImage2D_Access is
+     access procedure
+       (target  : GLenum_Type;
+        level   : GLint_Type;
+        xoffset : GLint_Type;
+        yoffset : GLint_Type;
+        width   : GLsizei_Type;
+        height  : GLsizei_Type;
+        format  : GLenum_Type;
+        ttype   : GLenum_Type;
+        data    : System.Address);
+   pragma Convention(StdCall,glTexSubImage2D_Access);
+
+   glClearColor     : glClearColor_Access:=null;
+   glClear          : glClear_Access:=null;
+   glViewport       : glViewport_Access:=null;
+   glDrawArrays     : glDrawArrays_Access:=null;
+   glFinish         : glFinish_Access:=null;
+   glGetIntegerv    : glGetIntegerv_Access:=null;
+   glGetError       : glGetError_Access:=null;
+   glGenTextures    : glGenTextures_Access:=null;
+   glBindTexture    : glBindTexture_Access:=null;
+   glTexParameteri  : glTexParameteri_Access:=null;
+   glDeleteTextures : glDeleteTextures_Access:=null;
+   glTexImage2D     : glTexImage2D_Access:=null;
+   glTexSubImage2D  : glTexSubImage2D_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects
@@ -423,5 +480,6 @@ package OpenGL is
    procedure AssertError;
 
    GLSLVersion : GLSLVersion_Type;
+   ActiveTexture : GLuint_Type:=0;
 
 end OpenGL;

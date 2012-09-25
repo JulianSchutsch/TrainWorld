@@ -19,9 +19,9 @@ package body Win32.OpenGL32 is
         (Source => System.Address,
          Target => Proc_Access);
 
-      ProcName : constant String:="wglCreateContextAttribsARB"&Character'Val(0);
+      ProcName : Interfaces.C.char_array:=Interfaces.C.To_C("wglCreateContextAttribsARB");
 
-      Proc : constant Proc_Access:=Conv(wglGetProcAddress(ProcName(ProcName'First)'Address));
+      Proc : constant Proc_Access:=Conv(wglGetProcAddress(ProcName(ProcName'First)'Access));
 
    begin
 
