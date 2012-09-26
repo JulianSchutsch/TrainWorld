@@ -123,6 +123,8 @@ package OpenGL is
 
    GL_NUM_EXTENSIONS : constant GLenum_Type:=16#821D#;
 
+   GL_LINEAR : constant GLint_Type:=16#2601#;
+
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
    type GetProc_Access is

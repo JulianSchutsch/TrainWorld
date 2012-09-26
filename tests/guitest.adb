@@ -64,7 +64,6 @@ procedure GUITest is
      "void main(void)"&
      "{"&
      "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
---     "  out_Color=vec4(ex_TexCoord,1.0,1.0);"&
      "}"&Character'Val(0);
 
    FragmentShader : aliased OpenGL.Program.Shader_Type;
@@ -179,6 +178,7 @@ begin
 
    MyTexture.Clear
      (Color => (Red=>255,Green=>0,Blue=>255,Alpha=>255));
+   MyTexture.Pixels(4,4):=(Red=>0,Green=>0,Blue=>0,Alpha=>255);
 
    MyTexture.Upload;
 

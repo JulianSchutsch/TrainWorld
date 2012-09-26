@@ -75,11 +75,11 @@ package body OpenGL.Textures is
       glTexParameteri
         (target => GL_TEXTURE_2D,
          pname  => GL_TEXTURE_MIN_FILTER,
-         param  => GL_NEAREST);
+         param  => GL_LINEAR);
       glTexParameteri
         (target => GL_TEXTURE_2D,
          pname  => GL_TEXTURE_MAG_FILTER,
-         param  => GL_NEAREST);
+         param  => GL_LINEAR);
       glTexParameteri
         (target => GL_TEXTURE_2D,
          pname  => GL_TEXTURE_WRAP_S,
