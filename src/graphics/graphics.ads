@@ -1,3 +1,43 @@
+-------------------------------------------------------------------------------
+--   Copyright 2012 Julian Schutsch
+--
+--   This file is part of TrainWorld
+--
+--   ParallelSim is free software: you can redistribute it and/or modify
+--   it under the terms of the GNU Affero General Public License as published
+--   by the Free Software Foundation, either version 3 of the License, or
+--   (at your option) any later version.
+--
+--   ParallelSim is distributed in the hope that it will be useful,
+--   but WITHOUT ANY WARRANTY; without even the implied warranty of
+--   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--   GNU Affero General Public License for more details.
+--
+--   You should have received a copy of the GNU Affero General Public License
+--   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------------------
+
+-- Revision History
+--   27.Sep 2012 Julian Schutsch
+--     - Original version
+
+-- Usage
+--   This package provides a common interface to be used for all graphics
+--   context implementations written for it.
+--   All implementations must register in the Implementations child package.
+--   An context is created given a specific configuration and immediately
+--   initialized after the Implementations.Utilize call which returns
+--   a Context_Ref.
+--
+--   The context communicates through a ContextCallBack_Interface which
+--   must be assigned to Context_Interface.CallBack.
+--   If the initialization was successfull, Context_Interface.OnCreate is
+--   called as soon as the CallBack is assigned.
+--
+--   If the context is closed, a Context_Interface.OnClose is called and
+--   no further calls to the CallBack are made. The CallBack access may
+--   be set to null by the implementation.
+
 pragma Ada_2012;
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
@@ -45,12 +85,25 @@ package Graphics is
      access procedure
        (Data : C_ClassAccess);
 
+   type ContextCallBack_Interface is limited interface;
+   type ContextCallBack_ClassAccess is access all ContextCallBack_Interface'Class;
+
+   procedure ContextClose
+     (T : in out ContextCallBack_Interface) is null;
+
+   procedure ContextResize
+     (T : in out ContextCallBack_Interface) is null;
+
+   procedure ContextPaint
+     (T : in out ContextCallBack_Interface) is null;
+
+   procedure ContextCreate
+     (T : in out ContextCallBack_Interface) is null;
+   ---------------------------------------------------------------------------
+
    type Context_Interface is new RefCount.Ref_Interface with
       record
-         Data     : C_ClassAccess    := null;
-         OnClose  : Context_OnClose  := null;
-         OnResize : Context_OnResize := null;
-         OnPaint  : Context_OnPaint  := null;
+         CallBack : ContextCallBack_ClassAccess;
       end record;
    type Context_ClassAccess is access all Context_Interface'Class;
 

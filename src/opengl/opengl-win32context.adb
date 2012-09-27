@@ -67,6 +67,7 @@ package body OpenGL.Win32Context is
          HasCapture          : Boolean           := False;
          LibraryLoaded       : Boolean           := False;
          LoopProcess         : Context_Process;
+         CreatePending       : Boolean:=False;
 
          CSTR_ClassName : Interfaces.C.Strings.chars_ptr
            := Interfaces.C.Strings.Null_Ptr;
@@ -91,8 +92,14 @@ package body OpenGL.Win32Context is
 
    begin
 
-      if P.Context=null then
-         raise InvalidContext with "Process not properly initialized";
+      pragma Assert(P.Context/=null,"Process not properly initialized, ProcessLoop Object has no reference to P.Context");
+
+      if P.Context.CreatePending then
+         if P.Context.CallBack=null then
+            return;
+         end if;
+         P.Context.CallBack.ContextCreate;
+         P.Context.CreatePending:=False;
       end if;
 
       while PeekMessage
@@ -106,8 +113,8 @@ package body OpenGL.Win32Context is
          LResult   :=DispatchMessage(lMsg'Access);
       end loop;
 
-      if P.Context.DestroySignalSend and P.Context.OnClose/=null then
-         P.Context.OnClose(P.Context.Data);
+      if P.Context.DestroySignalSend and P.Context.CallBack/=null then
+         P.Context.CallBack.ContextClose;
          P.Disable;
       end if;
 
@@ -130,8 +137,8 @@ package body OpenGL.Win32Context is
         (hdc   => Context.DeviceContext,
          hglrc => Context.RenderContext);
 
-      if Context.OnPaint/=null then
-         Context.OnPaint(Context.Data);
+      if Context.CallBack/=null then
+         Context.CallBack.ContextPaint;
       end if;
 
       if Context.DoubleBuffered then
@@ -158,6 +165,10 @@ package body OpenGL.Win32Context is
       lParam : LPARAM_Type)
       return LRESULT_Type is
 
+      function ConvertLongPtrToContextAccess is new Ada.Unchecked_Conversion
+        (Source => LONG_PTR_Type,
+         Target => Context_Access);
+
       -- Context belonging to this window
       Context : Context_Access;
 
@@ -167,14 +178,8 @@ package body OpenGL.Win32Context is
       -- Context will be null if WM_CREATE has not been called before
       -- PORTABILITY : Expects Context_Access to be a simple pointer
       --   Shown to work with GNAT GPL 2010 (20100603)
-      declare
-         function ConvertLongPtrToContextAccess is new Ada.Unchecked_Conversion
-           (Source => LONG_PTR_Type,
-            Target => Context_Access);
-      begin
-         Context:=ConvertLongPtrToContextAccess
-           (GetWindowLongPtr(hWnd,0));
-      end;
+      Context:=ConvertLongPtrToContextAccess
+        (GetWindowLongPtr(hWnd,0));
 
       case uMsg is
          when WM_MOUSELEAVE =>
@@ -220,8 +225,13 @@ package body OpenGL.Win32Context is
                  (hWnd      => hWnd,
                   nIndex    => 0,
                   dwNewLong => CreateStruct.lpCreateParams);
+               Context:=ConvertLongPtrToContextAccess
+                 (CreateStruct.lpCreateParams);
             end;
+
+            Context.CreatePending:=True;
             return 0;
+
          when WM_SIZE =>
 --            GUI.PropagateContextResize
 --              (Context => Context_ClassAccess(Context),

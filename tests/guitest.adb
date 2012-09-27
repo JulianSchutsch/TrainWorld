@@ -30,17 +30,14 @@ with Config;
 with Basics; use Basics;
 with OpenGL; use OpenGL;
 with GlobalLoop;
-with Interfaces.C;
 with OpenGL.Program;
+with OpenGL.Textures;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
-with OpenGL.Textures;
-pragma Warnings(Off);
+with Ada.Finalization;
 
 procedure GUITest is
 
-   C : Graphics.Context_Ref;
-   pragma Warnings(Off,C);
    Configuration : Config.ConfigNode_Type;
    Terminated : Boolean:=False;
    pragma Warnings(Off,Terminated);
@@ -66,18 +63,6 @@ procedure GUITest is
      "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
      "}"&Character'Val(0);
 
-   FragmentShader : aliased OpenGL.Program.Shader_Type;
-   VertexShader   : aliased OpenGL.Program.Shader_Type;
-   Program        : OpenGL.Program.Program_Type;
-
-   procedure OnContextClose
-     (Data : C_ClassAccess) is
-      pragma Unreferenced(Data);
-   begin
-      Terminated:=True;
-   end OnContextClose;
-   ---------------------------------------------------------------------------
-
    Vert : GLfloat_Array(0..8):=
      (0.0,0.8,-1.0,
       -0.8,-0.8,-1.0,
@@ -87,26 +72,123 @@ procedure GUITest is
       0.0,1.0,
       1.0,0.0);
 
-   VertBuffer : aliased GLuint_Type;
-   TexBuffer  : aliased GLuint_Type;
-   AttArray  : aliased GLuint_Type;
-   TexUniform : aliased GLint_Type;
-   MyTexture : OpenGL.Textures.BGRATexture_Type;
+   type ContextCallBack_Type is new Ada.Finalization.Limited_Controlled and Graphics.ContextCallBack_Interface with
+      record
+         FragmentShader : aliased OpenGL.Program.Shader_Type;
+         VertexShader   : aliased OpenGL.Program.Shader_Type;
+         Program        : OpenGL.Program.Program_Type;
+         VertBuffer     : aliased GLuint_Type;
+         TexBuffer      : aliased GLuint_Type;
+         AttArray       : aliased GLuint_Type;
+         TexUniform     : aliased GLint_Type;
+         MyTexture      : OpenGL.Textures.BGRATexture_Type;
+      end record;
 
-   procedure OnContextPaint
-     (Data : C_ClassAccess) is
+   overriding
+   procedure ContextClose
+     (Data : in out ContextCallBack_Type);
+
+   overriding
+   procedure ContextPaint
+     (Data : in out ContextCallBack_Type);
+
+   overriding
+   procedure ContextCreate
+     (Data : in out ContextCallBack_Type);
+
+   overriding
+   procedure Finalize
+     (Data : in out ContextCallBack_Type);
+   ---------------------------------------------------------------------------
+
+   procedure Finalize
+     (Data : in out ContextCallBack_Type) is
       pragma Unreferenced(Data);
+   begin
+      Put_Line("Data.Finalize");
+   end Finalize;
+   ---------------------------------------------------------------------------
+
+   procedure ContextCreate
+     (Data : in out ContextCallBack_Type) is
+
+   begin
+
+      Data.FragmentShader.Create
+        (ShaderType => OpenGL.Program.ShaderFragment,
+         Source     => FragmentShaderSource);
+      Put_Line("Compile Fragment Shader:"&To_String(Data.FragmentShader.GetCompileLog));
+
+      Data.VertexShader.Create
+        (ShaderType => OpenGL.Program.ShaderVertex,
+         Source     => VertexShaderSource);
+      Put_Line("Compile Vertex Shader:"&To_String(Data.VertexShader.GetCompileLog));
+
+      Data.Program.Create
+        ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeConstRef(Data.VertexShader'Unrestricted_Access),
+          OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeConstRef(Data.FragmentShader'Unrestricted_Access)));
+      Put_Line("Link:"&To_String(Data.Program.GetLinkLog));
+      Data.Program.BindAttribLocation(0,"in_Position");
+      Data.Program.BindAttribLocation(1,"in_TexCoord");
+      Data.Program.UseProgram;
+
+      glGenVertexArrays(1,Data.AttArray'Access);
+      glBindVertexArray(Data.AttArray);
+
+      glGenBuffers(1,Data.VertBuffer'Access);
+      glBindBuffer(GL_ARRAY_BUFFER,Data.VertBuffer);
+      glBufferData(GL_ARRAY_BUFFER,Vert'Size/8,Vert(0)'Address,GL_STATIC_DRAW);
+      glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,System.Null_Address);
+      glEnableVertexAttribArray(0);
+
+      glGenBuffers(1,Data.TexBuffer'Access);
+      glBindBuffer(GL_ARRAY_BUFFER,Data.TexBuffer);
+      glBufferData(GL_ARRAY_BUFFER,Tex'Size/8,Tex(0)'Address,GL_STATIC_DRAW);
+      glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,System.Null_Address);
+      glEnableVertexAttribArray(1);
+
+      glBindVertexArray(0);
+
+      Data.TexUniform:=Data.Program.GetUniformLocation("tex");
+      Data.Program.UseProgram;
+      glUniform1i(Data.TexUniform,0);
+
+      Data.MyTexture.Create
+        (Height => 10,
+         Width => 10);
+
+      Data.MyTexture.Clear
+        (Color => (Red=>255,Green=>0,Blue=>255,Alpha=>255));
+      Data.MyTexture.Pixels(4,4):=(Red=>0,Green=>0,Blue=>0,Alpha=>255);
+
+      Data.MyTexture.Upload;
+
+   end ContextCreate;
+   ---------------------------------------------------------------------------
+
+   procedure ContextClose
+     (Data : in out ContextCallBack_Type) is
+
+   begin
+      Data.FragmentShader.Reset;
+      Data.VertexShader.Reset;
+      Terminated:=True;
+   end ContextClose;
+   ---------------------------------------------------------------------------
+
+   procedure ContextPaint
+     (Data : in out ContextCallBack_Type) is
    begin
       glViewport(0,0,400,400);
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
-      MyTexture.Bind;
-      Program.UseProgram;
-      glBindVertexArray(AttArray);
+      Data.MyTexture.Bind;
+      Data.Program.UseProgram;
+      glBindVertexArray(Data.AttArray);
       glDrawArrays(GL_TRIANGLES,0,3);
       glBindVertexArray(0);
       AssertError;
-   end OnContextPaint;
+   end ContextPaint;
    ---------------------------------------------------------------------------
 
 begin
@@ -119,74 +201,23 @@ begin
       WindowType    => Graphics.WindowTypeWindow,
       BufferKind    => Graphics.BufferKindDefault);
 
-   Put_Line("Find");
-   C:=Graphics.Implementations.Utilize(Configuration);
+   declare
+      Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration);
+   begin
 
-   C.I.OnClose:=OnContextClose'Unrestricted_Access;
-   C.I.OnPaint:=OnContextPaint'Unrestricted_Access;
+      declare
+         ContextCallBack : ContextCallBack_Type;
+      begin
 
-   if OpenGL.SupportProgram then
-      Put_Line("GLSL supported");
-   else
-      Put_Line("GLSL not supported");
-      return;
-   end if;
-   Put_Line("GLSL Version:"&GLint_Type'Image(GLSLVersion.Major)&"."&GLint_Type'Image(GLSLVersion.Minor));
+         Context.I.CallBack:=ContextCallBack'Unrestricted_Access;
 
-   FragmentShader.Create
-     (ShaderType => OpenGL.Program.ShaderFragment,
-      Source     => FragmentShaderSource);
-   Put_Line("Compile Fragment Shader:"&To_String(FragmentShader.GetCompileLog));
+         while not Terminated loop
+            GlobalLoop.Process;
+         end loop;
 
-   VertexShader.Create
-     (ShaderType => OpenGL.Program.ShaderVertex,
-      Source     => VertexShaderSource);
-   Put_Line("Compile Vertex Shader:"&To_String(VertexShader.GetCompileLog));
+      end;
+      Put_Line("Leaving context area");
 
-   Program.Create
-     ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeConstRef(VertexShader'Unrestricted_Access),
-       OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeConstRef(FragmentShader'Unrestricted_Access)));
-   Put_Line("Link:"&To_String(Program.GetLinkLog));
-   Program.BindAttribLocation(0,"in_Position");
-   Program.BindAttribLocation(1,"in_TexCoord");
-   Program.UseProgram;
-
-   glGenVertexArrays(1,AttArray'Access);
-   glBindVertexArray(AttArray);
-
-   glGenBuffers(1,VertBuffer'Access);
-   glBindBuffer(GL_ARRAY_BUFFER,VertBuffer);
-   glBufferData(GL_ARRAY_BUFFER,Vert'Size/8,Vert(0)'Address,GL_STATIC_DRAW);
-   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,System.Null_Address);
-   glEnableVertexAttribArray(0);
-
-   glGenBuffers(1,TexBuffer'Access);
-   glBindBuffer(GL_ARRAY_BUFFER,TexBuffer);
-   glBufferData(GL_ARRAY_BUFFER,Tex'Size/8,Tex(0)'Address,GL_STATIC_DRAW);
-   glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,System.Null_Address);
-   glEnableVertexAttribArray(1);
-
-   glBindVertexArray(0);
-
-   TexUniform:=Program.GetUniformLocation("tex");
-   Program.UseProgram;
-   glUniform1i(TexUniform,0);
-
-   MyTexture.Create
-     (Height => 10,
-      Width => 10);
-
-   MyTexture.Clear
-     (Color => (Red=>255,Green=>0,Blue=>255,Alpha=>255));
-   MyTexture.Pixels(4,4):=(Red=>0,Green=>0,Blue=>0,Alpha=>255);
-
-   MyTexture.Upload;
-
-   while not Terminated loop
-      GlobalLoop.Process;
-   end loop;
-
-   FragmentShader.Reset;
-   VertexShader.Reset;
+   end;
 
 end GUITest;

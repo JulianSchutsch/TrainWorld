@@ -105,6 +105,7 @@ package body OpenGL.GLXContext is
          FBConfigCount       : aliased Interfaces.C.int:=0;
          FBConfigEntry       : Natural:=0;
          LoopProcess         : Context_Process;
+         CreatePending       : Boolean:=False;
       end record;
 
    overriding
@@ -137,6 +138,14 @@ package body OpenGL.GLXContext is
       end Paint;
 
    begin
+
+      if P.Context.CreatePending then
+         if P.Context.CallBack/=null then
+            P.Context.CallBack.ContextCreate;
+            P.Context.CreatePending:=False;
+         end if;
+      end if;
+
       if glX.glxMakeCurrent
         (dpy      => P.Context.Display,
          drawable => glX.GLXDrawable_Type(P.Context.Window),
