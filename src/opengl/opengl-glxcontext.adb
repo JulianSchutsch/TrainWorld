@@ -125,8 +125,8 @@ package body OpenGL.GLXContext is
 
       procedure Paint is
       begin
-         if P.Context.OnPaint/=null then
-            P.Context.OnPaint(P.Context.Data);
+         if P.Context.CallBack/=null then
+            P.Context.CallBack.ContextPaint;
          end if;
          if P.Context.DoubleBuffered then
             glX.glXSwapBuffers
@@ -179,8 +179,8 @@ package body OpenGL.GLXContext is
                if Event.ClientMessage.l(0)
                  =Interfaces.C.long(P.Context.DeleteWindowAtom) then
                   P.Context.DestroyedSignalSend:=True;
-                  if P.Context.OnClose/=null then
-                     P.Context.OnClose(P.Context.Data);
+                  if P.Context.CallBack/=null then
+                     P.Context.CallBack.ContextClose;
                   end if;
                   P.Disable;
                   return;
@@ -796,6 +796,7 @@ null;
             Compatible       => CompatibleOpenGL);
       end if;
 
+      Context.CreatePending:=True;
       return ContextRef;
 
    end ContextConstructor;
