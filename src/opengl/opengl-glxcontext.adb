@@ -480,7 +480,7 @@ null;
       New_Line;
       if not
         (
-           ((GLX.VersionMajor=1) and (GLX.VersionMinor>=3))
+           ((GLX.VersionMajor=1) and (GLX.VersionMinor>=2))
          or (GLX.VersionMajor>=2)) then
 
          raise FailedContextCreation
