@@ -2,6 +2,7 @@ with "core";
 with "gui";
 with "config";
 with "switches";
+with "cairoada";
 
 project GUITest is
 

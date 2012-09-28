@@ -98,6 +98,7 @@ package OpenGL is
    GL_BGRA            : constant:=16#80E1#;
 
    GL_QUADS : constant GLenum_Type:=7;
+   GL_TRIANGLE_STRIP : constant GLenum_Type:=5;
 
    GL_TEXTURE_MIN_FILTER : constant GLenum_Type:=16#2801#;
    GL_TEXTURE_MAG_FILTER : constant GLenum_Type:=16#2800#;

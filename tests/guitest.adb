@@ -35,12 +35,22 @@ with OpenGL.Textures;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
 with Ada.Finalization;
+pragma Warnings(off);
+with Cairo; use Cairo;
+with Cairo.Surface; use Cairo.Surface;
+with Cairo.Surface.Image; use Cairo.Surface.Image;
+with Cairo.Context; use Cairo.Context;
+with Ada.Numerics;
+with Interfaces.C;
 
 procedure GUITest is
 
+   use type Interfaces.C.double;
    Configuration : Config.ConfigNode_Type;
    Terminated : Boolean:=False;
    pragma Warnings(Off,Terminated);
+
+   Pi : Interfaces.C.double:=Interfaces.C.double(Ada.Numerics.PI);
 
    VertexShaderSource : constant String:=
      "#version 150"&Character'Val(10)&
@@ -63,14 +73,18 @@ procedure GUITest is
      "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
      "}"&Character'Val(0);
 
-   Vert : GLfloat_Array(0..8):=
-     (0.0,0.8,-1.0,
-      -0.8,-0.8,-1.0,
-      0.8,-0.8,-1.0);
-   Tex : GLfloat_Array(0..5):=
+   Vert : GLfloat_Array(0..11):=
+     (0.2,0.2,-1.0,
+      0.8,0.2,-1.0,
+      0.2,0.8,-1.0,
+      0.8,0.8,-1.0);
+   Tex : GLfloat_Array(0..7):=
      (0.0,0.0,
+      1.0,0.0,
       0.0,1.0,
-      1.0,0.0);
+      1.0,1.0);
+
+   Pic : Standard.Textures.BGRATexture_Type;
 
    type ContextCallBack_Type is new Ada.Finalization.Limited_Controlled and Graphics.ContextCallBack_Interface with
       record
@@ -154,12 +168,9 @@ procedure GUITest is
       glUniform1i(Data.TexUniform,0);
 
       Data.MyTexture.Create
-        (Height => 10,
-         Width => 10);
-
-      Data.MyTexture.Clear
-        (Color => (Red=>255,Green=>0,Blue=>255,Alpha=>255));
-      Data.MyTexture.Pixels(4,4):=(Red=>0,Green=>0,Blue=>0,Alpha=>255);
+        (Height => 200,
+         Width => 200);
+      Data.MyTexture.Pixels.all:=Pic.Pixels.all;
 
       Data.MyTexture.Upload;
 
@@ -185,7 +196,7 @@ procedure GUITest is
       Data.MyTexture.Bind;
       Data.Program.UseProgram;
       glBindVertexArray(Data.AttArray);
-      glDrawArrays(GL_TRIANGLES,0,3);
+      glDrawArrays(GL_TRIANGLE_STRIP,0,4);
       glBindVertexArray(0);
       AssertError;
    end ContextPaint;
@@ -200,6 +211,66 @@ begin
      (Configuration => Configuration,
       WindowType    => Graphics.WindowTypeWindow,
       BufferKind    => Graphics.BufferKindDefault);
+
+   declare
+      Surface : Cairo_Surface_Handle;
+      Context : Cairo_Context_Handle;
+      Data    : System.Address;
+   begin
+      Surface:=New_Image_Surface
+        (Format => CAIRO_FORMAT_ARGB32,
+         Height => 200,
+         Width  => 200);
+      Context:=New_Context(Ref(Surface));
+      Rectangle
+        (Context => Ref(Context).all,
+         X => 0.0,
+         Y => 0.0,
+         Height => 200.0,
+         Width => 200.0);
+      Set_Source_RGBA
+        (Context => Ref(Context).all,
+         Red     => 0.0,
+         Green   => 1.0,
+         Blue    => 0.0,
+         Alpha   => 1.0);
+      Fill(Ref(Context).all);
+      Move_To
+        (Context => Ref(Context).all,
+         X       => 0.0,
+         Y       => 199.0);
+      Arc
+        (Context => Ref(Context).all,
+         Center_X => 199.0,
+         Center_Y => 199.0,
+         Radius   => 199.0,
+         Angle1   => -Pi,
+         Angle2   => -Pi*0.5);
+      Line_To
+        (Context => Ref(Context).all,
+         X => 199.0,
+         Y => 9.0);
+      Arc_Negative
+        (Context => Ref(Context).all,
+         Center_X => 199.0,
+         Center_Y => 199.0,
+         Radius   => 189.0,
+         Angle1   => -Pi*0.5,
+         Angle2   => -Pi);
+      Close_Path(Ref(Context).all);
+      Set_Line_Width(Ref(Context).all,1.0);
+      Set_Source_RGBA
+        (Context => Ref(Context).all,
+         Red  => 1.0,
+         Green => 0.0,
+         Blue => 0.0,
+         Alpha => 1.0);
+      Fill(Ref(Context).all);
+      Ref(Surface).Flush;
+      Data:=Get_Data(Cairo_Image_Surface(Ref(Surface).all));
+      Pic.Create(Height => 200,Width => 200);
+      Pic.CopyFromRawData(Data);
+   end;
 
    declare
       Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration);
