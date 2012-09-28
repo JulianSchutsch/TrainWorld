@@ -53,5 +53,6 @@ package OpenGL.Textures is
    overriding
    procedure Upload
      (Texture : in out BGRATexture_Type);
+   ---------------------------------------------------------------------------
 
 end OpenGL.Textures;

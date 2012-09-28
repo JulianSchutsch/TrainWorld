@@ -126,6 +126,9 @@ package OpenGL is
 
    GL_LINEAR : constant GLint_Type:=16#2601#;
 
+   GL_TEXTURE_BUFFER          : constant GLenum_Type := 16#8C2A#;
+   GL_MAX_TEXTURE_BUFFER_SIZE : constant GLenum_Type := 16#8C2B#;
+
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
    type GetProc_Access is
