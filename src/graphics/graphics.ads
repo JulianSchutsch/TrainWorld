@@ -123,8 +123,8 @@ package Graphics is
       record
          WindowType             : WindowType_Enum:=WindowTypeWindow;
          BufferKind             : BufferKind_Enum:=BufferKindDefault;
-         Height                 : Natural:=1024;
-         Width                  : Natural:=768;
+         Height                 : Natural:=768;
+         Width                  : Natural:=1024;
          RedBits                : Natural:=8;
          GreenBits              : Natural:=8;
          BlueBits               : Natural:=8;
@@ -141,8 +141,8 @@ package Graphics is
      (Configuration    : in out Config.ConfigNode_Type;
       WindowType       : WindowType_Enum:=WindowTypeWindow;
       BufferKind       : BufferKind_Enum:=BufferKindDefault;
-      Height           : Natural:=1024;
-      Width            : Natural:=768;
+      Height           : Natural:=768;
+      Width            : Natural:=1024;
       RedBits          : Natural:=8;
       GreenBits        : Natural:=8;
       BlueBits         : Natural:=8;
