@@ -53,7 +53,7 @@ procedure GUITest is
    Pi : Interfaces.C.double:=Interfaces.C.double(Ada.Numerics.PI);
 
    VertexShaderSource : constant String:=
-     "#version 150"&Character'Val(10)&
+     "#version 130"&Character'Val(10)&
      "in vec3 in_Position;"&
      "in vec2 in_TexCoord;"&
      "out vec2 ex_TexCoord;"&
@@ -64,7 +64,7 @@ procedure GUITest is
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
-     "#version 150"&Character'Val(10)&
+     "#version 130"&Character'Val(10)&
      "in vec2 ex_TexCoord;"&
      "out vec4 out_Color;"&
      "uniform sampler2D tex;"&
