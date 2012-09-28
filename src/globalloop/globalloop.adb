@@ -28,6 +28,7 @@ package body GlobalLoop is
       -- but in this case the Finalize will remove the entry before we
       -- leave the procedure.
       P.NextProcess:=Processes;
+      P.LastProcess:=null;
       if Processes/=null then
          Processes.LastProcess:=P'Unrestricted_Access;
       end if;
