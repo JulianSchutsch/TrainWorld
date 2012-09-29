@@ -212,50 +212,49 @@ package body OpenGL is
    ---------------------------------------------------------------------------
 
    procedure LoadFunctions
-     (DefaultGetProc   : not null GetProc_Access;
-      ExtensionGetProc : not null GetProc_Access;
-      Compatible       : Boolean) is
+     (GetProc    : not null GetProc_Access;
+      Compatible : Boolean) is
       pragma Unreferenced(Compatible);
 
-      Version : constant OpenGLVersion_Type:=GetVersion(DefaultGetProc);
+      Version : constant OpenGLVersion_Type:=GetVersion(GetProc);
 
    begin
 
       -- TODO: It is not entirely safe to say what can be loaded with ExtensionProc
       --       This needs testing and research
-      glGetError       := Conv(DefaultGetProc("glGetError"));
-      glClear          := Conv(DefaultGetProc("glClear"));
-      glClearColor     := Conv(DefaultGetProc("glClearColor"));
-      glViewport       := Conv(DefaultGetProc("glViewport"));
-      glFinish         := Conv(DefaultGetProc("glFinish"));
-      glGetIntegerv    := Conv(DefaultgetProc("glGetIntegerv"));
-      glTexParameteri  := Conv(DefaultGetProc("glTexParameteri"));
-      glDrawArrays     := Conv(ExtensionGetProc("glDrawArrays"));
-      glGenTextures    := Conv(ExtensionGetProc("glGenTextures"));
-      glBindTexture    := Conv(ExtensionGetProc("glBindTexture"));
-      glDeleteTextures := Conv(ExtensionGetProc("glDeleteTextures"));
-      glTexImage2D     := Conv(DefaultGetProc("glTexImage2D"));
-      glTexSubImage2D  := Conv(ExtensionGetProc("glTexSubImage2D"));
+      glGetError       := Conv(GetProc("glGetError"));
+      glClear          := Conv(GetProc("glClear"));
+      glClearColor     := Conv(GetProc("glClearColor"));
+      glViewport       := Conv(GetProc("glViewport"));
+      glFinish         := Conv(GetProc("glFinish"));
+      glGetIntegerv    := Conv(GetProc("glGetIntegerv"));
+      glTexParameteri  := Conv(GetProc("glTexParameteri"));
+      glDrawArrays     := Conv(GetProc("glDrawArrays"));
+      glGenTextures    := Conv(GetProc("glGenTextures"));
+      glBindTexture    := Conv(GetProc("glBindTexture"));
+      glDeleteTextures := Conv(GetProc("glDeleteTextures"));
+      glTexImage2D     := Conv(GetProc("glTexImage2D"));
+      glTexSubImage2D  := Conv(GetProc("glTexSubImage2D"));
       AssertError("Default Load");
 
       if Version.Major>=3 then
-         glGetStringi := Conv(ExtensionGetProc("glGetStringi"&NullChar));
+         glGetStringi := Conv(GetProc("glGetStringi"&NullChar));
       end if;
       -- TODO: Check if this is still a valid method or if you
       --  need to apply something new for OGL 3
       if Version.Major>=3 then
          ReadExtensionsByGetStringi;
       else
-         ReadExtensionsByGetString(DefaultGetProc);
+         ReadExtensionsByGetString(GetProc);
       end if;
 
       AssertError("Extension Extract");
       -- Buffer Objects
       if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
-         glGenBuffers := Conv(ExtensionGetProc("glGenBuffers"));
-         glBindBuffer := Conv(ExtensionGetProc("glBindBuffer"));
-         glBufferData := Conv(ExtensionGetProc("glBufferData"));
+         glGenBuffers := Conv(GetProc("glGenBuffers"));
+         glBindBuffer := Conv(GetProc("glBindBuffer"));
+         glBufferData := Conv(GetProc("glBufferData"));
       end if;
 
       Put_line("Buffer Objects");
@@ -263,9 +262,9 @@ package body OpenGL is
       -- VertexAttrib
       if Version.Major>=2 then
          SupportVertexAttributes:=True;
-         glVertexAttribPointer     := Conv(ExtensionGetProc("glVertexAttribPointer"));
-         glEnableVertexAttribArray := Conv(ExtensionGetProc("glEnableVertexAttribArray"));
-         glBindAttribLocation      := Conv(ExtensionGetProc("glBindAttribLocation"));
+         glVertexAttribPointer     := Conv(GetProc("glVertexAttribPointer"));
+         glEnableVertexAttribArray := Conv(GetProc("glEnableVertexAttribArray"));
+         glBindAttribLocation      := Conv(GetProc("glBindAttribLocation"));
       end if;
 
       Put_Line("Vertex Array");
@@ -273,8 +272,8 @@ package body OpenGL is
 
       if (Version.Major>=3) or
         IsExtensionSupported("GL_ARB_vertex_array_object") then
-         glBindVertexArray:=Conv(ExtensionGetProc("glBindVertexArray"));
-         glGenVertexArrays:=Conv(ExtensionGetProc("glGenVertexArrays"));
+         glBindVertexArray:=Conv(GetProc("glBindVertexArray"));
+         glGenVertexArrays:=Conv(GetProc("glGenVertexArrays"));
       end if;
 
       Put_Line("Check GLSL");
@@ -285,7 +284,7 @@ package body OpenGL is
          SupportProgram := True;
          -- TODO: Check if Get
          declare
-            Version : constant VersionParser.Version_Type:=VersionParser.Parse(glGetString(GL_SHADING_LANGUAGE_VERSION,DefaultGetProc),Limit=>2);
+            Version : constant VersionParser.Version_Type:=VersionParser.Parse(glGetString(GL_SHADING_LANGUAGE_VERSION,GetProc),Limit=>2);
          begin
             if Version'Length/=2 then
                raise InvalidGLSLVersion;
@@ -293,22 +292,22 @@ package body OpenGL is
             GLSLVersion.Major:=GLint_Type(Version(Version'First));
             GLSLVersion.Minor:=GLint_Type(Version(Version'First+1));
          end;
-         glCreateProgram      := Conv(ExtensionGetProc("glCreateProgram"));
-         glDeleteProgram      := Conv(ExtensionGetProc("glDeleteProgram"));
-         glUseProgram         := Conv(ExtensionGetProc("glUseProgram"));
-         glAttachShader       := Conv(ExtensionGetProc("glAttachShader"));
-         glDetachShader       := Conv(ExtensionGetProc("glDetachShader"));
-         glLinkProgram        := Conv(ExtensionGetProc("glLinkProgram"));
-         glGetProgramiv       := Conv(ExtensionGetProc("glGetProgramiv"));
-         glGetShaderInfoLog   := Conv(ExtensionGetProc("glGetShaderInfoLog"));
-         glGetUniformLocation := Conv(ExtensionGetProc("glGetUniformLocation"));
-         glGetProgramInfoLog  := Conv(ExtensionGetProc("glGetProgramInfoLog"));
-         glCreateShader       := Conv(ExtensionGetProc("glCreateShader"));
-         glDeleteShader       := Conv(ExtensionGetProc("glDeleteShader"));
-         glShaderSource       := Conv(ExtensionGetProc("glShaderSource"));
-         glCompileShader      := Conv(ExtensionGetProc("glCompileShader"));
-         glGetShaderiv        := Conv(ExtensionGetProc("glGetShaderiv"));
-         glUniform1i          := Conv(ExtensionGetProc("glUniform1i"));
+         glCreateProgram      := Conv(GetProc("glCreateProgram"));
+         glDeleteProgram      := Conv(GetProc("glDeleteProgram"));
+         glUseProgram         := Conv(GetProc("glUseProgram"));
+         glAttachShader       := Conv(GetProc("glAttachShader"));
+         glDetachShader       := Conv(GetProc("glDetachShader"));
+         glLinkProgram        := Conv(GetProc("glLinkProgram"));
+         glGetProgramiv       := Conv(GetProc("glGetProgramiv"));
+         glGetShaderInfoLog   := Conv(GetProc("glGetShaderInfoLog"));
+         glGetUniformLocation := Conv(GetProc("glGetUniformLocation"));
+         glGetProgramInfoLog  := Conv(GetProc("glGetProgramInfoLog"));
+         glCreateShader       := Conv(GetProc("glCreateShader"));
+         glDeleteShader       := Conv(GetProc("glDeleteShader"));
+         glShaderSource       := Conv(GetProc("glShaderSource"));
+         glCompileShader      := Conv(GetProc("glCompileShader"));
+         glGetShaderiv        := Conv(GetProc("glGetShaderiv"));
+         glUniform1i          := Conv(GetProc("glUniform1i"));
       end if;
       AssertError("Load Program");
 

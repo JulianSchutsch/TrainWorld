@@ -424,7 +424,10 @@ null;
       Put_Line("GetProc:"&Str&":");
       Result := wglGetProcAddress(CName(CName'First)'Access);
       if Result=System.Null_Address then
-         raise FailedContextCreation with "wglGetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
+         Result:=GetProcAddress(LibraryHandle,CName(CName'First)'Access);
+         if Result=System.Null_Address then
+            raise FailedContextCreation with "wglGetProcAddress and library GetProcAddress returned null for """&Str(Str'First..Str'Last-1)&"""";
+         end if;
       end if;
       return Result;
 
@@ -607,7 +610,7 @@ null;
       -- OpenGL <3.2 are treated as "old"
       if (Version.Major<3) or ((Version.Major=3) and (Version.Minor<2)) then
          Put_Line("Created compatible context");
-         OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,True);
+         OpenGL.LoadFunctions(WGLGetProc'Access,True);
          return ContextRef;
       end if;
 
@@ -627,7 +630,7 @@ null;
             attriblist    => Attribs(Attribs'First)'Unchecked_Access);
          if NewContext=NULLHANDLE then
             -- TODO: Add Error note, but use allready present context
-            OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,True);
+            OpenGL.LoadFunctions(WGLGetProc'Access,True);
             return ContextRef;
          end if;
 
@@ -653,7 +656,7 @@ null;
 
       end;
 
-      OpenGL.LoadFunctions(OpenGL32GetProc'Access,WGLGetProc'Access,False);
+      OpenGL.LoadFunctions(WGLGetProc'Access,False);
 
       return ContextRef;
 

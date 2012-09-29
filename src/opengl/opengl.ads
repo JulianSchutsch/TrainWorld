@@ -477,9 +477,8 @@ package OpenGL is
    -- This is necessary for initialisation
 
    procedure LoadFunctions
-     (DefaultGetProc   : not null GetProc_Access;
-      ExtensionGetProc : not null GetProc_Access;
-      Compatible       : Boolean);
+     (GetProc    : not null GetProc_Access;
+      Compatible : Boolean);
 
    function IsExtensionSupported
      (Name : String)
