@@ -1,3 +1,6 @@
+pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body GlobalLoop is
 
    Processes : Process_ClassAccess:=null;
@@ -7,14 +10,16 @@ package body GlobalLoop is
    procedure Finalize
      (P: in out Process_Type) is
    begin
+      Put_Line("Finalize Process");
       if P.Enabled then
+         Put_Line("--Disable");
          P.Disable;
       end if;
    end Finalize;
    ---------------------------------------------------------------------------
 
    procedure Enable
-     (P : in out Process_Type) is
+     (P : aliased in out Process_Type) is
    begin
       if P.Enabled then
          raise ProcessAllreadyEnabled;
@@ -28,7 +33,6 @@ package body GlobalLoop is
       -- but in this case the Finalize will remove the entry before we
       -- leave the procedure.
       P.NextProcess:=Processes;
-      P.LastProcess:=null;
       if Processes/=null then
          Processes.LastProcess:=P'Unrestricted_Access;
       end if;

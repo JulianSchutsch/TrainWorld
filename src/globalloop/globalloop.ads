@@ -1,3 +1,5 @@
+pragma Ada_2012;
+
 with Ada.Finalization;
 
 package GlobalLoop is
@@ -13,7 +15,7 @@ package GlobalLoop is
 
    not overriding
    procedure Enable
-     (P : in out Process_Type);
+     (P : aliased in out Process_Type);
 
    not overriding
    procedure Disable

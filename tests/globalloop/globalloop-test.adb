@@ -1,12 +1,14 @@
 pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body GlobalLoop.Test is
 
    MaxProcs : constant := 4;
 
    Touched : array(1..MaxProcs) of Boolean;
+   TouchedCount : Natural:=0;
 
    type Proc_Type is new Process_Type with
       record
@@ -18,6 +20,7 @@ package body GlobalLoop.Test is
      (P : in out Proc_Type) is
    begin
       Touched(P.ID):=True;
+      TouchedCount:=TouchedCount+1;
    end Process;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -27,19 +30,32 @@ package body GlobalLoop.Test is
    Procs : array(1..MaxProcs) of Proc_Access:=(others => null);
 
    procedure CheckActive is
+      ExpectedCount : Natural:=0;
    begin
 
       for b of Touched loop
          b:=False;
       end loop;
 
+      TouchedCount:=0;
+
       Process;
 
       for i in Touched'Range loop
+
+         if (Procs(i)/=null) and then (Procs(i).Enabled) then
+            ExpectedCount:=ExpectedCount+1;
+         end if;
+
          if Touched(i) xor Procs(i)/=null then
             ReportIssue("Process active/inactive which shouldn't : "&Integer'Image(i));
          end if;
+
       end loop;
+
+      if ExpectedCount/=TouchedCount then
+         ReportIssue("Different number of processes active than should be, process leak?"&Natural'Image(TouchedCount)&" vs "&Natural'Image(ExpectedCount));
+      end if;
 
    end CheckActive;
    ---------------------------------------------------------------------------
@@ -56,7 +72,9 @@ package body GlobalLoop.Test is
 
    procedure Destroy(Index : Integer) is
    begin
+      pragma Assert(Procs(Index)/=null);
       Free(Procs(Index));
+      pragma Assert(Procs(Index)=null);
       for i in Index..Procs'Last-1 loop
          Procs(i):=Procs(i+1);
       end loop;
@@ -67,11 +85,16 @@ package body GlobalLoop.Test is
    procedure DestroySeq(Seq,Count : Integer) is
       C : Integer:=Seq;
    begin
+      Put_Line("Destroy Seq :"&Integer'Image(C)&" Count:"&Integer'Image(Count));
       for i in Count..1 loop
-         Destroy(C mod i+1);
+         Put_Line("Delete :"&Integer'Image(C mod i+1));
+         Destroy(C mod i+Procs'First);
          CheckActive;
-         C:=C/i;
+         Put_Line(Integer'Image(C));
+         C := C/i;
       end loop;
+      Put_Line("/Destroy Seq");
+      pragma Assert(Procs(Procs'First)=null);
    end DestroySeq;
    ---------------------------------------------------------------------------
 

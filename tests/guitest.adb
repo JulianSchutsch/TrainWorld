@@ -194,11 +194,15 @@ procedure GUITest is
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
       Data.MyTexture.Bind;
+      AssertError("Texture.Bind");
       Data.Program.UseProgram;
+      AssertError("UseProgram");
       glBindVertexArray(Data.AttArray);
+      AssertError("BindVertexArray");
       glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+      AssertError("DrawArrays");
       glBindVertexArray(0);
-      AssertError;
+      AssertError("BindVertexArray");
    end ContextPaint;
    ---------------------------------------------------------------------------
 
@@ -272,6 +276,7 @@ begin
       Pic.CopyFromRawData(Data);
    end;
 
+   Put_Line("Cairo part done, initialize Context");
    declare
       Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration);
    begin

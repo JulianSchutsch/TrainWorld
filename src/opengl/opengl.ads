@@ -490,7 +490,8 @@ package OpenGL is
    procedure ProcessExtensionString
      (ExtStr : String);
 
-   procedure AssertError;
+   procedure AssertError
+     (Extra : String);
 
    GLSLVersion : GLSLVersion_Type;
    ActiveTexture : GLuint_Type:=0;

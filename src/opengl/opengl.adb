@@ -236,7 +236,7 @@ package body OpenGL is
       glDeleteTextures := Conv(ExtensionGetProc("glDeleteTextures"));
       glTexImage2D     := Conv(DefaultGetProc("glTexImage2D"));
       glTexSubImage2D  := Conv(ExtensionGetProc("glTexSubImage2D"));
-      AssertError;
+      AssertError("Default Load");
 
       if Version.Major>=3 then
          glGetStringi := Conv(ExtensionGetProc("glGetStringi"&NullChar));
@@ -249,7 +249,7 @@ package body OpenGL is
          ReadExtensionsByGetString(DefaultGetProc);
       end if;
 
-      AssertError;
+      AssertError("Extension Extract");
       -- Buffer Objects
       if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
@@ -259,7 +259,7 @@ package body OpenGL is
       end if;
 
       Put_line("Buffer Objects");
-      AssertError;
+      AssertError("Load Buffer Objects");
       -- VertexAttrib
       if Version.Major>=2 then
          SupportVertexAttributes:=True;
@@ -269,7 +269,7 @@ package body OpenGL is
       end if;
 
       Put_Line("Vertex Array");
-      AssertError;
+      AssertError("Load Vertex Array");
 
       if (Version.Major>=3) or
         IsExtensionSupported("GL_ARB_vertex_array_object") then
@@ -278,7 +278,7 @@ package body OpenGL is
       end if;
 
       Put_Line("Check GLSL");
-      AssertError;
+      AssertError("Load VAO");
 
       -- GLSL
       if (Version.Major>=2)then
@@ -310,12 +310,13 @@ package body OpenGL is
          glGetShaderiv        := Conv(ExtensionGetProc("glGetShaderiv"));
          glUniform1i          := Conv(ExtensionGetProc("glUniform1i"));
       end if;
-      AssertError;
+      AssertError("Load Program");
 
    end LoadFunctions;
    ---------------------------------------------------------------------------
 
-   procedure AssertError is
+   procedure AssertError
+     (Extra : String) is
       Error : GLenum_Type;
    begin
 
@@ -324,7 +325,7 @@ package body OpenGL is
       if Error/=0 then
          raise OpenGLError
            with "OpenGL Error detected with error number "
-             &GLenum_Type'Image(Error);
+             &GLenum_Type'Image(Error)&" Extra:"&Extra;
       end if;
 
    end AssertError;
