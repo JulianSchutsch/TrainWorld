@@ -19,7 +19,7 @@ package body GlobalLoop is
    ---------------------------------------------------------------------------
 
    procedure Enable
-     (P : aliased in out Process_Type) is
+     (P : in out Process_Type) is
    begin
       if P.Enabled then
          raise ProcessAllreadyEnabled;

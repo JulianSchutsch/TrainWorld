@@ -15,7 +15,7 @@ package GlobalLoop is
 
    not overriding
    procedure Enable
-     (P : aliased in out Process_Type);
+     (P : in out Process_Type);
 
    not overriding
    procedure Disable
