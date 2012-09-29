@@ -167,12 +167,17 @@ procedure GUITest is
       Data.Program.UseProgram;
       glUniform1i(Data.TexUniform,0);
 
+      AssertError("Uniform set");
+
       Data.MyTexture.Create
         (Height => 200,
          Width => 200);
       Data.MyTexture.Pixels.all:=Pic.Pixels.all;
 
+      AssertError("Texture create");
+
       Data.MyTexture.Upload;
+      AssertError("Texture upload");
 
    end ContextCreate;
    ---------------------------------------------------------------------------
@@ -190,7 +195,9 @@ procedure GUITest is
    procedure ContextPaint
      (Data : in out ContextCallBack_Type) is
    begin
+      AssertError("ContextPaint.enter");
       glViewport(0,0,400,400);
+      AssertError("ClearColor");
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
       AssertError("ContextPaint");

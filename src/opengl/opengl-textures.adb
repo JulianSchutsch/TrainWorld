@@ -85,14 +85,14 @@ package body OpenGL.Textures is
         (target => GL_TEXTURE_2D,
          pname  => GL_TEXTURE_MAG_FILTER,
          param  => GL_LINEAR);
-      glTexParameteri
-        (target => GL_TEXTURE_2D,
-         pname  => GL_TEXTURE_WRAP_S,
-         param  => GL_CLAMP);
-      glTexParameteri
-        (target => GL_TEXTURE_2D,
-         pname  => GL_TEXTURE_WRAP_T,
-         param  => GL_CLAMP);
+--      glTexParameteri
+--        (target => GL_TEXTURE_2D,
+--         pname  => GL_TEXTURE_WRAP_S,
+--         param  => GL_REPEAT);
+--      glTexParameteri
+--        (target => GL_TEXTURE_2D,
+--         pname  => GL_TEXTURE_WRAP_T,
+--         param  => GL_REPEAT);
 
    end Create;
    ---------------------------------------------------------------------------
