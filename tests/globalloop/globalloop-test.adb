@@ -1,7 +1,6 @@
 pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body GlobalLoop.Test is
 
@@ -48,7 +47,7 @@ package body GlobalLoop.Test is
          end if;
 
          if Touched(i) xor Procs(i)/=null then
-            ReportIssue("Process active/inactive which shouldn't : "&Integer'Image(i));
+            ReportIssue("Process active/inactive which shouldn't : "&Integer'Image(i)&"::"&Boolean'Image(Touched(i))&"<->"&Boolean'Image(Procs(i)/=null));
          end if;
 
       end loop;
@@ -77,23 +76,25 @@ package body GlobalLoop.Test is
       pragma Assert(Procs(Index)=null);
       for i in Index..Procs'Last-1 loop
          Procs(i):=Procs(i+1);
+         if Procs(i)/=null then
+            Procs(i).ID:=i;
+         end if;
       end loop;
       Procs(Procs'Last):=null;
    end Destroy;
    ---------------------------------------------------------------------------
 
-   procedure DestroySeq(Seq,Count : Integer) is
+   procedure DestroySeq(Seq:Natural;Count : Natural) is
       C : Integer:=Seq;
    begin
-      Put_Line("Destroy Seq :"&Integer'Image(C)&" Count:"&Integer'Image(Count));
-      for i in Count..1 loop
-         Put_Line("Delete :"&Integer'Image(C mod i+1));
-         Destroy(C mod i+Procs'First);
-         CheckActive;
-         Put_Line(Integer'Image(C));
-         C := C/i;
-      end loop;
-      Put_Line("/Destroy Seq");
+      if Count>=1 then
+         for i in reverse 1..Count loop
+            pragma Assert(Procs(C mod i+Procs'First)/=null);
+            Destroy(C mod i+Procs'First);
+            CheckActive;
+            C := C/i;
+         end loop;
+      end if;
       pragma Assert(Procs(Procs'First)=null);
    end DestroySeq;
    ---------------------------------------------------------------------------

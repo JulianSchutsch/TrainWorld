@@ -1,5 +1,4 @@
 pragma Ada_2012;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body GlobalLoop is
 
@@ -10,9 +9,7 @@ package body GlobalLoop is
    procedure Finalize
      (P: in out Process_Type) is
    begin
-      Put_Line("Finalize Process");
       if P.Enabled then
-         Put_Line("--Disable");
          P.Disable;
       end if;
    end Finalize;
