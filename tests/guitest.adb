@@ -193,6 +193,7 @@ procedure GUITest is
       glViewport(0,0,400,400);
       glClearColor(1.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
+      AssertError("ContextPaint");
       Data.MyTexture.Bind;
       AssertError("Texture.Bind");
       Data.Program.UseProgram;
