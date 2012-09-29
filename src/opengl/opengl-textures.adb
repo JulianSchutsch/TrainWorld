@@ -3,11 +3,12 @@ package body OpenGL.Textures is
    procedure Bind
      (Texture : in out BGRATexture_Type) is
    begin
-      if ActiveTexture/=Texture.TextureID then
+      pragma Assert(Texture.TextureID/=0);
+--      if ActiveTexture/=Texture.TextureID then
          glBindTexture
            (target  => GL_TEXTURE_2D,
             texture => Texture.TextureID);
-      end if;
+--      end if;
    end Bind;
    ---------------------------------------------------------------------------
 
@@ -17,11 +18,12 @@ package body OpenGL.Textures is
       use type Standard.Textures.BGRAPixel_2DArrayAccess;
 
    begin
-      if ActiveTexture/=Texture.TextureID then
+      pragma Assert(Texture.TextureID/=0);
+--      if ActiveTexture/=Texture.TextureID then
          glBindTexture
            (target  => GL_TEXTURE_2D,
             texture => Texture.TextureID);
-      end if;
+--      end if;
 
       if Texture.Pixels=null then
          raise Standard.Textures.UploadEmptyTexture;
@@ -69,6 +71,7 @@ package body OpenGL.Textures is
       glGenTextures
         (n => 1,
          textures => Texture.TextureID'Access);
+      pragma Assert(Texture.TextureID/=0);
       glBindTexture
         (target  => GL_TEXTURE_2D,
          texture => Texture.TextureID);
