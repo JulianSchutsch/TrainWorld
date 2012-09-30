@@ -31,9 +31,9 @@ package OpenGL.Program is
       return Unbounded_String is abstract;
    ---------------------------------------------------------------------------
 
-   package Ref is new RefCount.Ref(Shader_Interface,Shader_ClassAccess);
+   package ShaderRef is new RefCount.Ref(Shader_Interface,Shader_ClassAccess);
 
-   type Shader_Set is array(Shader_Enum) of Ref.Ref_Type;
+   type Shader_Set is array(Shader_Enum) of ShaderRef.Ref_Type;
    type Shader_Type is new Shader_Interface with private;
 
    overriding

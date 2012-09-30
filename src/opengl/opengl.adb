@@ -48,6 +48,8 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBindBuffer_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBufferData_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glTexBuffer_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glMapBufferRange_Access);
    -- Vertex Attributes
    function Conv is new Ada.Unchecked_Conversion(System.Address,glVertexAttribPointer_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glEnableVertexAttribArray_Access);
@@ -274,6 +276,11 @@ package body OpenGL is
         IsExtensionSupported("GL_ARB_vertex_array_object") then
          glBindVertexArray:=Conv(GetProc("glBindVertexArray"));
          glGenVertexArrays:=Conv(GetProc("glGenVertexArrays"));
+         glMapBufferRange:=Conv(GetProc("glMapBufferRange"));
+      end if;
+
+      if ((Version.Major>=4) or ((Version.Major>=3) and (Version.Minor>=1))) then
+          glTexBuffer:=Conv(GetProc("glTexBuffer"));
       end if;
 
       Put_Line("Check GLSL");

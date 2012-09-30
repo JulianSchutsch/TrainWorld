@@ -1,8 +1,11 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
 with Ada.Finalization;
+with Interfaces.C;
 
 package Basics is
+
+   type PtrInt_Type is new Interfaces.C.size_t;
 
    type UnboundedString_Array is array(Integer range <>) of Unbounded_String;
 

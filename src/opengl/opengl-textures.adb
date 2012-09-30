@@ -93,6 +93,7 @@ package body OpenGL.Textures is
 --        (target => GL_TEXTURE_2D,
 --         pname  => GL_TEXTURE_WRAP_T,
 --         param  => GL_REPEAT);
+      AssertError("OpenGL.BGRATexture_Type.Create");
 
    end Create;
    ---------------------------------------------------------------------------

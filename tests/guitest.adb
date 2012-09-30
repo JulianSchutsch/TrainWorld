@@ -42,6 +42,8 @@ with Cairo.Surface.Image; use Cairo.Surface.Image;
 with Cairo.Context; use Cairo.Context;
 with Ada.Numerics;
 with Interfaces.C;
+with OpenGL.TextureBuffer;
+with System;
 
 procedure GUITest is
 
@@ -96,6 +98,9 @@ procedure GUITest is
          AttArray       : aliased GLuint_Type;
          TexUniform     : aliased GLint_Type;
          MyTexture      : OpenGL.Textures.BGRATexture_Type;
+         Buffer         : OpenGL.TextureBuffer.TextureBuffers_Type;
+         BufferRange    : OpenGL.TextureBuffer.TextureBufferRange_Ref;
+         RangeMap : System.Address;
       end record;
 
    overriding
@@ -139,8 +144,8 @@ procedure GUITest is
       Put_Line("Compile Vertex Shader:"&To_String(Data.VertexShader.GetCompileLog));
 
       Data.Program.Create
-        ((OpenGL.Program.ShaderVertex   => OpenGL.Program.Ref.MakeConstRef(Data.VertexShader'Unrestricted_Access),
-          OpenGL.Program.ShaderFragment => OpenGL.Program.Ref.MakeConstRef(Data.FragmentShader'Unrestricted_Access)));
+        ((OpenGL.Program.ShaderVertex   => OpenGL.Program.ShaderRef.MakeConstRef(Data.VertexShader'Unrestricted_Access),
+          OpenGL.Program.ShaderFragment => OpenGL.Program.ShaderRef.MakeConstRef(Data.FragmentShader'Unrestricted_Access)));
       Put_Line("Link:"&To_String(Data.Program.GetLinkLog));
       Data.Program.BindAttribLocation(0,"in_Position");
       Data.Program.BindAttribLocation(1,"in_TexCoord");
@@ -178,6 +183,10 @@ procedure GUITest is
 
       Data.MyTexture.Upload;
       AssertError("Texture upload");
+
+      Data.Buffer.SetBufferBlockSize(4096);
+      Data.BufferRange:=Data.Buffer.Allocate(1024);
+      Data.RangeMap:=Data.BufferRange.I.Map;
 
    end ContextCreate;
    ---------------------------------------------------------------------------

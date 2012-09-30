@@ -57,7 +57,8 @@ package OpenGL is
    type GLint_Access is access all GLint_Type;
    type GLsizei_Type is new Interfaces.C.int;
    type GLsizei_Access is access all GLsizei_Type;
-   type GLsizeiptr_Type is new Interfaces.C.int; -- <- why this one?
+   type GLintptr_Type is new Interfaces.C.size_t;
+   type GLsizeiptr_Type is new Interfaces.C.size_t; -- <- why this one?
    type GLenum_Type is new Interfaces.Unsigned_32;
    subtype GLchar_Type is Interfaces.C.char;
    type GLchar_Access is access all GLchar_Type;
@@ -128,6 +129,13 @@ package OpenGL is
 
    GL_TEXTURE_BUFFER          : constant GLenum_Type := 16#8C2A#;
    GL_MAX_TEXTURE_BUFFER_SIZE : constant GLenum_Type := 16#8C2B#;
+
+   GL_RGBA8I  : constant GLenum_Type:=16#8D8E#;
+   GL_RGBA32F : constant GLenum_Type:=16#8814#;
+
+   GL_DYNAMIC_DRAW : constant GLenum_Type:=16#88E8#;
+
+   GL_MAP_WRITE_BIT : constant GLbitfield_Type:=2;
 
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
@@ -289,12 +297,30 @@ package OpenGL is
         usage  : GLenum_Type);
    pragma Convention(StdCall,glBufferData_Access);
 
+   type glTexBuffer_Access is
+     access procedure
+       (target         : GLenum_Type;
+        internalFormat : GLenum_Type;
+        buffer         : GLuint_Type);
+   pragma Convention(StdCall,glTexBuffer_Access);
+
+   type glMapBufferRange_Access is
+     access function
+       (target  : GLenum_Type;
+        offset  : GLintptr_Type;
+        length  : GLsizeiptr_Type;
+        aaccess : GLbitfield_Type)
+        return System.Address;
+   pragma Convention(StdCall,glMapBufferRange_Access);
+
    GL_ARRAY_BUFFER : GLenum_Type:=16#8892#;
    GL_STATIC_DRAW  : GLenum_Type:=16#88E4#;
 
-   glGenBuffers : glGenBuffers_Access:=null;
-   glBindBuffer : glBindBuffer_Access:=null;
-   glBufferData : glBufferData_Access:=null;
+   glGenBuffers     : glGenBuffers_Access:=null;
+   glBindBuffer     : glBindBuffer_Access:=null;
+   glBufferData     : glBufferData_Access:=null;
+   glTexBuffer      : glTexBuffer_Access:=null;
+   glMapBufferRange : glMapBufferRange_Access:=null;
 
    SupportBufferObjects : Boolean:=False;
 
