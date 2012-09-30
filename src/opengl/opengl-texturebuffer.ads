@@ -7,6 +7,7 @@ package OpenGL.TextureBuffer is
 
    BufferRangeTooLarge : Exception;
    FailedMap           : Exception;
+   FailedUnmap         : Exception;
 
    type TextureBufferRange_Interface is abstract new RefCount.Ref_Interface with null record;
    type TextureBufferRange_ClassAccess is access all TextureBufferRange_Interface'Class;
@@ -15,6 +16,14 @@ package OpenGL.TextureBuffer is
    function Map
      (TextureBufferRange : in out TextureBufferRange_Interface)
       return System.Address is abstract;
+
+   not overriding
+   procedure Unmap
+     (TextureBufferRange : in out TextureBufferRange_Interface) is abstract;
+
+   not overriding
+   procedure Bind
+     (TextureBufferRange : in out TextureBufferRange_Interface) is abstract;
 
    package TextureBufferRangeRef is new RefCount.Ref(TextureBufferRange_Interface,TextureBufferRange_ClassAccess);
 
@@ -87,6 +96,15 @@ private
      (TextureBufferRange : in out TextureBuffersRange_Type)
       return System.Address;
 
+   overriding
+   procedure Unmap
+     (TextureBufferRange : in out TextureBuffersRange_Type);
+
+   overriding
+   procedure Bind
+     (TextureBufferRange : in out TextureBuffersRange_Type);
+   ---------------------------------------------------------------------------
+
    type TextureBuffersBuffer_Type is
       record
          BufferID     : aliased GLuint_Type:=0;
@@ -103,7 +121,7 @@ private
       record
          Buffers     : TextureBuffersBuffer_Access:=null;
          BufferSize  : PtrInt_Type:=0;
-         Format      : GLenum_Type:=GL_RGBA8I;
+         Format      : GLenum_Type:=GL_RGBA8;
       end record;
 
 end OpenGL.TextureBuffer;

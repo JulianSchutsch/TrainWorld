@@ -80,6 +80,14 @@ package Textures is
       Color   : BGRAPixel_Type);
 
    not overriding
+   procedure VertLine
+     (Texture : in out BGRATexture_Type;
+      X       : Integer;
+      Y       : Integer;
+      Height  : Natural;
+      Color   : BGRAPixel_Type);
+
+   not overriding
    procedure Bind
      (Texture : in out BGRATexture_Type) is null;
 
@@ -89,6 +97,21 @@ package Textures is
 
    not overriding
    procedure CopyFromRawData
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address);
+
+   not overriding
+   procedure CopyFromRawDataSwapRB
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address);
+
+   not overriding
+   procedure CopyToRawData
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address);
+
+   not overriding
+   procedure CopyToRawDataSwapRB
      (Texture : in out BGRATexture_Type;
       Data    : System.Address);
    ---------------------------------------------------------------------------

@@ -130,6 +130,8 @@ package OpenGL is
    GL_TEXTURE_BUFFER          : constant GLenum_Type := 16#8C2A#;
    GL_MAX_TEXTURE_BUFFER_SIZE : constant GLenum_Type := 16#8C2B#;
 
+
+   GL_RGBA8   : constant GLenum_Type:=16#8058#;
    GL_RGBA8I  : constant GLenum_Type:=16#8D8E#;
    GL_RGBA32F : constant GLenum_Type:=16#8814#;
 
@@ -313,6 +315,11 @@ package OpenGL is
         return System.Address;
    pragma Convention(StdCall,glMapBufferRange_Access);
 
+   type glUnmapBuffer_Access is
+     access function
+       (target : GLenum_Type)
+        return GLboolean_Type;
+
    GL_ARRAY_BUFFER : GLenum_Type:=16#8892#;
    GL_STATIC_DRAW  : GLenum_Type:=16#88E4#;
 
@@ -321,6 +328,7 @@ package OpenGL is
    glBufferData     : glBufferData_Access:=null;
    glTexBuffer      : glTexBuffer_Access:=null;
    glMapBufferRange : glMapBufferRange_Access:=null;
+   glUnmapBuffer    : glUnmapBuffer_Access:=null;
 
    SupportBufferObjects : Boolean:=False;
 

@@ -1,3 +1,7 @@
+pragma Ada_2012;
+
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body OpenGL.Textures is
 
    procedure Bind
@@ -20,6 +24,7 @@ package body OpenGL.Textures is
 
    begin
       pragma Assert(Texture.TextureID/=0);
+      Put_Line("Upload Texture:"&GLuint_Type'Image(Texture.TextureID));
       if ActiveTexture/=Texture.TextureID then
          glBindTexture
            (target  => GL_TEXTURE_2D,
@@ -33,14 +38,14 @@ package body OpenGL.Textures is
 
       glTexImage2D
         (target => GL_TEXTURE_2D,
-         level => 0,
+         level  => 0,
          internalFormat => GL_RGBA,
-         width => GLsizei_Type(Texture.Width),
+         width  => GLsizei_Type(Texture.Width),
          height => GLsizei_Type(Texture.Height),
          border => 0,
          format => GL_BGRA,
-         ttype => GL_UNSIGNED_BYTE,
-         data => Texture.Pixels(0,0)'Address);
+         ttype  => GL_UNSIGNED_BYTE,
+         data   => Texture.Pixels(0,0)'Address);
 
    end Upload;
    ---------------------------------------------------------------------------

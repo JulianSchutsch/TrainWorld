@@ -49,13 +49,13 @@ procedure GUITest is
 
    use type Interfaces.C.double;
    Configuration : Config.ConfigNode_Type;
-   Terminated : Boolean:=False;
+   Terminated    : Boolean:=False;
    pragma Warnings(Off,Terminated);
 
    Pi : Interfaces.C.double:=Interfaces.C.double(Ada.Numerics.PI);
 
    VertexShaderSource : constant String:=
-     "#version 130"&Character'Val(10)&
+     "#version 140"&Character'Val(10)&
      "in vec3 in_Position;"&
      "in vec2 in_TexCoord;"&
      "out vec2 ex_TexCoord;"&
@@ -66,13 +66,16 @@ procedure GUITest is
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
-     "#version 130"&Character'Val(10)&
+     "#version 140"&Character'Val(10)&
+--     "#extension GL_EXT_gpu_shader4 : require"&Character'Val(10)&
      "in vec2 ex_TexCoord;"&
      "out vec4 out_Color;"&
-     "uniform sampler2D tex;"&
+   --     "uniform sampler2D tex;"&
+     "uniform samplerBuffer tex;"&
      "void main(void)"&
      "{"&
-     "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
+   --     "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
+     "   out_Color=texelFetch(tex,int(ex_TexCoord.x*200)+int(ex_TexCoord.y*200)*200);"&
      "}"&Character'Val(0);
 
    Vert : GLfloat_Array(0..11):=
@@ -87,6 +90,7 @@ procedure GUITest is
       1.0,1.0);
 
    Pic : Standard.Textures.BGRATexture_Type;
+   Pic2 : Standard.Textures.BGRATexture_Type;
 
    type ContextCallBack_Type is new Ada.Finalization.Limited_Controlled and Graphics.ContextCallBack_Interface with
       record
@@ -167,26 +171,33 @@ procedure GUITest is
       glEnableVertexAttribArray(1);
 
       glBindVertexArray(0);
-
-      Data.TexUniform:=Data.Program.GetUniformLocation("tex");
-      Data.Program.UseProgram;
-      glUniform1i(Data.TexUniform,0);
+      ------------------------------------------------------------------------
 
       AssertError("Uniform set");
 
-      Data.MyTexture.Create
-        (Height => 200,
-         Width => 200);
-      Data.MyTexture.Pixels.all:=Pic.Pixels.all;
+--      Data.MyTexture.Create
+--        (Height => 200,
+--         Width => 200);
+--      Data.MyTexture.Pixels.all:=Pic.Pixels.all;
 
-      AssertError("Texture create");
+--      AssertError("Texture create");
 
-      Data.MyTexture.Upload;
-      AssertError("Texture upload");
+--      Data.MyTexture.Upload;
+--      AssertError("Texture upload");
 
-      Data.Buffer.SetBufferBlockSize(4096);
-      Data.BufferRange:=Data.Buffer.Allocate(1024);
+      Data.Buffer.SetBufferBlockSize(200*200*4);
+      Data.BufferRange:=Data.Buffer.Allocate(200*200*4);
+      Data.BufferRange.I.Bind;
       Data.RangeMap:=Data.BufferRange.I.Map;
+      Pic.CopyToRawData(Data.RangeMap);
+      Data.BufferRange.I.Bind;
+      Data.BufferRange.I.Unmap;
+
+      -- Set uniform
+      Data.TexUniform:=Data.Program.GetUniformLocation("tex");
+      Data.Program.UseProgram;
+      glUniform1i(Data.TexUniform,0);
+      AssertError("Uniform");
 
    end ContextCreate;
    ---------------------------------------------------------------------------
@@ -207,13 +218,14 @@ procedure GUITest is
       AssertError("ContextPaint.enter");
       glViewport(0,0,400,400);
       AssertError("ClearColor");
-      glClearColor(1.0,1.0,0.0,1.0);
+      glClearColor(0.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
       AssertError("ContextPaint");
-      Data.MyTexture.Bind;
-      AssertError("Texture.Bind");
       Data.Program.UseProgram;
       AssertError("UseProgram");
+--      Data.MyTexture.Bind;
+      Data.BufferRange.I.Bind;
+      AssertError("Texture.Bind");
       glBindVertexArray(Data.AttArray);
       AssertError("BindVertexArray");
       glDrawArrays(GL_TRIANGLE_STRIP,0,4);
@@ -290,8 +302,11 @@ begin
       Ref(Surface).Flush;
       Data:=Get_Data(Cairo_Image_Surface(Ref(Surface).all));
       Pic.Create(Height => 200,Width => 200);
-      Pic.CopyFromRawData(Data);
+      Pic.CopyFromRawDataSwapRB(Data);
    end;
+   Pic2.Create(200,200);
+   Pic2.Clear((Red=>255,Green=>255,Blue=>255,Alpha=>255));
+   Pic2.VertLine(99,0,200,(Red=>0,Green=>0,Blue=>0,Alpha=>255));
 
    Put_Line("Cairo part done, initialize Context");
    declare

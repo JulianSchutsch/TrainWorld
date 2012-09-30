@@ -50,6 +50,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBufferData_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexBuffer_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glMapBufferRange_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glUnmapBuffer_Access);
    -- Vertex Attributes
    function Conv is new Ada.Unchecked_Conversion(System.Address,glVertexAttribPointer_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glEnableVertexAttribArray_Access);
@@ -274,9 +275,10 @@ package body OpenGL is
 
       if (Version.Major>=3) or
         IsExtensionSupported("GL_ARB_vertex_array_object") then
-         glBindVertexArray:=Conv(GetProc("glBindVertexArray"));
-         glGenVertexArrays:=Conv(GetProc("glGenVertexArrays"));
-         glMapBufferRange:=Conv(GetProc("glMapBufferRange"));
+         glBindVertexArray := Conv(GetProc("glBindVertexArray"));
+         glGenVertexArrays := Conv(GetProc("glGenVertexArrays"));
+         glMapBufferRange  := Conv(GetProc("glMapBufferRange"));
+         glUnmapBuffer     := Conv(GetProc("glUnmapBuffer"));
       end if;
 
       if ((Version.Major>=4) or ((Version.Major>=3) and (Version.Minor>=1))) then

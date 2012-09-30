@@ -46,12 +46,62 @@ package body Textures is
    end "+";
    ---------------------------------------------------------------------------
 
+   procedure CopyToRawData
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address) is
+
+      Pointer : BGRAPixel_Access:=AddressToBGRAPixelAccess(Data);
+
+   begin
+
+      pragma Assert(Pointer/=null);
+      if Texture.Pixels/=null then
+         for i in Texture.Pixels'Range(1) loop
+            for n in Texture.Pixels'Range(2) loop
+               Pointer.all:=Texture.Pixels(i,n);
+               Pointer:=Pointer+1;
+            end loop;
+         end loop;
+      end if;
+
+   end;
+
+   procedure CopyToRawDataSwapRB
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address) is
+
+      Pointer : BGRAPixel_Access:=AddressToBGRAPixelAccess(Data);
+
+   begin
+
+      pragma Assert(Pointer/=null);
+      if Texture.Pixels/=null then
+         for i in Texture.Pixels'Range(1) loop
+            for n in Texture.Pixels'Range(2) loop
+               declare
+                  Source : BGRAPixel_Type renames Texture.Pixels(i,n);
+               begin
+                  Pointer.all.Red   := Source.Blue;
+                  Pointer.all.Green := Source.Green;
+                  Pointer.all.Blue  := Source.Red;
+                  Pointer.all.Alpha := Source.Alpha;
+                  Pointer:=Pointer+1;
+               end;
+            end loop;
+         end loop;
+      end if;
+
+   end CopyToRawDataSwapRB;
+   ---------------------------------------------------------------------------
+
    procedure CopyFromRawData
      (Texture : in out BGRATexture_Type;
       Data    : System.Address) is
 
       Pointer : BGRAPixel_Access:=AddressToBGRAPixelAccess(Data);
+
    begin
+
       pragma Assert(Pointer/=null);
       if Texture.Pixels/=null then
          for i in Texture.Pixels'Range(1) loop
@@ -61,7 +111,36 @@ package body Textures is
             end loop;
          end loop;
       end if;
+
    end CopyFromRawData;
+   ---------------------------------------------------------------------------
+
+   procedure CopyFromRawDataSwapRB
+     (Texture : in out BGRATexture_Type;
+      Data    : System.Address) is
+
+   Pointer : BGRAPixel_Access:=AddressToBGRAPixelAccess(Data);
+
+   begin
+
+      pragma Assert(Pointer/=null);
+      if Texture.Pixels/=null then
+         for i in Texture.Pixels'Range(1) loop
+            for n in Texture.Pixels'Range(2) loop
+               declare
+                  Target : BGRAPixel_Type renames Texture.Pixels(i,n);
+               begin
+                  Target.Red   := Pointer.all.Blue;
+                  Target.Green := Pointer.all.Green;
+                  Target.Blue  := Pointer.all.Red;
+                  Target.Alpha := Pointer.all.Alpha;
+                  Pointer:=Pointer+1;
+               end;
+            end loop;
+         end loop;
+      end if;
+
+   end CopyFromRawDataSwapRB;
    ---------------------------------------------------------------------------
 
    procedure Create
@@ -79,6 +158,46 @@ package body Textures is
       Texture.Pixels:=new BGRAPixel_2DArray(0..Height-1,0..Width-1);
 
    end Create;
+   ---------------------------------------------------------------------------
+
+   procedure VertLine
+     (Texture : in out BGRATexture_Type;
+      X       : Integer;
+      Y       : Integer;
+      Height  : Natural;
+      Color   : BGRAPixel_Type) is
+
+      DrawHeight : Integer;
+      DrawY      : Integer;
+
+   begin
+      if (Texture.Pixels=null)
+        or (X<0)
+        or (X>=Texture.Width) then
+         return;
+      end if;
+
+      DrawHeight := Height;
+      DrawY      := Y;
+
+      if DrawY<0 then
+         DrawHeight:=DrawHeight+DrawY;
+         DrawY:=0;
+      end if;
+
+      if DrawY+DrawHeight>Texture.Height then
+         DrawHeight:=Texture.Height-DrawY;
+      end if;
+
+      if DrawHeight<=0 then
+         return;
+      end if;
+
+      for i in DrawY..DrawY+DrawHeight-1 loop
+         Texture.Pixels(i,X):=Color;
+      end loop;
+
+   end VertLine;
    ---------------------------------------------------------------------------
 
    procedure Clear

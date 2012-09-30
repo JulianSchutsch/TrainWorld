@@ -4,6 +4,25 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body OpenGL.TextureBuffer is
 
+   procedure Bind
+     (TextureBufferRange : in out TextureBuffersRange_Type) is
+   begin
+      glBindBuffer(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.BufferID);
+      glBindTexture(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.TextureID);
+   end Bind;
+   ---------------------------------------------------------------------------
+
+   procedure Unmap
+     (TextureBufferRange : in out TextureBuffersRange_Type) is
+      pragma Unreferenced(TextureBufferRange);
+   begin
+      if glUnmapBuffer(GL_TEXTURE_BUFFER)=0 then
+         raise FailedUnmap;
+      end if;
+      glBindBuffer(GL_TEXTURE_BUFFER,0);
+   end Unmap;
+   ---------------------------------------------------------------------------
+
    function Map
      (TextureBufferRange : in out TextureBuffersRange_Type)
       return System.Address is
@@ -13,14 +32,14 @@ package body OpenGL.TextureBuffer is
       Result : System.Address;
 
    begin
+      -- TODO: CHange BindBuffer to OGL BindBuffer-Cache variant.
       Put_Line(PtrInt_Type'Image(TextureBufferRange.Start)&".."&PtrInt_Type'Image(TextureBufferRange.Size));
-      -- TODO: Make Aaccess an option
-      -- Bind???
+      -- TODO: Make aaccess an option
       glBindBuffer(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.BufferID);
       Result:=glMapBufferRange
-        (target => GL_TEXTURE_BUFFER,
-         offset => GLintptr_Type(TextureBufferRange.Start),
-         length => GLsizeiptr_Type(TextureBufferRange.Size),
+        (target  => GL_TEXTURE_BUFFER,
+         offset  => GLintptr_Type(TextureBufferRange.Start),
+         length  => GLsizeiptr_Type(TextureBufferRange.Size),
          aaccess => GL_MAP_WRITE_BIT);
       if Result=System.Null_Address then
          raise FailedMap with "GLError:"&GLenum_Type'Image(glGetError.all);
@@ -94,9 +113,11 @@ package body OpenGL.TextureBuffer is
                TextureBuffers.Buffers.Previous:=MinimumFreeBuffer;
             end if;
 
+            -- Generate Buffer
             glGenBuffers
               (n        => 1,
                buffers  => MinimumFreeBuffer.BufferID'Access);
+            -- TODO: Replace Asserts by exceptions 2*
             pragma Assert(MinimumFreeBuffer.BufferID/=0);
             -- Temporary:
             glBindBuffer(GL_TEXTURE_BUFFER,MinimumFreeBuffer.BufferID);
@@ -107,6 +128,8 @@ package body OpenGL.TextureBuffer is
                data   => System.Null_Address,
                usage  => GL_DYNAMIC_DRAW);
             AssertError("Initialize TexBuffer Object 2");
+
+            -- Generate Texture
             glGenTextures
               (n        => 1,
                textures => MinimumFreeBuffer.TextureID'Access);
@@ -118,8 +141,8 @@ package body OpenGL.TextureBuffer is
             AssertError("Initialize TexBuffer Object 4");
             glTexBuffer
               (target         => GL_TEXTURE_BUFFER,
-               internalformat => GL_RGBA8I,
-               buffer         => MinimumFreeBuffer.TextureID);
+               internalformat => TextureBuffers.Format,
+               buffer         => MinimumFreeBuffer.BufferID);
             glBindBuffer
               (target  => GL_TEXTURE_BUFFER,
                buffer => 0);
