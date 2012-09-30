@@ -786,13 +786,11 @@ null;
 
       if GLX.glXGetProcAddressARB/=null then
          OpenGL.LoadFunctions
-           (DefaultGetProc   => GLX.GetProcAddressARB'Access,
-            ExtensionGetProc => GLX.GetProcAddressARB'Access,
+           (GetProc   => GLX.GetProcAddressARB'Access,
             Compatible       => CompatibleOpenGL);
       else
          OpenGL.LoadFunctions
-           (DefaultGetProc   => GLX.GetProcAddress'Access,
-            ExtensionGetProc => GLX.GetProcAddress'Access,
+           (GetProc   => GLX.GetProcAddress'Access,
             Compatible       => CompatibleOpenGL);
       end if;
 
