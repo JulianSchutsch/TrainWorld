@@ -8,12 +8,9 @@ package body OpenGL.Textures is
      (Texture : in out BGRATexture_Type) is
    begin
       pragma Assert(Texture.TextureID/=0);
-      if ActiveTexture/=Texture.TextureID then
          glBindTexture
            (target  => GL_TEXTURE_2D,
             texture => Texture.TextureID);
-         ActiveTexture:=Texture.TextureID;
-      end if;
    end Bind;
    ---------------------------------------------------------------------------
 
@@ -25,12 +22,9 @@ package body OpenGL.Textures is
    begin
       pragma Assert(Texture.TextureID/=0);
       Put_Line("Upload Texture:"&GLuint_Type'Image(Texture.TextureID));
-      if ActiveTexture/=Texture.TextureID then
          glBindTexture
            (target  => GL_TEXTURE_2D,
             texture => Texture.TextureID);
-         ActiveTexture:=Texture.TextureID;
-      end if;
 
       if Texture.Pixels=null then
          raise Standard.Textures.UploadEmptyTexture;

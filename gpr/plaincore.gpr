@@ -23,6 +23,7 @@ project PlainCore is
      Dir & "../src/resourcefilesystem",
      Dir & "../src/streams",
      Dir & "../src/plattform",
-     Dir & "../src/portableexec");
+     Dir & "../src/portableexec",
+     Dir & "../src/allocators");
 
 end PlainCore;

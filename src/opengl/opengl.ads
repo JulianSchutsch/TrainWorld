@@ -37,11 +37,12 @@ package OpenGL is
 
    Extensions : Extension_ArrayAccess;
 
-   InvalidOpenGLVersion   : Exception;
-   InvalidGLSLVersion     : Exception;
-   InvalidExtensionString : Exception;
-
-   OpenGLError : Exception;
+   InvalidOpenGLVersion    : Exception;
+   InvalidGLSLVersion      : Exception;
+   InvalidExtensionString  : Exception;
+   OpenGLLoadError         : Exception;
+   OpenGLError             : Exception;
+   InvalidTextureImageUnit : Exception;
 
    -- Portability : Maybe risky and non portable when using anything but
    --               the GNAT compiler
@@ -85,7 +86,10 @@ package OpenGL is
    GL_SCISSOR_TEST : constant GLenum_Type:=16#C11#;
    GL_DEPTH_TEST   : constant GLenum_Type:=16#B71#;
    GL_BLEND        : constant GLenum_Type:=16#BE2#;
+   GL_TEXTURE_1D   : constant GLenum_Type:=16#DE0#;
    GL_TEXTURE_2D   : constant GLenum_Type:=16#DE1#;
+   GL_TEXTURE_3D   : constant GLenum_Type:=16#806F#;
+   GL_TEXTURE_CUBE_MAP : constant GLenum_Type:=16#8513#;
 
    GL_SRC_ALPHA           : constant GLenum_Type:=16#302#;
    GL_ONE_MINUS_SRC_ALPHA : constant GLenum_Type:=16#303#;
@@ -138,6 +142,11 @@ package OpenGL is
    GL_DYNAMIC_DRAW : constant GLenum_Type:=16#88E8#;
 
    GL_MAP_WRITE_BIT : constant GLbitfield_Type:=2;
+
+   GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS : constant GLenum_Type:=16#8B4D#;
+   GL_ACTIVE_TEXTURE : constant GLenum_Type:=16#84E0#;
+
+   GL_TEXTURE0 : constant GLenum_Type:=16#84C0#;
 
    -- GetProc_Access expects null terminated strings and returns
    -- a pointer to a function/procedure of the OpenGL interface
@@ -262,6 +271,10 @@ package OpenGL is
         data    : System.Address);
    pragma Convention(StdCall,glTexSubImage2D_Access);
 
+   type glActiveTexture_Access is
+     access procedure
+       (texture : GLenum_Type);
+
    glClearColor     : glClearColor_Access:=null;
    glClear          : glClear_Access:=null;
    glViewport       : glViewport_Access:=null;
@@ -275,6 +288,7 @@ package OpenGL is
    glDeleteTextures : glDeleteTextures_Access:=null;
    glTexImage2D     : glTexImage2D_Access:=null;
    glTexSubImage2D  : glTexSubImage2D_Access:=null;
+   glActiveTexture  : glActiveTexture_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects
@@ -319,6 +333,7 @@ package OpenGL is
      access function
        (target : GLenum_Type)
         return GLboolean_Type;
+   pragma Convention(StdCall,glUnmapBuffer_Access);
 
    GL_ARRAY_BUFFER : GLenum_Type:=16#8892#;
    GL_STATIC_DRAW  : GLenum_Type:=16#88E4#;
@@ -475,6 +490,7 @@ package OpenGL is
      access procedure
        (location : GLint_Type;
         v0       : GLint_Type);
+   pragma Convention(StdCall,glUniform1i_Access);
 
    glCreateProgram      : glCreateProgram_Access      := null;
    glDeleteProgram      : glDeleteProgram_Access      := null;
@@ -527,6 +543,16 @@ package OpenGL is
      (Extra : String);
 
    GLSLVersion : GLSLVersion_Type;
-   ActiveTexture : GLuint_Type:=0;
+
+   function GetMaxCombinedTextureImageUnits
+     return Natural;
+
+   procedure BindTexture
+     (Target  : GLenum_Type;
+      Unit    : Natural;
+      Texture : GLuint_Type);
+
+   procedure BindTextureBuffer
+     (Buffer : GLuint_Type);
 
 end OpenGL;

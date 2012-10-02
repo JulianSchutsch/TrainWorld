@@ -421,7 +421,6 @@ null;
 
    begin
 
-      Put_Line("GetProc:"&Str&":");
       Result := wglGetProcAddress(CName(CName'First)'Access);
       if Result=System.Null_Address then
          Result:=GetProcAddress(LibraryHandle,CName(CName'First)'Access);

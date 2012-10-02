@@ -1,14 +1,14 @@
 pragma Ada_2012;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body OpenGL.TextureBuffer is
 
    procedure Bind
      (TextureBufferRange : in out TextureBuffersRange_Type) is
    begin
-      glBindBuffer(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.BufferID);
-      glBindTexture(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.TextureID);
+      BindTexture
+        (target  => GL_TEXTURE_BUFFER,
+         unit    => 0,
+         texture => TextureBufferRange.Buffer.TextureID);
    end Bind;
    ---------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ package body OpenGL.TextureBuffer is
       if glUnmapBuffer(GL_TEXTURE_BUFFER)=0 then
          raise FailedUnmap;
       end if;
-      glBindBuffer(GL_TEXTURE_BUFFER,0);
+      BindTextureBuffer(0);
    end Unmap;
    ---------------------------------------------------------------------------
 
@@ -32,10 +32,9 @@ package body OpenGL.TextureBuffer is
       Result : System.Address;
 
    begin
-      -- TODO: CHange BindBuffer to OGL BindBuffer-Cache variant.
-      Put_Line(PtrInt_Type'Image(TextureBufferRange.Start)&".."&PtrInt_Type'Image(TextureBufferRange.Size));
+
       -- TODO: Make aaccess an option
-      glBindBuffer(GL_TEXTURE_BUFFER,TextureBufferRange.Buffer.BufferID);
+      BindTextureBuffer(TextureBufferRange.Buffer.BufferID);
       Result:=glMapBufferRange
         (target  => GL_TEXTURE_BUFFER,
          offset  => GLintptr_Type(TextureBufferRange.Start),
@@ -120,7 +119,7 @@ package body OpenGL.TextureBuffer is
             -- TODO: Replace Asserts by exceptions 2*
             pragma Assert(MinimumFreeBuffer.BufferID/=0);
             -- Temporary:
-            glBindBuffer(GL_TEXTURE_BUFFER,MinimumFreeBuffer.BufferID);
+            BindTextureBuffer(MinimumFreeBuffer.BufferID);
             AssertError("Initialize TexBuffer Object 1");
             glBufferData
               (target => GL_TEXTURE_BUFFER,
@@ -143,9 +142,6 @@ package body OpenGL.TextureBuffer is
               (target         => GL_TEXTURE_BUFFER,
                internalformat => TextureBuffers.Format,
                buffer         => MinimumFreeBuffer.BufferID);
-            glBindBuffer
-              (target  => GL_TEXTURE_BUFFER,
-               buffer => 0);
             AssertError("Initialize TexBuffer Object");
 
          end if;

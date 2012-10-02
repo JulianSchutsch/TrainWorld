@@ -31,6 +31,7 @@ with VersionParser.Test;
 with GlobalLoop.Test;
 with InterfaceTest;
 with ProtectedBasics.Test;
+with Allocators.Test;
 
 procedure CoreTest is
    Tests : constant TestFrameWork.Test_Array:=
@@ -41,7 +42,8 @@ procedure CoreTest is
      VersionParser.Test.Tests&
      GlobalLoop.Test.Tests&
      InterfaceTest.Tests&
-     ProtectedBasics.Test.Tests;
+     ProtectedBasics.Test.Tests&
+     Allocators.Test.Tests;
 begin
    TestFrameWork.Run(Tests);
 end CoreTest;

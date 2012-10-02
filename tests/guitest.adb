@@ -134,8 +134,11 @@ procedure GUITest is
 
    procedure ContextCreate
      (Data : in out ContextCallBack_Type) is
+      use type OpenGL.TextureBuffer.TextureBufferRange_ClassAccess;
 
    begin
+
+      Put_Line("Image Units:"&Natural'Image(OpenGL.GetMaxCombinedTextureImageUnits));
 
       Data.FragmentShader.Create
         (ShaderType => OpenGL.Program.ShaderFragment,
@@ -189,15 +192,19 @@ procedure GUITest is
       Data.BufferRange:=Data.Buffer.Allocate(200*200*4);
       Data.BufferRange.I.Bind;
       Data.RangeMap:=Data.BufferRange.I.Map;
+      Put_Line("Copy");
       Pic.CopyToRawData(Data.RangeMap);
-      Data.BufferRange.I.Bind;
+      Put_Line("Call unmap");
+      pragma Assert(Data.BufferRange.I/=null);
       Data.BufferRange.I.Unmap;
+      Put_Line("Set Uniform");
 
       -- Set uniform
       Data.TexUniform:=Data.Program.GetUniformLocation("tex");
       Data.Program.UseProgram;
       glUniform1i(Data.TexUniform,0);
       AssertError("Uniform");
+      Put_Line("Init done");
 
    end ContextCreate;
    ---------------------------------------------------------------------------

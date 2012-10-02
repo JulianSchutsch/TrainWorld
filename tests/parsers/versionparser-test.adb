@@ -293,7 +293,7 @@ package body VersionParser.Test is
             null;
       end;
 
-      for Length in 1..3 loop
+      for Length in 1..2 loop
          Test(Length);
       end loop;
 

@@ -17,7 +17,7 @@
 --   along with ParallelSim.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------------
 
-pragma Ada_2005;
+pragma Ada_2012;
 
 with Ada.Unchecked_Conversion;
 with VersionParser;
@@ -43,6 +43,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glDeleteTextures_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexImage2D_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexSubImage2D_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glActiveTexture_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -74,6 +75,58 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetProgramInfoLog_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBindAttribLocation_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glUniform1i_Access);
+
+   type Texture_Array is array(Natural range <>) of GLuint_Type;
+   type Texture_ArrayAccess is access all Texture_Array;
+
+   MaxCombinedTextureImageUnits : aliased GLint_Type:=0;
+
+   CurrentUnit          : Natural;
+   CurrentTextures      : Texture_ArrayAccess:=null;
+   CurrentTextureBuffer : GLuint_Type:=0;
+
+   function GetMaxCombinedTextureImageUnits
+     return Natural is
+   begin
+      return Natural(MaxCombinedTextureImageUnits);
+   end GetMaxCombinedTextureImageUnits;
+   ---------------------------------------------------------------------------
+
+   procedure BindTextureBuffer
+     (Buffer : GLuint_Type) is
+   begin
+      if CurrentTextureBuffer/=Buffer then
+         Put_Line("Actual Bind");
+         glBindBuffer(GL_TEXTURE_BUFFER,Buffer);
+         CurrentTextureBuffer:=Buffer;
+      end if;
+   end BindTextureBuffer;
+   ---------------------------------------------------------------------------
+
+   procedure BindTexture
+     (Target  : GLenum_Type;
+      Unit    : Natural;
+      Texture : GLuint_Type) is
+   begin
+
+      if (Unit not in CurrentTextures'Range) then
+         raise InvalidTextureImageUnit;
+      end if;
+
+      pragma Assert(Target in GL_TEXTURE_1D|GL_TEXTURE_2D|GL_TEXTURE_3D|GL_TEXTURE_CUBE_MAP|GL_TEXTURE_BUFFER,"Invalid Texture Target");
+
+      if CurrentTextures(Unit)/=Texture then
+         if CurrentUnit/=Unit then
+            glActiveTexture(GL_TEXTURE0+GLenum_Type(Unit));
+            CurrentUnit:=Unit;
+         end if;
+         glBindTexture
+           (target  => Target,
+            texture => Texture);
+      end if;
+
+   end BindTexture;
+   ---------------------------------------------------------------------------
 
    function glGetString
      (name    : GLenum_Type;
@@ -258,6 +311,19 @@ package body OpenGL is
          glGenBuffers := Conv(GetProc("glGenBuffers"));
          glBindBuffer := Conv(GetProc("glBindBuffer"));
          glBufferData := Conv(GetProc("glBufferData"));
+      end if;
+
+      if (Version.Major>=2) or ((Version.Major>=1) and (Version.Minor>=3)) then
+         glActiveTexture:=Conv(GetProc("glActiveTexture"));
+         glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,MaxCombinedTextureImageUnits'Access);
+         if MaxCombinedTextureImageUnits<=0 then
+            raise OpenGLLoadError with "Invalid GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS";
+         end if;
+         CurrentTextures:=new Texture_Array(0..Integer(MaxCombinedTextureImageUnits)-1);
+         for i in CurrentTextures'Range loop
+            CurrentTextures(i):=0;
+         end loop;
+         -- TODO: Free this texture array at the end
       end if;
 
       Put_line("Buffer Objects");
