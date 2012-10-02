@@ -1,0 +1,29 @@
+with "core";
+with "graphics";
+with "config";
+with "switches";
+with "cairoada";
+
+project GraphicsTest is
+
+  Dir:=GraphicsTest'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  for Main use ("graphicstest.adb");
+
+  package Compiler is
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
+  end Compiler;
+
+  package Linker is
+    for Default_Switches("Ada") use
+       Core.Linker_Switches
+      &Graphics.Linker_Switches;
+  end Linker;
+
+  for Source_Dirs use
+    (Dir & ".",
+     Dir & "opengl");
+
+end GraphicsTest;
