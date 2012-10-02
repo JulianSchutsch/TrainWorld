@@ -2,7 +2,6 @@ pragma Ada_2012;
 
 with FirstFitLinearAllocator;
 with Ada.Numerics.Float_Random;
---with Ada.Text_IO; use Ada.Text_IO;
 
 package body Allocators.Test is
 
@@ -126,10 +125,16 @@ package body Allocators.Test is
 
          if Valid2/=null then
             Allocator.Release(Valid2);
+            if Valid2/=null then
+               ReportIssue("Release does not set null(valid2)");
+            end if;
          end if;
 
          if Valid1/=null then
             Allocator.Release(Valid1);
+            if Valid1/=null then
+               ReportIssue("Release does not set null(valid1)");
+            end if;
          end if;
 
       end;
@@ -198,7 +203,21 @@ package body Allocators.Test is
             if Blocks(CurrentBlock)/=null then
                RemoveTags;
                Allocator.Release(Blocks(CurrentBlock));
-               Blocks(CurrentBlock):=null;
+            end if;
+
+         end if;
+
+      end loop;
+
+      for i in Blocks'Range loop
+
+         CurrentBlock:=i;
+
+         if Blocks(i)/=null then
+            RemoveTags;
+            Allocator.Release(Blocks(i));
+            if Blocks(i)/=null then
+               ReportIssue("Block not properly released");
             end if;
 
          end if;
@@ -206,30 +225,27 @@ package body Allocators.Test is
       end loop;
 
    end TestMonteCarloAndTaggedMemory;
+   ---------------------------------------------------------------------------
 
-   -- TODO: Test double init, invalid init etc
-   procedure TestFirstFitLinear is
+   procedure TestFirstFitLinearInvalidSizeRequest is
+      Allocator : FirstFitLinearAllocator.Allocator_Type;
    begin
+      TestInvalidSizeRequest(Allocator'Unrestricted_Access);
+   end;
+   ---------------------------------------------------------------------------
 
-      declare
-         Allocator : FirstFitLinearAllocator.Allocator_Type;
-      begin
-         TestInvalidSizeRequest(Allocator'Unrestricted_Access);
-      end;
+   procedure TestFirstFitLinearValidSizeRequest is
+      Allocator : FirstFitLinearAllocator.Allocator_Type;
+   begin
+      TestValidSizeRequest(Allocator'Unrestricted_Access);
+   end;
+   ---------------------------------------------------------------------------
 
-      declare
-         Allocator : FirstFitLinearAllocator.Allocator_Type;
-      begin
-         TestValidSizeRequest(Allocator'Unrestricted_Access);
-      end;
-
-      declare
-         Allocator : FirstFitLinearAllocator.Allocator_Type;
-      begin
-         TestMonteCarloAndTaggedMemory(Allocator'Unrestricted_Access);
-      end;
-
-   end TestFirstFitLinear;
+   procedure TestFirstFitLinearMonteCarloAndTaggedMemory is
+      Allocator : FirstFitLinearAllocator.Allocator_Type;
+   begin
+      TestMonteCarloAndTaggedMemory(Allocator'Unrestricted_Access);
+   end;
    ---------------------------------------------------------------------------
 
 end Allocators.Test;

@@ -1,13 +1,28 @@
 pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
---with Ada.Text_IO; use Ada.Text_IO;
 
 package body FirstFitLinearAllocator is
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => Block_Type,
       Name   => Block_Access);
+
+   procedure Finalize
+     (Allocator : in out Allocator_Type) is
+   begin
+
+      pragma Assert(Allocator.Blocks=Allocator.FreeBlocks,"Possible remaining allocated blocks");
+      if Allocator.FreeBlocks/=null then
+         pragma Assert(Allocator.FreeBlocks.NextFree=null,"Unexpected second free block in Finalize");
+         pragma Assert(Allocator.FreeBlocks.PreviousFree=null,"Unexpected 'previous' free");
+         pragma Assert(Allocator.FreeBlocks.Next=null,"Unexpected 'next'");
+         pragma Assert(Allocator.FreeBlocks.Previous=null,"Unexpected 'previous'");
+         Free(Allocator.FreeBlocks);
+      end if;
+
+   end Finalize;
+   ---------------------------------------------------------------------------
 
    procedure Init
      (Allocator : in out Allocator_Type;
@@ -25,6 +40,9 @@ package body FirstFitLinearAllocator is
 
       Allocator.ManagedAmount:=Size;
       pragma Assert(not AllBlock.Allocated);
+      pragma Assert(Allocator.FreeBlocks.NextFree=null);
+      pragma Assert(Allocator.FreeBlocks.PreviousFree=null);
+      pragma Assert(Allocator.Blocks=Allocator.FreeBlocks);
 
    end Init;
    ---------------------------------------------------------------------------
@@ -49,6 +67,7 @@ package body FirstFitLinearAllocator is
       Block.Allocated    := True;
       Block.PreviousFree := null;
       Block.NextFree     := null;
+
    end RemoveFreeBlock;
    ---------------------------------------------------------------------------
 
@@ -134,6 +153,7 @@ package body FirstFitLinearAllocator is
       SumDelete : PtrInt_Type:=0;
 
    begin
+      pragma Assert(BlockA/=null,"Release of null block");
       pragma Assert(BlockA.Allocated);
       pragma Assert(BlockA.PreviousFree=null);
       pragma Assert(BlockA.NextFree=null);

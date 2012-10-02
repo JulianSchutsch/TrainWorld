@@ -7,8 +7,8 @@ package Allocators is
    InvalidSizeRequest : Exception;
 
    type Block_Type is tagged record
-      Start : PtrInt_Type;
-      Size  : PtrInt_Type;
+      Start : PtrInt_Type; -- Readonly, used by implementation
+      Size  : PtrInt_Type; -- Readonly, used by implementation
    end record;
 
    type Block_ClassAccess is access all Block_Type'Class;

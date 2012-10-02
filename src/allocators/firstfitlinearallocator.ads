@@ -8,18 +8,25 @@ package FirstFitLinearAllocator is
 
    type Allocator_Type is new Ada.Finalization.Limited_Controlled and Allocators.Allocator_Interface with private;
 
+   overriding
    procedure Init
      (Allocator : in out Allocator_Type;
       Size      : PtrInt_Type);
 
+   overriding
    function Allocate
      (Allocator : in out Allocator_Type;
       Size      : PtrInt_Type)
       return Allocators.Block_ClassAccess;
 
+   overriding
    procedure Release
      (Allocator : in out Allocator_Type;
       Block     : in out Allocators.Block_ClassAccess);
+
+   overriding
+   procedure Finalize
+     (Allocator : in out Allocator_Type);
 
 private
 

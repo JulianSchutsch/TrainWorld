@@ -2,10 +2,16 @@ with TestFrameWork; use TestFrameWork;
 
 package Allocators.Test is
 
-   procedure TestFirstFitLinear;
+   procedure TestFirstFitLinearInvalidSizeRequest;
+   procedure TestFirstFitLinearValidSizeRequest;
+   procedure TestFirstFitLinearMonteCarloAndTaggedMemory;
 
    Tests : Test_Array:=
-     (0=>(Name => U("FirstFitLinear"),
-          Test => TestFirstFitLinear'Access));
+     ((Name => U("FirstFitLinear.InvalidSizeRequest"),
+       Test => TestFirstFitLinearInvalidSizeRequest'Access),
+      (Name => U("FirstFitLinear.ValidSizeRequest"),
+       Test => TestFirstFitLinearValidSizeRequest'Access),
+      (Name => U("FirstFitLinear.MonteCarloAndTaggedMemory"),
+       Test => TestFirstFitLinearMonteCarloAndTaggedMemory'Access));
 
 end Allocators.Test;
