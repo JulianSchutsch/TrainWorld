@@ -2,9 +2,9 @@ with "core";
 with "config";
 with "switches";
 
-project GUI is
+project Graphics is
 
-  Dir:=GUI'Project_Dir & "/";
+  Dir:=Graphics'Project_Dir & "/";
   Linker_Switches:=();
 
   Sources:=
@@ -37,4 +37,4 @@ project GUI is
    for Source_Dirs use Sources;
    for Languages use Languages;
 
-end GUI;
+end Graphics;

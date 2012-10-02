@@ -96,7 +96,6 @@ package body OpenGL is
      (Buffer : GLuint_Type) is
    begin
       if CurrentTextureBuffer/=Buffer then
-         Put_Line("Actual Bind");
          glBindBuffer(GL_TEXTURE_BUFFER,Buffer);
          CurrentTextureBuffer:=Buffer;
       end if;
@@ -133,7 +132,7 @@ package body OpenGL is
       GetProc : not null GetProc_Access)
       return String is
 
-      extglGetString : constant glGetString_Access:=Conv(GetProc("glGetString"&NullChar));
+      extglGetString : constant glGetString_Access:=Conv(GetProc("glGetString"));
       Str            : constant chars_ptr:=extglGetString(name);
 
    begin
@@ -152,7 +151,7 @@ package body OpenGL is
       params  : access GLint_Type;
       GetProc : not null GetProc_Access) is
 
-      extglGetIntegerv : constant glGetIntegerv_Access:=Conv(GetProc("glGetIntegerv"&NullChar));
+      extglGetIntegerv : constant glGetIntegerv_Access:=Conv(GetProc("glGetIntegerv"));
 
    begin
       extglGetIntegerv(pname,params);
@@ -255,6 +254,7 @@ package body OpenGL is
       glGetIntegerv(GL_NUM_EXTENSIONS,Count'Access);
       Extensions:=new Extension_Array(0..Integer(Count)-1);
       for i in 0..Count-1 loop
+         Put_Line("Read Extension:"&Integer'Image(Integer(i))&" of "&Integer'Image(IntegeR(count)));
          declare
             Str : constant chars_ptr:=glGetStringi(GL_EXTENSIONS,i);
          begin
@@ -326,7 +326,6 @@ package body OpenGL is
          -- TODO: Free this texture array at the end
       end if;
 
-      Put_line("Buffer Objects");
       AssertError("Load Buffer Objects");
       -- VertexAttrib
       if Version.Major>=2 then
@@ -336,7 +335,6 @@ package body OpenGL is
          glBindAttribLocation      := Conv(GetProc("glBindAttribLocation"));
       end if;
 
-      Put_Line("Vertex Array");
       AssertError("Load Vertex Array");
 
       if (Version.Major>=3) or
@@ -351,7 +349,6 @@ package body OpenGL is
           glTexBuffer:=Conv(GetProc("glTexBuffer"));
       end if;
 
-      Put_Line("Check GLSL");
       AssertError("Load VAO");
 
       -- GLSL

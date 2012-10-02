@@ -1,5 +1,5 @@
 with "core";
-with "gui";
+with "graphics";
 with "config";
 with "switches";
 with "cairoada";
@@ -19,7 +19,7 @@ project GUITest is
   package Linker is
     for Default_Switches("Ada") use
        Core.Linker_Switches
-      &GUI.Linker_Switches;
+      &Graphics.Linker_Switches;
   end Linker;
 
   for Source_Dirs use

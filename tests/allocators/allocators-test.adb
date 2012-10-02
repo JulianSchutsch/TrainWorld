@@ -188,7 +188,7 @@ package body Allocators.Test is
       Reset(Gen);
 
       for LoopNr in 1..100_000 loop
-         -- Select block
+
          CurrentBlock:=Natural(Float'Rounding(Random(Gen)*Float(TaggedBlockCount-1)))+1;
          if Blocks(CurrentBlock)=null then
 
