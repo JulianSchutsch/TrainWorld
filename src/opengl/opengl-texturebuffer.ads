@@ -2,32 +2,33 @@ pragma Ada_2012;
 
 with RefCount;
 with Basics; use Basics;
+with Allocators;
+with FirstFitLinearAllocator;
 
 package OpenGL.TextureBuffer is
 
-   BufferRangeTooLarge : Exception;
    FailedMap           : Exception;
    FailedUnmap         : Exception;
 
-   type TextureBufferRange_Interface is abstract new RefCount.Ref_Interface with null record;
-   type TextureBufferRange_ClassAccess is access all TextureBufferRange_Interface'Class;
+   type TextureBuffersRange_Interface is abstract new RefCount.Ref_Interface with null record;
+   type TextureBuffersRange_ClassAccess is access all TextureBuffersRange_Interface'Class;
 
    not overriding
    function Map
-     (TextureBufferRange : in out TextureBufferRange_Interface)
+     (TextureBufferRange : in out TextureBuffersRange_Interface)
       return System.Address is abstract;
 
    not overriding
    procedure Unmap
-     (TextureBufferRange : in out TextureBufferRange_Interface) is abstract;
+     (TextureBufferRange : in out TextureBuffersRange_Interface) is abstract;
 
    not overriding
    procedure Bind
-     (TextureBufferRange : in out TextureBufferRange_Interface) is abstract;
+     (TextureBufferRange : in out TextureBuffersRange_Interface) is abstract;
 
-   package TextureBufferRangeRef is new RefCount.Ref(TextureBufferRange_Interface,TextureBufferRange_ClassAccess);
+   package TextureBuffersRangeRef is new RefCount.Ref(TextureBuffersRange_Interface,TextureBuffersRange_ClassAccess);
 
-   subtype TextureBufferRange_Ref is TextureBufferRangeRef.Ref_Type;
+   subtype TextureBuffersRange_Ref is TextureBuffersRangeRef.Ref_Type;
    ---------------------------------------------------------------------------
 
    type TextureBuffers_Interface is abstract new RefCount.Ref_Interface with null record;
@@ -44,10 +45,10 @@ package OpenGL.TextureBuffer is
       Size           : PtrInt_Type) is abstract;
 
    not overriding
-   function Allocate
+   procedure Allocate
      (TextureBuffers : in out TextureBuffers_Interface;
-      Size           : PtrInt_Type)
-      return TextureBufferRange_Ref is abstract;
+      Size           : PtrInt_Type;
+      BufferRange    : in out TextureBuffersRange_Ref) is abstract;
 
    package TextureBuffersRef is new RefCount.Ref(TextureBuffers_Interface,TextureBuffers_ClassAccess);
    ---------------------------------------------------------------------------
@@ -65,10 +66,10 @@ package OpenGL.TextureBuffer is
       Size           : PtrInt_Type);
 
    overriding
-   function Allocate
+   procedure Allocate
      (TextureBuffers : in out TextureBuffers_Type;
-      Size           : PtrInt_Type)
-      return TextureBufferRange_Ref;
+      Size           : PtrInt_Type;
+      BufferRange    : in out TextureBuffersRange_Ref);
 
    overriding
    procedure Finalize
@@ -82,13 +83,10 @@ private
    type TextureBuffersBuffer_Type;
    type TextureBuffersBuffer_Access is access all TextureBuffersBuffer_Type;
 
-   type TextureBuffersRange_Type is new TextureBufferRange_Interface with
+   type TextureBuffersRange_Type is new TextureBuffersRange_Interface with
       record
          Buffer    : TextureBuffersBuffer_Access:=null;
-         Start     : PtrInt_Type;
-         Size      : PtrInt_Type;
-         Next      : TextureBuffersRange_Access:=null;
-         Previous  : TextureBuffersRange_Access:=null;
+         Block     : Allocators.Block_ClassAccess:=null;
       end record;
 
    overriding
@@ -109,17 +107,15 @@ private
       record
          BufferID     : aliased GLuint_Type:=0;
          TextureID    : aliased GLuint_Type:=0;
-         FirstRange   : TextureBuffersRange_Access:=null;
-         LastRange    : TextureBuffersRange_Access:=null;
-         UsedBytes    : PtrInt_Type:=0;
-         FillBytes    : PtrInt_Type:=0;
          Next         : TextureBuffersBuffer_Access:=null;
          Previous     : TextureBuffersBuffer_Access:=null;
+         Allocator    : FirstFitLinearAllocator.Allocator_Type;
       end record;
 
    type TextureBuffers_Type is new TextureBuffers_Interface with
       record
-         Buffers     : TextureBuffersBuffer_Access:=null;
+         FirstBuffer : TextureBuffersBuffer_Access:=null;
+         LastBuffer  : TextureBuffersBuffer_Access:=null;
          BufferSize  : PtrInt_Type:=0;
          Format      : GLenum_Type:=GL_RGBA8;
       end record;

@@ -62,7 +62,8 @@ package OpenGL.Test is
       Target : GLenum_Type:=0;
       ID     : GLuint_Type:=0);
 
-   procedure CheckEventsDone;
+   procedure CheckEventsBegin;
+   procedure CheckEventsEnd;
 
    procedure BindEvents;
 
@@ -76,7 +77,7 @@ package OpenGL.Test is
    Tests : Test_Array:=
      ((Name => U("OpenGL.BindTextureBuffer"),
        Test => TestBindTextureBuffer'Access),
-      (Name => U("OpenGL.Bindtextuer"),
+      (Name => U("OpenGL.BindTexture"),
        Test => TestBindTexture'Access));
 
 end OpenGL.Test;

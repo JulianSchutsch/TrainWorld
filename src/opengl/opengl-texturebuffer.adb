@@ -1,5 +1,7 @@
 pragma Ada_2012;
 
+with Ada.Tags; use Ada.Tags;
+
 package body OpenGL.TextureBuffer is
 
    procedure Bind
@@ -37,13 +39,14 @@ package body OpenGL.TextureBuffer is
       BindTextureBuffer(TextureBufferRange.Buffer.BufferID);
       Result:=glMapBufferRange
         (target  => GL_TEXTURE_BUFFER,
-         offset  => GLintptr_Type(TextureBufferRange.Start),
-         length  => GLsizeiptr_Type(TextureBufferRange.Size),
+         offset  => GLintptr_Type(TextureBufferRange.Block.Start),
+         length  => GLsizeiptr_Type(TextureBufferRange.Block.Size),
          aaccess => GL_MAP_WRITE_BIT);
       if Result=System.Null_Address then
          raise FailedMap with "GLError:"&GLenum_Type'Image(glGetError.all);
       end if;
       return Result;
+
    end Map;
    ---------------------------------------------------------------------------
 
@@ -65,62 +68,55 @@ package body OpenGL.TextureBuffer is
    end SetBufferBlockSize;
    ---------------------------------------------------------------------------
 
-   function Allocate
+   procedure Allocate
      (TextureBuffers : in out TextureBuffers_Type;
-      Size           : PtrInt_Type)
-      return TextureBufferRange_Ref is
+      Size           : PtrInt_Type;
+      BufferRange    : in out TextureBuffersRange_Ref) is
+
+      use type Allocators.Block_ClassAccess;
 
    begin
-      -- 1. Does it make sense to compress the buffers now? Check ratios? This shall be omitted for now...
-      -- 2. Is there enough space left for the range in any buffer?
-      --    if not, does allocation of a new buffer solve this problem?
-      --      no => raise exception
-      --      yes => add buffer
-      -- 3. What is the best place to place the new range?
-      --    => In the buffer with the least amount of space left!
-      if Size>TextureBuffers.BufferSize then
-         raise BufferRangeTooLArge;
-      end if;
+
+      pragma Assert(Size/=0,"Buffer range size too small");
+      pragma Assert(Size<=TextureBuffers.BufferSize,"Buffer range size too large");
 
       declare
-         Buffer            : TextureBuffersBuffer_Access:=TextureBuffers.Buffers;
-         MinimumFree       : PtrInt_Type:=PtrInt_Type'Last;
-         MinimumFreeBuffer : TextureBuffersBuffer_Access:=null;
-         BufferFree        : PtrInt_Type;
+         Buffer      : TextureBuffersBuffer_Access:=TextureBuffers.FirstBuffer;
+         BufferBlock : Allocators.Block_ClassAccess;
       begin
 
-         -- Select buffer with smallest portion of remaining free space
-         -- enough for the new buffer range.
          while Buffer/=null loop
-            BufferFree:=TextureBuffers.BufferSize-Buffer.FillBytes;
-            if BufferFree>=Size then
-               if BufferFree<=MinimumFree then
-                  MinimumFree:=BufferFree;
-                  MinimumFreeBuffer:=Buffer;
-               end if;
+            BufferBlock:=Buffer.Allocator.Allocate(Size);
+            if BufferBlock/=null then
+               exit;
             end if;
             Buffer:=Buffer.Next;
          end loop;
 
-         -- If nothing has been found, create new buffer
-         if MinimumFreeBuffer=null then
+         if BufferBlock=null then
 
-            MinimumFreeBuffer:=new TextureBuffersBuffer_Type;
-            MinimumFreeBuffer.Next:=TextureBuffers.Buffers;
-
-            if TextureBuffers.Buffers/=null then
-               TextureBuffers.Buffers.Previous:=MinimumFreeBuffer;
+            Buffer:=new TextureBuffersBuffer_Type;
+            Buffer.Previous:=TextureBuffers.LastBuffer;
+            if Buffer.Previous/=null then
+               Buffer.Previous.Next:=Buffer;
+            else
+               TextureBuffers.FirstBuffer:=Buffer;
             end if;
+            TextureBuffers.LastBuffer:=Buffer;
 
+            -- TODO : This part must be updated to handle cases with exceptions!!!
             -- Generate Buffer
             glGenBuffers
               (n        => 1,
-               buffers  => MinimumFreeBuffer.BufferID'Access);
-            -- TODO: Replace Asserts by exceptions 2*
-            pragma Assert(MinimumFreeBuffer.BufferID/=0);
-            -- Temporary:
-            BindTextureBuffer(MinimumFreeBuffer.BufferID);
+               buffers  => Buffer.BufferID'Access);
+
+            -- TODO : HANDLE BufferID=0
+
+            -- Temporary:???
+            BindTextureBuffer(Buffer.BufferID);
+
             AssertError("Initialize TexBuffer Object 1");
+
             glBufferData
               (target => GL_TEXTURE_BUFFER,
                size   => GLsizeiptr_Type(size),
@@ -131,43 +127,39 @@ package body OpenGL.TextureBuffer is
             -- Generate Texture
             glGenTextures
               (n        => 1,
-               textures => MinimumFreeBuffer.TextureID'Access);
-            pragma Assert(MinimumFreeBuffer.TextureID/=0);
+               textures => Buffer.TextureID'Access);
+            -- TODO: Handle TextureID=0
             AssertError("Initialize TexBuffer Object 3");
+
             glBindTexture
               (target  => GL_TEXTURE_BUFFER,
-               texture => MinimumFreeBuffer.TextureID);
+               texture => Buffer.TextureID);
             AssertError("Initialize TexBuffer Object 4");
+
             glTexBuffer
               (target         => GL_TEXTURE_BUFFER,
                internalformat => TextureBuffers.Format,
-               buffer         => MinimumFreeBuffer.BufferID);
+               buffer         => Buffer.BufferID);
             AssertError("Initialize TexBuffer Object");
 
+            Buffer.Allocator.Init(TextureBuffers.BufferSize);
+            BufferBlock:=Buffer.Allocator.Allocate(Size);
+            pragma Assert(BufferBlock/=null);
          end if;
 
-         pragma Assert(MinimumFreeBuffer/=null);
+         pragma Assert(Buffer/=null);
 
-         -- Add range to buffer
+         -- Check if the buffer range is allocated and has the right tag
+         if not (BufferRange.I/=null and then BufferRange.I'Tag=TextureBuffersRange_Type'Tag) then
+            BufferRange:=TextureBuffersRangeRef.MakeNewRef(new TextureBuffersRange_Type);
+         end if;
+
          declare
-            NewRange : constant TextureBuffersRange_Access:=new TextureBuffersRange_Type;
+            BufferRangeI : constant TextureBuffersRange_Access:=TextureBuffersRange_Access(BufferRange.I);
          begin
 
-            NewRange.Previous:=MinimumFreeBuffer.LastRange;
-            if NewRange.Previous/=null then
-               NewRange.Previous.Next:=NewRange;
-            else
-               MinimumFreeBuffer.FirstRange:=NewRange;
-            end if;
-
-            NewRange.Start  := MinimumFreeBuffer.FillBytes;
-            NewRange.Size   := Size;
-            NewRange.Buffer := MinimumFreeBuffer;
-
-            MinimumFreeBuffer.FillBytes := MinimumFreeBuffer.FillBytes+Size;
-            MinimumFreeBuffer.UsedBytes := MinimumFreeBuffer.UsedBytes+Size;
-
-            return TextureBufferRangeRef.MakeNewRef(TextureBufferRange_ClassAccess(NewRange));
+            BufferRangeI.Buffer:=Buffer;
+            BufferRangeI.Block:=Bufferblock;
 
          end;
 

@@ -55,6 +55,7 @@ package OpenGL is
    type GLbitfield_Type is new Interfaces.C.unsigned;
    type GLint_Type is new Interfaces.C.int;
    type GLuint_Type is new Interfaces.C.unsigned;
+   type GLuint_Access is access all GLuint_Type;
    type GLint_Access is access all GLint_Type;
    type GLsizei_Type is new Interfaces.C.int;
    type GLsizei_Access is access all GLsizei_Type;

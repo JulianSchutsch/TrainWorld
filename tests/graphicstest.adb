@@ -23,11 +23,14 @@
 
 pragma Ada_2012;
 
-with TestFrameWork;
+with TestFrameWork; use TestFrameWork;
 with OpenGL.Test;
+with OpenGL.TextureBuffer.Test;
 
 procedure GraphicsTest is
-   Tests : constant TestFrameWork.Test_Array:=OpenGL.Test.Tests;
+   Tests : constant TestFrameWork.Test_Array:=
+     OpenGL.Test.Tests&
+     OpenGL.TextureBuffer.Test.Tests;
 begin
    TestFrameWork.Run(Tests);
 end GraphicsTest;
