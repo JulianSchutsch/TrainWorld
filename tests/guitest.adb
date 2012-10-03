@@ -103,7 +103,7 @@ procedure GUITest is
          TexUniform     : aliased GLint_Type;
          MyTexture      : OpenGL.Textures.BGRATexture_Type;
          Buffer         : OpenGL.TextureBuffer.TextureBuffers_Type;
-         BufferRange    : OpenGL.TextureBuffer.TextureBufferRange_Ref;
+         BufferRange    : OpenGL.TextureBuffer.TextureBuffersRange_Ref;
          RangeMap : System.Address;
       end record;
 
@@ -134,7 +134,7 @@ procedure GUITest is
 
    procedure ContextCreate
      (Data : in out ContextCallBack_Type) is
-      use type OpenGL.TextureBuffer.TextureBufferRange_ClassAccess;
+      use type OpenGL.TextureBuffer.TextureBuffersRange_ClassAccess;
 
    begin
 
@@ -189,7 +189,7 @@ procedure GUITest is
 --      AssertError("Texture upload");
 
       Data.Buffer.SetBufferBlockSize(200*200*4);
-      Data.BufferRange:=Data.Buffer.Allocate(200*200*4);
+      Data.Buffer.Allocate(200*200*4,Data.BufferRange);
       Data.BufferRange.I.Bind;
       Data.RangeMap:=Data.BufferRange.I.Map;
       Put_Line("Copy");
