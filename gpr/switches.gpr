@@ -6,7 +6,7 @@ abstract project Switches is
       "-g",
       "-gnatf",
       "-gnatwa",
-      "-O0",
+      "-O2",
       "-gnateE",
       "-gnata");
 

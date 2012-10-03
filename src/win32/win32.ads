@@ -179,6 +179,9 @@ package Win32 is
       end record;
    type CREATESTRUCT_Access is access CREATESTRUCT_Type;
    pragma Convention(C,CREATESTRUCT_Type);
+   -- This is necessary because unchecked conversion of this type and
+   -- possible access through different channels cannot be avoided
+   pragma No_Strict_Aliasing(CREATESTRUCT_Access);
 
    type POINT_Type is
       record

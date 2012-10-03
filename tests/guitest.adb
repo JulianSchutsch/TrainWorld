@@ -215,6 +215,7 @@ procedure GUITest is
    begin
       Data.FragmentShader.Reset;
       Data.VertexShader.Reset;
+      Data.BufferRange.SetNull;
       Terminated:=True;
    end ContextClose;
    ---------------------------------------------------------------------------
