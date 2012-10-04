@@ -16,6 +16,9 @@ package body RefCount is
    begin
 
       Ref.Count := Ref.Count-1;
+      if Ref.Count=0 then
+         Finalize;
+      end if;
 
    end DecrementRefCount;
    ---------------------------------------------------------------------------
@@ -48,6 +51,7 @@ package body RefCount is
             Name   => Interface_ClassAccess);
 
       begin
+
          if Ref.I/=null then
             Ref_Access(Ref.I).Count:=Ref_Access(Ref.I).Count-1;
             if Ref_Access(Ref.I).Count=0 then
@@ -55,6 +59,7 @@ package body RefCount is
             end if;
             Ref.I:=null;
          end if;
+
       end Finalize;
       ------------------------------------------------------------------------
 
@@ -62,9 +67,11 @@ package body RefCount is
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type is
       begin
+
          return R:Ref_Type do
             R.I:=Object;
          end return;
+
       end MakeInitialRef;
       ------------------------------------------------------------------------
 
