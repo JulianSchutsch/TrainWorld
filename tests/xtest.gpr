@@ -1,0 +1,27 @@
+with "core";
+with "graphics";
+with "config";
+with "switches";
+
+project XTest is
+
+  Dir:=XTest'Project_Dir & "/";
+
+  for Languages use ("Ada");
+
+  for Main use ("xtest.adb");
+
+  package Compiler is
+    for Default_Switches("Ada") use Switches.Compiler_Switches;
+  end Compiler;
+
+  package Linker is
+    for Default_Switches("Ada") use
+       Core.Linker_Switches
+      &Graphics.Linker_Switches;
+  end Linker;
+
+  for Source_Dirs use
+    (Dir & ".");
+
+end XTest;
