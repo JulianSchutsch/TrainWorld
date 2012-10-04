@@ -47,11 +47,13 @@ package body GlobalLoop is
       if not P.Enabled then
          raise ProcessAllreadyDisabled;
       end if;
+
       if P.LastProcess/=null then
          P.LastProcess.NextProcess:=P.NextProcess;
       else
          Processes:=P.NextProcess;
       end if;
+
       if P.NextProcess/=null then
          P.NextProcess.LastProcess:=P.LastProcess;
       end if;
