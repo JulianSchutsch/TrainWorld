@@ -18,6 +18,9 @@
 -------------------------------------------------------------------------------
 
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Command_Line;
+with Ada.Containers.Vectors;
+with Basics; use Basics;
 
 package body TestFrameWork is
 
@@ -30,11 +33,46 @@ package body TestFrameWork is
    end ReportIssue;
    ---------------------------------------------------------------------------
 
+   package TestVector is new Ada.Containers.Vectors
+     (Index_Type   => Natural,
+      Element_Type => Unbounded_String);
+
+   ActiveTests : TestVector.Vector;
+
+   procedure AddTest
+     (Test : Unbounded_String) is
+   begin
+      ActiveTests.Append(Test);
+   end AddTest;
+   ---------------------------------------------------------------------------
+
+   function HasTest
+     (Test : Unbounded_String)
+      return Boolean is
+      use type Ada.Containers.Count_Type;
+   begin
+      if ActiveTests.Length=0 then
+         return True;
+      end if;
+      if ActiveTests.Contains(Test) then
+         return True;
+      end if;
+      return False;
+   end HasTest;
+   ---------------------------------------------------------------------------
+
    procedure Run(Tests:Test_Array) is
    begin
+
+      for i in 1..Ada.Command_Line.Argument_Count loop
+         AddTest(U(Ada.Command_Line.Argument(i)));
+      end loop;
+
       for i in Tests'Range loop
-         Put_Line(To_String(Tests(i).Name));
-         Tests(i).Test.all;
+         if HasTest(Tests(i).Name) then
+            Put_Line(To_String(Tests(i).Name));
+            Tests(i).Test.all;
+         end if;
       end loop;
       if IssueReported then
          Put_Line("*******************************************************************************");
