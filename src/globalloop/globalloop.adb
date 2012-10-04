@@ -4,7 +4,8 @@ package body GlobalLoop is
 
    Processes : Process_ClassAccess:=null;
 
-   pragma Thread_Local_Storage(Processes);
+   -- TODO: Find alternative solution for thread local storage
+--   pragma Thread_Local_Storage(Processes);
 
    procedure Finalize
      (P: in out Process_Type) is
