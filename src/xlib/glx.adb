@@ -1,5 +1,4 @@
 with Ada.Text_IO; use Ada.Text_IO;
-
 package body glX is
 
    function Conv is new Ada.Unchecked_Conversion(System.Address,GLXGetProcAddressARB_Access);

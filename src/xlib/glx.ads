@@ -148,7 +148,7 @@ package glX is
    function glXGetProcAddress
      (procName : access Interfaces.C.char)
       return System.Address;
-   pragma Import(C,glXGetProcAddress,"glXGetProcAddress");
+   pragma Import(C,glXGetProcAddress,"glXGetProcAddressARB");
 
    function glXChooseFBConfig
      (dpy         : Display_Access;
