@@ -85,6 +85,9 @@ package body OpenGL.Test is
       for i in BoundTextureBufferTexture'Range loop
          BoundTextureBufferTexture(i):=0;
       end loop;
+      for i in BoundTexture2D'Range loop
+         BoundTexture2D(i):=0;
+      end loop;
 
       ActiveTexture             := 0;
 
@@ -498,7 +501,7 @@ package body OpenGL.Test is
          case target is
             when GL_TEXTURE_BUFFER =>
                if BoundTextureBufferTexture(ActiveTexture)=texture then
-                  ReportIssue("CatchBindTexture: TextureBuffer allready bound");
+                  ReportIssue("CatchBindTexture: TextureBuffer allready bound"&GLuint_Type'Image(texture));
                end if;
                BoundTextureBufferTexture(ActiveTexture):=texture;
             when GL_TEXTURE_2D =>
@@ -561,6 +564,17 @@ package body OpenGL.Test is
          CheckEvent
            (Event => CatchEventDeleteTextures,
             ID    => Pointer.all);
+         -- This assumes, its correct to delete a texture when its still bound
+         for j in BoundTextureBufferTexture'Range loop
+            if BoundTextureBufferTexture(j)=Pointer.all then
+               BoundTextureBufferTexture(j):=0;
+            end if;
+         end loop;
+         for j in BoundTexture2D'Range loop
+            if BoundTexture2D(j)=Pointer.all then
+               BoundTexture2D(j):=0;
+            end if;
+         end loop;
          Textures(Pointer.all)    := False;
          TextureType(Pointer.all) := 0;
          Pointer:=Pointer+1;
