@@ -372,9 +372,9 @@ null;
 
    begin
 
-      if OpenGLLoaded then
+      if Context.OpenGLLoaded then
          UnloadFunctions;
-         OpenGLLoaded:=False;
+         Context.OpenGLLoaded:=False;
       end if;
 
       if Context.InputContext/=null then

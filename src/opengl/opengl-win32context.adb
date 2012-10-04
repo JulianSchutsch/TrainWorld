@@ -68,6 +68,7 @@ package body OpenGL.Win32Context is
          LibraryLoaded       : Boolean           := False;
          LoopProcess         : Context_Process;
          CreatePending       : Boolean:=False;
+         OpenGLLoaded        : Boolean:=False;
 
          CSTR_ClassName : Interfaces.C.Strings.chars_ptr
            := Interfaces.C.Strings.Null_Ptr;
@@ -440,6 +441,10 @@ null;
       pragma Unreferenced(IntResult,BoolResult);
    begin
 
+      if Context.OpenGLLoaded then
+         UnloadFunctions;
+      end if;
+
       Put_Line("Finalize Win32 Context");
       if Context.DeviceContext/=NULLHANDLE then
          Intresult:=ReleaseDC
@@ -610,6 +615,7 @@ null;
       if (Version.Major<3) or ((Version.Major=3) and (Version.Minor<2)) then
          Put_Line("Created compatible context");
          OpenGL.LoadFunctions(WGLGetProc'Access,True);
+         Context.OpenGLLoaded:=True;
          return ContextRef;
       end if;
 
@@ -656,6 +662,7 @@ null;
       end;
 
       OpenGL.LoadFunctions(WGLGetProc'Access,False);
+      Context.OpenGLLoaded:=True;
 
       return ContextRef;
 
