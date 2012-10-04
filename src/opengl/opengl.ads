@@ -567,4 +567,10 @@ package OpenGL is
    procedure BindTextureBuffer
      (Buffer : GLuint_Type);
 
+   procedure DeleteBuffer
+     (Buffer : GLuint_Type);
+
+   procedure DeleteTexture
+     (Texture : GLuint_Type);
+
 end OpenGL;

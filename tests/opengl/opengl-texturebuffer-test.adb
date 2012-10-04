@@ -1,4 +1,5 @@
 with OpenGL.Test; use OpenGL.Test;
+with Ada.Numerics.Float_Random;
 
 package body OpenGL.TextureBuffer.Test is
 
@@ -28,6 +29,43 @@ package body OpenGL.TextureBuffer.Test is
       UnbindEvents;
 
    end TestAllocation;
+   ---------------------------------------------------------------------------
+
+   procedure TestMonteCarlo is
+
+      RangeCount : constant:=10000;
+      MaxSize    : constant:=1024*1024;
+
+      use Ada.Numerics.Float_Random;
+
+
+   begin
+
+      BindEvents;
+
+      declare
+         Buffers : TextureBuffers_Type;
+         Ranges  : array(0..RangeCount-1) of TextureBuffersRange_Ref;
+         Gen     : Ada.Numerics.Float_Random.Generator;
+         Current : Natural;
+         Size    : PtrInt_Type;
+      begin
+         Reset(Gen);
+         Buffers.SetBufferBlockSize(1024*1024);
+         for i in 1..100000 loop
+            Current:=Natural(Float'Rounding(Random(Gen)*Float(RangeCount-1)));
+            if Ranges(Current).I=null then
+               Size:=PtrInt_Type(Float'Rounding(Random(Gen)*Float(MaxSize-1)))+1;
+               Buffers.Allocate(Size,Ranges(Current));
+            else
+               Ranges(Current).SetNull;
+            end if;
+         end loop;
+      end;
+
+      UnBindEvents;
+
+   end TestMonteCarlo;
    ---------------------------------------------------------------------------
 
 end OpenGL.TextureBuffer.Test;

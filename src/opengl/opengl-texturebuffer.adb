@@ -9,7 +9,7 @@ package body OpenGL.TextureBuffer is
      (TextureBufferRange : in out TextureBuffersRange_Type) is
    begin
 
-      Put_Line("TextureBufferRange.Finalize");
+--      Put_Line("TextureBufferRange.Finalize");
       if TextureBufferRange.Buffer/=null then
          TextureBufferRange.Buffer.Allocator.Release(TextureBufferRange.Block);
          TextureBufferRange.Buffers.DecrementRefCount;
@@ -127,18 +127,19 @@ package body OpenGL.TextureBuffer is
               (n        => 1,
                buffers  => Buffer.BufferID'Access);
 
+            Put_Line(GLuint_Type'Image(Buffer.BufferID));
             -- TODO : HANDLE BufferID=0
 
             -- Assign buffer size
+            Put_Line("Bind Buffer");
             BindTextureBuffer(Buffer.BufferID);
-
-            AssertError("Initialize TexBuffer Object 1");
-
+            Put_Line("Buffer Bound?");
             glBufferData
               (target => GL_TEXTURE_BUFFER,
                size   => GLsizeiptr_Type(size),
                data   => System.Null_Address,
                usage  => GL_DYNAMIC_DRAW);
+            Put_Line("Gen Tex");
             AssertError("Initialize TexBuffer Object 2");
 
             -- Generate Texture
@@ -209,12 +210,9 @@ package body OpenGL.TextureBuffer is
       pragma Assert(Buffer.TextureID/=0);
       pragma Assert(Buffer.BufferID/=0);
 
-      glDeleteTextures
-        (n        => 1,
-         textures => Buffer.TextureID'Access);
-      glDeleteBuffers
-        (n       => 1,
-         buffers => Buffer.BufferID'Access);
+      Put_Line("Release Buffer");
+      DeleteTexture(Buffer.TextureID);
+      DeleteBuffer(Buffer.BufferID);
 
    end ReleaseBuffer;
    ---------------------------------------------------------------------------
@@ -222,8 +220,9 @@ package body OpenGL.TextureBuffer is
    procedure Finalize
      (TextureBuffers : in out TextureBuffers_Type) is
    begin
-      Put_Line("TextureBuffers.Finalize");
+--      Put_Line("TextureBuffers.Finalize");
 
+      Put_Line("Finalize TextureBuffers");
       while TextureBuffers.FirstBuffer/=null loop
          ReleaseBuffer(TextureBuffers,TextureBuffers.FirstBuffer);
       end loop;

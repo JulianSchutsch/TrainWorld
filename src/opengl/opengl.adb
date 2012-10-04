@@ -100,6 +100,24 @@ package body OpenGL is
    end GetMaxCombinedTextureImageUnits;
    ---------------------------------------------------------------------------
 
+   procedure DeleteBuffer
+     (Buffer : GLuint_Type) is
+
+      BufVar : aliased GLuint_Type:=Buffer;
+
+   begin
+
+      -- TODO: Take care of ALL targets!
+      if CurrentTextureBuffer=Buffer then
+         CurrentTextureBuffer:=0;
+      end if;
+      glDeleteBuffers
+        (n       => 1,
+         buffers => BufVar'Access);
+
+   end DeleteBuffer;
+   ---------------------------------------------------------------------------
+
    procedure BindTextureBuffer
      (Buffer : GLuint_Type) is
    begin
@@ -133,6 +151,26 @@ package body OpenGL is
       end if;
 
    end BindTexture;
+   ---------------------------------------------------------------------------
+
+   procedure DeleteTexture
+     (Texture : GLuint_Type) is
+
+      TexVar : aliased GLuint_Type:=Texture;
+
+   begin
+
+      for Unit in CurrentTextures'Range loop
+         if CurrentTextures(Unit)=Texture then
+            CurrentTextures(Unit):=0;
+         end if;
+      end loop;
+
+      glDeleteTextures
+        (n => 1,
+         textures => TexVar'Access);
+
+   end DeleteTexture;
    ---------------------------------------------------------------------------
 
    function glGetString

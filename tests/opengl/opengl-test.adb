@@ -21,6 +21,7 @@ pragma Ada_2012;
 
 with System;
 with Ada.Unchecked_Conversion;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body OpenGL.Test is
 
@@ -273,6 +274,8 @@ package body OpenGL.Test is
       buffer : GLuint_Type) is
    begin
 
+      Put_Line("BindBuffer"&GLenum_Type'Image(target));
+
       CheckEvent
         (Event       => CatchEventBindBuffer,
          CheckTarget => True,
@@ -282,6 +285,7 @@ package body OpenGL.Test is
 
       if buffer not in Buffers'Range then
 
+         Put_Line("Bind 0");
          if buffer=0 then
             case target is
                when GL_TEXTURE_BUFFER =>
@@ -309,6 +313,7 @@ package body OpenGL.Test is
          BufferType(buffer):=target;
          case target is
             when GL_TEXTURE_BUFFER =>
+               Put_Line("Bind Texture Buffer"&GLuint_Type'Image(Buffer));
                if BoundTextureBuffer=Buffer then
                   ReportIssue("CatchBindBuffer: Buffer allready set");
                end if;
@@ -448,6 +453,9 @@ package body OpenGL.Test is
            ID    => Pointer.all);
          if not Buffers(Pointer.all) then
             ReportIssue("CatchDeleteBuffers: Buffer not allocated "&GLuint_Type'Image(Pointer.all));
+         end if;
+         if BoundTextureBuffer=Pointer.all then
+            BoundTextureBuffer:=0;
          end if;
          Buffers(Pointer.all):=False;
          Pointer:=Pointer+1;
