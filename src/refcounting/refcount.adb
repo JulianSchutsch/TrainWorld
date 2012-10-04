@@ -17,7 +17,7 @@ package body RefCount is
 
       Ref.Count := Ref.Count-1;
       if Ref.Count=0 then
-         Finalize;
+         Ref.Finalize;
       end if;
 
    end DecrementRefCount;
