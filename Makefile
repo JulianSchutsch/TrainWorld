@@ -1,7 +1,7 @@
 .PHONY: all
 .PHONY: runtests
 
-GPR_PROJECT_PATH=-aP$(CURDIR)/../cairoada -aP$(CURDIR)/../CairoAda -aP$(CURDIR)/gpr
+GPR_PROJECT_PATH=-aP./../cairoada -aP./../CairoAda -aP./gpr
 
 all:
 	gprbuild $(GPR_PROJECT_PATH) build/build.gpr
