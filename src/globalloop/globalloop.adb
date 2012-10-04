@@ -5,8 +5,8 @@ with ThreadLocalStorage;
 package body GlobalLoop is
 
    package ProcessStorage is new ThreadLocalStorage
-     (Content_Type => Process_ClassAccess,
-      NullValue    => null);
+     (Content_Type        => Process_Type,
+      Content_ClassAccess => Process_ClassAccess);
 
    procedure Finalize
      (P: in out Process_Type) is
