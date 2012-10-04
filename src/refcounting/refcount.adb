@@ -2,6 +2,24 @@ with Ada.Unchecked_Deallocation;
 
 package body RefCount is
 
+   procedure IncrementRefCount
+     (Ref : in out Ref_Interface) is
+   begin
+
+      Ref.Count := Ref.Count+1;
+
+   end IncrementRefCount;
+   ---------------------------------------------------------------------------
+
+   procedure DecrementRefCount
+     (Ref : in out Ref_Interface) is
+   begin
+
+      Ref.Count := Ref.Count-1;
+
+   end DecrementRefCount;
+   ---------------------------------------------------------------------------
+
    package body Ref is
 
       type Ref_Access is access all Ref_Interface;
@@ -40,17 +58,17 @@ package body RefCount is
       end Finalize;
       ------------------------------------------------------------------------
 
-      function MakeNewRef
+      function MakeInitialRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type is
       begin
          return R:Ref_Type do
             R.I:=Object;
          end return;
-      end MakeNewRef;
+      end MakeInitialRef;
       ------------------------------------------------------------------------
 
-      function MakeConstRef
+      function MakeAdditionalRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type is
       begin
@@ -58,7 +76,7 @@ package body RefCount is
             R.I:=Object;
             Ref_Access(Object).Count:=Ref_Access(Object).Count+1;
          end return;
-      end MakeConstRef;
+      end MakeAdditionalRef;
       ------------------------------------------------------------------------
 
    end Ref;

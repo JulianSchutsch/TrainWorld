@@ -38,10 +38,12 @@ package body OpenGL.Test is
    BoundTextureBuffer : GLuint_Type:=0;
 
    TextureCount   : constant GLuint_Type:=1024;
+   UnitCount      : constant GLuint_Type:=16;
    Textures       : array(1..TextureCount) of Boolean:=(others => False);
    TextureType    : array(1..TextureCount) of GLenum_Type:=(others => 0);
-   BoundTexture2D : GLuint_Type;
-   BoundTextureBufferTexture : GLuint_Type;
+   ActiveTexture  : GLuint_Type:=0;
+   BoundTexture2D : array(0..UnitCount-1) of GLuint_Type:=(others => 0);
+   BoundTextureBufferTexture : array(0..UnitCount-1) of GLuint_Type:=(others => 0);
 
    procedure ResetBuffers is
    begin
@@ -76,8 +78,15 @@ package body OpenGL.Test is
 
       end loop;
 
-      BoundTexture2D:=0;
-      BoundTextureBufferTexture:=0;
+      for i in BoundTexture2D'Range loop
+         BoundTexture2D(i):=0;
+      end loop;
+
+      for i in BoundTextureBufferTexture'Range loop
+         BoundTextureBufferTexture(i):=0;
+      end loop;
+
+      ActiveTexture             := 0;
 
    end ResetTextures;
    ---------------------------------------------------------------------------
@@ -175,7 +184,7 @@ package body OpenGL.Test is
       CheckTarget : Boolean:=False;
       Target      : GLenum_Type:=0;
       CheckID     : Boolean:=False;
-      ID          : GLuint_Type) is
+      ID          : GLuint_Type:=0) is
 
       MatchIndex : Integer:=-1;
 
@@ -269,28 +278,44 @@ package body OpenGL.Test is
          ID          => Buffer);
 
       if buffer not in Buffers'Range then
+
+         if buffer=0 then
+            case target is
+               when GL_TEXTURE_BUFFER =>
+                  if BoundTextureBuffer=0 then
+                     ReportIssue("CatchBindBuffer: Allready no TextureBuffer bound");
+                  end if;
+                  BoundTextureBuffer:=0;
+               when others =>
+                  ReportIssue("Target not supported");
+            end case;
+            return;
+         end if;
          ReportIssue("CatchBindBuffer : Either 0 or impossible buffer");
          return;
+
       end if;
 
       if not Buffers(buffer) then
-         ReportIssue("CatchBindBuffer : Buffer not allocated.");
+         ReportIssue("CatchBindBuffer: Buffer not allocated.");
          return;
       end if;
 
       if (BufferType(buffer)=0) or (BufferType(buffer)=target) then
+
          BufferType(buffer):=target;
          case target is
             when GL_TEXTURE_BUFFER =>
                if BoundTextureBuffer=Buffer then
-                  ReportIssue("CatchBindBuffer : Buffer allready set");
+                  ReportIssue("CatchBindBuffer: Buffer allready set");
                end if;
                BoundTextureBuffer:=Buffer;
             when others =>
                ReportIssue("Unknown target");
          end case;
+
       else
-         ReportIssue("CatchBindBuffer : Buffer does not fit target");
+         ReportIssue("CatchBindBuffer: Buffer does not fit target");
       end if;
 
    end CatchBindBuffer;
@@ -380,23 +405,52 @@ package body OpenGL.Test is
 
    procedure CatchGenBuffers
      (n       : GLsizei_Type;
-      buffers : access GLuint_Type);
+      buffer : access GLuint_Type);
    pragma Convention(StdCall,CatchGenBuffers);
 
    procedure CatchGenBuffers
-     (n       : GLsizei_Type;
-      buffers : access GLuint_Type) is
+     (n      : GLsizei_Type;
+      buffer : access GLuint_Type) is
 
-      Pointer : GLuint_Access:=GLuint_Access(buffers);
+      Pointer : GLuint_Access:=GLuint_Access(buffer);
 
    begin
 
       for i in 1..n loop
+         CheckEvent
+           (Event => CatchEventGenBuffers);
          Pointer.all := AllocateBuffer;
          Pointer     := Pointer+1;
       end loop;
 
    end CatchGenBuffers;
+   ---------------------------------------------------------------------------
+
+   procedure CatchDeleteBuffers
+     (n      : GLsizei_Type;
+      buffer : access GLuint_Type);
+   pragma Convention(StdCall,CatchDeleteBuffers);
+
+   procedure CatchDeleteBuffers
+     (n      : GLsizei_Type;
+      buffer : access GLuint_Type) is
+
+      Pointer : GLuint_Access:=GLuint_Access(buffer);
+
+   begin
+
+      for i in 1..n loop
+        CheckEvent
+          (Event => CatchEventDeleteBuffers,
+           ID    => Pointer.all);
+         if not Buffers(Pointer.all) then
+            ReportIssue("CatchDeleteBuffers: Buffer not allocated "&GLuint_Type'Image(Pointer.all));
+         end if;
+         Buffers(Pointer.all):=False;
+         Pointer:=Pointer+1;
+      end loop;
+
+   end CatchDeleteBuffers;
    ---------------------------------------------------------------------------
 
    procedure CatchGenTextures
@@ -408,8 +462,14 @@ package body OpenGL.Test is
    begin
 
       for i in 1..n loop
+
+         Checkevent
+           (Event => CatchEventGenTextures,
+            ID    => Pointer.all);
          Pointer.all:=AllocateTexture;
+         BufferType(Pointer.all):=0;
          Pointer:=Pointer+1;
+
       end loop;
 
    end CatchgenTextures;
@@ -419,7 +479,11 @@ package body OpenGL.Test is
      (target  : GLenum_Type;
       texture : GLuint_Type) is
    begin
-      -- TODO: Insert CheckEvent
+
+      CheckEvent
+        (Event => CatchEventBindTexture,
+         ID    => texture);
+
       if texture not in Textures'Range then
          ReportIssue("CatchBindBuffer: either 0 or impossible texture");
          return;
@@ -433,15 +497,15 @@ package body OpenGL.Test is
       if (TextureType(texture)=0) or (TextureType(texture)=target) then
          case target is
             when GL_TEXTURE_BUFFER =>
-               if BoundTextureBufferTexture=texture then
+               if BoundTextureBufferTexture(ActiveTexture)=texture then
                   ReportIssue("CatchBindTexture: TextureBuffer allready bound");
                end if;
-               BoundTextureBufferTexture:=texture;
+               BoundTextureBufferTexture(ActiveTexture):=texture;
             when GL_TEXTURE_2D =>
-               if BoundTexture2D=texture then
+               if BoundTexture2D(ActiveTexture)=texture then
                   ReportIssue("CatchBindTexture: Texture2D allready bound");
                end if;
-               BoundTexture2D:=texture;
+               BoundTexture2D(ActiveTexture):=texture;
             when others =>
                ReportIssue("CatchBindTexture: Target not supported");
          end case;
@@ -465,7 +529,7 @@ package body OpenGL.Test is
 
       case target is
          when GL_TEXTURE_BUFFER =>
-            if BoundTextureBufferTexture=0 then
+            if BoundTextureBufferTexture(ActiveTexture)=0 then
                ReportIssue("CatchTexBuffer: No Buffer Texture bound");
             end if;
 --            if (Buffers(buffer)=GL_TEXTURE_BUFFER) then
@@ -478,6 +542,32 @@ package body OpenGL.Test is
       end case;
 
    end CatchTexBuffer;
+   ---------------------------------------------------------------------------
+
+   procedure CatchDeleteTextures
+     (n       : GLuint_Type;
+      texture : access GLuint_Type);
+   pragma Convention(StdCall,CatchDeleteTextures);
+
+   procedure CatchDeleteTextures
+     (n       : GLuint_Type;
+      texture : access GLuint_Type) is
+
+      Pointer : GLuint_Access:=GLuint_Access(texture);
+
+   begin
+
+      for i in 1..n loop
+         CheckEvent
+           (Event => CatchEventDeleteTextures,
+            ID    => Pointer.all);
+         Textures(Pointer.all)    := False;
+         TextureType(Pointer.all) := 0;
+         Pointer:=Pointer+1;
+
+      end loop;
+
+   end CatchDeleteTextures;
    ---------------------------------------------------------------------------
 
    function GetProc
@@ -512,6 +602,12 @@ package body OpenGL.Test is
       if Str="glTexBuffer" then
          return CatchTexBuffer'Address;
       end if;
+      if Str="glDeleteBuffers" then
+         return CatchDeleteBuffers'Address;
+      end if;
+      if Str="glDeleteTextures" then
+         return CatchDeleteTextures'Address;
+      end if;
 
       return System.Null_Address;
 
@@ -530,47 +626,111 @@ package body OpenGL.Test is
       ResetTextures;
       null; -- Not yet implemented, should later remove all assigned function
             -- calls
+      UnloadFunctions;
    end UnbindEvents;
    ---------------------------------------------------------------------------
 
-   procedure TestBindTextureBuffer is
+   procedure TestTextureBuffer is
+
+      Buffer : aliased GLuint_Type;
 
    begin
+
       BindEvents;
       CheckEventsBegin;
+      ------------------------------------------------------------------------
 
       BindTextureBuffer(0);
       CheckEventsMiddle;
+      ------------------------------------------------------------------------
+
+      PushEvent
+        (Event => CatchEventGenBuffers);
+      glGenBuffers
+        (n       => 1,
+         buffers => Buffer'Access);
+      CheckEventsMiddle;
+      ------------------------------------------------------------------------
 
       PushEvent
         (Event  => CatchEventBindBuffer,
          Target => GL_TEXTURE_BUFFER,
-         ID     => 1);
+         ID     => Buffer);
       BindTextureBuffer(1);
       CheckEventsMiddle;
+      ------------------------------------------------------------------------
 
       BindTextureBuffer(1);
       CheckEventsMiddle;
+      ------------------------------------------------------------------------
 
       PushEvent
         (Event  => CatchEventBindBuffer,
-         Target => GL_TEXTURE_BUFFEr,
+         Target => GL_TEXTURE_BUFFER,
          ID     => 0);
       BindTextureBuffer(0);
+      CheckEventsMiddle;
+      ------------------------------------------------------------------------
 
+      PushEvent
+        (Event => CatchEventDeleteBuffers,
+         ID    => Buffer);
+      glDeleteBuffers
+        (n       => 1,
+         buffers => Buffer'Access);
       CheckEventsEnd;
       UnbindEvents;
+      ------------------------------------------------------------------------
 
-   end TestBindTextureBuffer;
+   end TestTextureBuffer;
    ---------------------------------------------------------------------------
 
-   procedure TestBindTexture is
+   procedure TestTexture is
+
+      Texture : aliased GLuint_Type;
+
    begin
+
       BindEvents;
       CheckEventsBegin;
+      ------------------------------------------------------------------------
+
+      BindTexture
+        (target  => GL_TEXTURE_2D,
+         unit    => 0,
+         texture => 0);
+      CheckEventsMiddle;
+      ------------------------------------------------------------------------
+
+      PushEvent
+        (Event => CatchEventGenTextures);
+      glGenTextures
+        (n        => 1,
+         textures => Texture'Access);
+      CheckEventsMiddle;
+      ------------------------------------------------------------------------
+
+      PushEvent
+        (Event => CatchEventBindTexture,
+         ID    => Texture);
+      BindTexture
+        (target  => GL_TEXTURE_2D,
+         unit    => 0,
+         texture => Texture);
+      CheckEventsMiddle;
+      ------------------------------------------------------------------------
+
+      PushEvent
+        (Event => CatchEventDeleteTextures,
+         ID    => Texture);
+      glDeleteTextures
+        (n => 1,
+         textures => Texture'Access);
       CheckEventsEnd;
       UnbindEvents;
-   end TestBindTexture;
+      ------------------------------------------------------------------------
+
+   end TestTexture;
    ---------------------------------------------------------------------------
 
 end OpenGL.Test;

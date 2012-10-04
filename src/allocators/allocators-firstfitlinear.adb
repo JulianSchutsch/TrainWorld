@@ -2,7 +2,7 @@ pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
 
-package body FirstFitLinearAllocator is
+package body Allocators.FirstFitLinear is
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => Block_Type,
@@ -225,4 +225,4 @@ package body FirstFitLinearAllocator is
    end Release;
    ---------------------------------------------------------------------------
 
-end FirstFitLinearAllocator;
+end Allocators.FirstFitLinear;

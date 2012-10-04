@@ -2,7 +2,6 @@ with "core";
 with "graphics";
 with "config";
 with "switches";
-with "cairoada";
 
 project GraphicsTest is
 

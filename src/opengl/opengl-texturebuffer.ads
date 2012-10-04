@@ -3,7 +3,7 @@ pragma Ada_2012;
 with RefCount;
 with Basics; use Basics;
 with Allocators;
-with FirstFitLinearAllocator;
+with Allocators.FirstFitLinear;
 
 package OpenGL.TextureBuffer is
 
@@ -83,10 +83,13 @@ private
    type TextureBuffersBuffer_Type;
    type TextureBuffersBuffer_Access is access all TextureBuffersBuffer_Type;
 
+   type TextureBuffers_Access is access all TextureBuffers_Type;
+
    type TextureBuffersRange_Type is new TextureBuffersRange_Interface with
       record
-         Buffer    : TextureBuffersBuffer_Access:=null;
-         Block     : Allocators.Block_ClassAccess:=null;
+         Buffer    : TextureBuffersBuffer_Access  := null;
+         Block     : Allocators.Block_ClassAccess := null;
+         Buffers   : TextureBuffers_Access        := null;
       end record;
 
    overriding
@@ -101,6 +104,10 @@ private
    overriding
    procedure Bind
      (TextureBufferRange : in out TextureBuffersRange_Type);
+
+   overriding
+   procedure Finalize
+     (TextureBufferRange : in out TextureBuffersRange_Type);
    ---------------------------------------------------------------------------
 
    type TextureBuffersBuffer_Type is
@@ -109,7 +116,7 @@ private
          TextureID    : aliased GLuint_Type:=0;
          Next         : TextureBuffersBuffer_Access:=null;
          Previous     : TextureBuffersBuffer_Access:=null;
-         Allocator    : FirstFitLinearAllocator.Allocator_Type;
+         Allocator    : Allocators.FirstFitLinear.Allocator_Type;
       end record;
 
    type TextureBuffers_Type is new TextureBuffers_Interface with

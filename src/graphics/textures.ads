@@ -51,6 +51,7 @@ package Textures is
       end record;
    pragma Convention(C,BGRAPixel_Type);
    type BGRAPixel_Access is access all BGRAPixel_Type;
+   pragma No_Strict_Aliasing(BGRAPixel_Access);
 
    type BGRAPixel_2DArray is array(Natural range <>, Natural range <>) of aliased BGRAPixel_Type;
    pragma Convention(C,BGRAPixel_2DArray);

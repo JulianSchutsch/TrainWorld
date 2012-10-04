@@ -745,11 +745,11 @@ package body ClientServerStream.SMPipe is
             Client.BlockPipes:=Connection.BlockPipes;
 
             Connection.ReadStreamP:=new PipeReadStream_Type;
-            Connection.ReadStream:=Streams.ReadStreamRef.MakeNewRef(Streams.ReadStream_ClassAccess(Connection.ReadStreamP));
+            Connection.ReadStream:=Streams.ReadStreamRef.MakeInitialRef(Streams.ReadStream_ClassAccess(Connection.ReadStreamP));
             Connection.ReadStreamP.SourceBlockPipe:=Connection.BlockPipes.ToServer'Access;
 
             Client.ReadStreamP:=new PipeReadStream_Type;
-            Client.ReadStream:=Streams.ReadStreamRef.MakeNewRef(Streams.readStream_ClassAccess(Client.ReadStreamP));
+            Client.ReadStream:=Streams.ReadStreamRef.MakeInitialRef(Streams.readStream_ClassAccess(Client.ReadStreamP));
             Client.ReadStreamP.SourceBlockPipe:=Client.BlockPipes.FromServer'Access;
 
             Connection.Next:=Server.HalfConnections;
@@ -838,7 +838,7 @@ package body ClientServerStream.SMPipe is
                declare
                   WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
                begin
-                  Connection.WriteStream:=Streams.WriteStreamRef.MakeNewRef(Streams.WriteStream_ClassAccess(WriteStream));
+                  Connection.WriteStream:=Streams.WriteStreamRef.MakeInitialRef(Streams.WriteStream_ClassAccess(WriteStream));
                   WriteStream.DestBlockPipe:=Connection.BlockPipes.FromServer'Access;
                end;
 
@@ -929,7 +929,7 @@ package body ClientServerStream.SMPipe is
             WriteStream : constant PipeWriteStream_Access:=new PipeWriteStream_Type;
          begin
             WriteStream.DestBlockPipe:=Client.BlockPipes.ToServer'Access;
-            Client.WriteStream:=Streams.WriteStreamRef.MakeNewRef(Streams.WriteStream_ClassAccess(WriteStream));
+            Client.WriteStream:=Streams.WriteStreamRef.MakeInitialRef(Streams.WriteStream_ClassAccess(WriteStream));
          end;
          Client.ReceiveState:=Client.CallBack.NetworkConnect(Client.WriteStream);
          pragma Assert(Client.ReceiveState/=null);

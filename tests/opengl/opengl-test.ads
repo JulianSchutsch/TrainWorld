@@ -55,7 +55,12 @@ package OpenGL.Test is
    type CatchEvent_Enum is
      (CatchEventNone,
       CatchEventBarrier,
-      CatchEventBindBuffer);
+      CatchEventBindBuffer,
+      CatchEventGenBuffers,
+      CatchEventDeleteBuffers,
+      CatchEventGenTextures,
+      CatchEventDeleteTextures,
+      CatchEventBindTexture);
 
    procedure PushEvent
      (Event  : CatchEvent_Enum;
@@ -70,14 +75,14 @@ package OpenGL.Test is
    procedure UnbindEvents;
    ---------------------------------------------------------------------------
 
-   procedure TestBindTextureBuffer;
+   procedure TestTextureBuffer;
 
-   procedure TestBindTexture;
+   procedure TestTexture;
 
    Tests : Test_Array:=
      ((Name => U("OpenGL.BindTextureBuffer"),
-       Test => TestBindTextureBuffer'Access),
-      (Name => U("OpenGL.BindTexture"),
-       Test => TestBindTexture'Access));
+       Test => TestTextureBuffer'Access),
+      (Name => U("OpenGL.Texture"),
+       Test => TestTexture'Access));
 
 end OpenGL.Test;

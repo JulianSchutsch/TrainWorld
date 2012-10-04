@@ -151,8 +151,8 @@ procedure GUITest is
       Put_Line("Compile Vertex Shader:"&To_String(Data.VertexShader.GetCompileLog));
 
       Data.Program.Create
-        ((OpenGL.Program.ShaderVertex   => OpenGL.Program.ShaderRef.MakeConstRef(Data.VertexShader'Unrestricted_Access),
-          OpenGL.Program.ShaderFragment => OpenGL.Program.ShaderRef.MakeConstRef(Data.FragmentShader'Unrestricted_Access)));
+        ((OpenGL.Program.ShaderVertex   => OpenGL.Program.ShaderRef.MakeAdditionalRef(Data.VertexShader'Unrestricted_Access),
+          OpenGL.Program.ShaderFragment => OpenGL.Program.ShaderRef.MakeAdditionalRef(Data.FragmentShader'Unrestricted_Access)));
       Put_Line("Link:"&To_String(Data.Program.GetLinkLog));
       Data.Program.BindAttribLocation(0,"in_Position");
       Data.Program.BindAttribLocation(1,"in_TexCoord");

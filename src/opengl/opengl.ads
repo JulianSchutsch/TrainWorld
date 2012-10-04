@@ -56,7 +56,9 @@ package OpenGL is
    type GLint_Type is new Interfaces.C.int;
    type GLuint_Type is new Interfaces.C.unsigned;
    type GLuint_Access is access all GLuint_Type;
+   pragma No_Strict_Aliasing(GLuint_Access);
    type GLint_Access is access all GLint_Type;
+   pragma No_Strict_Aliasing(GLint_Access);
    type GLsizei_Type is new Interfaces.C.int;
    type GLsizei_Access is access all GLsizei_Type;
    type GLintptr_Type is new Interfaces.C.size_t;
@@ -300,6 +302,12 @@ package OpenGL is
         buffers : access GLuint_Type);
    pragma Convention(StdCall,glGenBuffers_Access);
 
+   type glDeleteBuffers_Access is
+     access procedure
+       (n       : GLsizei_Type;
+        buffers : access GLuint_Type);
+   pragma Convention(StdCall,glDeleteBuffers_Access);
+
    type glBindBuffer_Access is
      access procedure
        (target : GLenum_Type;
@@ -340,6 +348,7 @@ package OpenGL is
    GL_STATIC_DRAW  : GLenum_Type:=16#88E4#;
 
    glGenBuffers     : glGenBuffers_Access:=null;
+   glDeleteBuffers  : glDeleteBuffers_Access:=null;
    glBindBuffer     : glBindBuffer_Access:=null;
    glBufferData     : glBufferData_Access:=null;
    glTexBuffer      : glTexBuffer_Access:=null;
@@ -530,6 +539,8 @@ package OpenGL is
    procedure LoadFunctions
      (GetProc    : not null GetProc_Access;
       Compatible : Boolean);
+
+   procedure UnloadFunctions;
 
    function IsExtensionSupported
      (Name : String)

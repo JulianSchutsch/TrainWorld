@@ -1,6 +1,6 @@
 pragma Ada_2012;
 
-with FirstFitLinearAllocator;
+with Allocators.FirstFitLinear;
 with Ada.Numerics.Float_Random;
 
 package body Allocators.Test is
@@ -228,21 +228,21 @@ package body Allocators.Test is
    ---------------------------------------------------------------------------
 
    procedure TestFirstFitLinearInvalidSizeRequest is
-      Allocator : FirstFitLinearAllocator.Allocator_Type;
+      Allocator : Allocators.FirstFitLinear.Allocator_Type;
    begin
       TestInvalidSizeRequest(Allocator'Unrestricted_Access);
    end;
    ---------------------------------------------------------------------------
 
    procedure TestFirstFitLinearValidSizeRequest is
-      Allocator : FirstFitLinearAllocator.Allocator_Type;
+      Allocator : Allocators.FirstFitLinear.Allocator_Type;
    begin
       TestValidSizeRequest(Allocator'Unrestricted_Access);
    end;
    ---------------------------------------------------------------------------
 
    procedure TestFirstFitLinearMonteCarloAndTaggedMemory is
-      Allocator : FirstFitLinearAllocator.Allocator_Type;
+      Allocator : Allocators.FirstFitLinear.Allocator_Type;
    begin
       TestMonteCarloAndTaggedMemory(Allocator'Unrestricted_Access);
    end;

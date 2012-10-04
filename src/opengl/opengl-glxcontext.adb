@@ -106,6 +106,7 @@ package body OpenGL.GLXContext is
          FBConfigEntry       : Natural:=0;
          LoopProcess         : Context_Process;
          CreatePending       : Boolean:=False;
+         OpenGLLoaded        : Boolean:=False;
       end record;
 
    overriding
@@ -370,6 +371,11 @@ null;
       use type Interfaces.C.int;
 
    begin
+
+      if OpenGLLoaded then
+         UnloadFunctions;
+         OpenGLLoaded:=False;
+      end if;
 
       if Context.InputContext/=null then
          XDestroyIC(Context.InputContext);
@@ -793,6 +799,8 @@ null;
            (GetProc   => GLX.GetProcAddress'Access,
             Compatible       => CompatibleOpenGL);
       end if;
+
+      Context.OpenGLLoaded:=True;
 
       Context.CreatePending:=True;
       return ContextRef;

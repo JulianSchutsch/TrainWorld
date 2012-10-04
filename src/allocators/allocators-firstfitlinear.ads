@@ -1,10 +1,9 @@
 pragma Ada_2012;
 
-with Basics; use basics;
 with Ada.Finalization;
 with Allocators;
 
-package FirstFitLinearAllocator is
+package Allocators.FirstFitLinear is
 
    type Allocator_Type is new Ada.Finalization.Limited_Controlled and Allocators.Allocator_Interface with private;
 
@@ -48,4 +47,4 @@ private
          ManagedAmount : PtrInt_Type:=0;
       end record;
 
-end FirstFitLinearAllocator;
+end Allocators.FirstFitLinear;

@@ -20,6 +20,7 @@
 pragma Ada_2012;
 
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 with VersionParser;
 with Ada.Text_IO; use Ada.Text_IO;
 with Basics; use Basics;
@@ -47,6 +48,7 @@ package body OpenGL is
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glDeleteBuffers_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBindBuffer_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBufferData_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexBuffer_Access);
@@ -79,7 +81,13 @@ package body OpenGL is
    type Texture_Array is array(Natural range <>) of GLuint_Type;
    type Texture_ArrayAccess is access all Texture_Array;
 
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => Texture_Array,
+      Name   => Texture_ArrayAccess);
+
    MaxCombinedTextureImageUnits : aliased GLint_Type:=0;
+
+   ActiveContexts : Natural:=0;
 
    CurrentUnit          : Natural;
    CurrentTextures      : Texture_ArrayAccess:=null;
@@ -242,7 +250,6 @@ package body OpenGL is
 
    procedure ReadExtensionsByGetString
      (GetProc : GetProc_Access) is
-
    begin
       ProcessExtensionString(glGetString(GL_EXTENSIONS,GetProc));
    end ReadExtensionsByGetString;
@@ -254,7 +261,6 @@ package body OpenGL is
       glGetIntegerv(GL_NUM_EXTENSIONS,Count'Access);
       Extensions:=new Extension_Array(0..Integer(Count)-1);
       for i in 0..Count-1 loop
-         Put_Line("Read Extension:"&Integer'Image(Integer(i))&" of "&Integer'Image(IntegeR(count)));
          declare
             Str : constant chars_ptr:=glGetStringi(GL_EXTENSIONS,i);
          begin
@@ -276,6 +282,7 @@ package body OpenGL is
 
    begin
 
+      ActiveContexts:=ActiveContexts+1;
       -- TODO: It is not entirely safe to say what can be loaded with ExtensionProc
       --       This needs testing and research
       glGetError       := Conv(GetProc("glGetError"));
@@ -308,9 +315,10 @@ package body OpenGL is
       -- Buffer Objects
       if (Version.Major>=2) or ((Version.Major=1) and (Version.Minor>=5)) then
          SupportBufferObjects:=True;
-         glGenBuffers := Conv(GetProc("glGenBuffers"));
-         glBindBuffer := Conv(GetProc("glBindBuffer"));
-         glBufferData := Conv(GetProc("glBufferData"));
+         glGenBuffers    := Conv(GetProc("glGenBuffers"));
+         glDeleteBuffers := Conv(GetProc("glDeleteBuffers"));
+         glBindBuffer    := Conv(GetProc("glBindBuffer"));
+         glBufferData    := Conv(GetProc("glBufferData"));
       end if;
 
       if (Version.Major>=2) or ((Version.Major>=1) and (Version.Minor>=3)) then
@@ -384,6 +392,70 @@ package body OpenGL is
       AssertError("Load Program");
 
    end LoadFunctions;
+   ---------------------------------------------------------------------------
+
+   procedure UnloadFunctions is
+   begin
+
+
+      ActiveContexts:=ActiveContexts-1;
+
+      if ActiveContexts=0 then
+         glGetError       := null;
+         glClear          := null;
+         glClearColor     := null;
+         glViewport       := null;
+         glFinish         := null;
+         glGetIntegerv    := null;
+         glTexParameteri  := null;
+         glDrawArrays     := null;
+         glGenTextures    := null;
+         glBindTexture    := null;
+         glDeleteTextures := null;
+         glTexImage2D     := null;
+         glTexSubImage2D  := null;
+
+         glGenBuffers    := null;
+         glDeleteBuffers := null;
+         glBindBuffer    := null;
+         glBufferData    := null;
+
+         glActiveTexture := null;
+
+         glVertexAttribPointer     := null;
+         glEnableVertexAttribArray := null;
+         glBindAttribLocation      := null;
+
+         glBindVertexArray := null;
+         glGenVertexArrays := null;
+         glMapBufferRange  := null;
+         glUnmapBuffer     := null;
+
+         glTexBuffer := null;
+
+         glCreateProgram      := null;
+         glDeleteProgram      := null;
+         glUseProgram         := null;
+         glAttachShader       := null;
+         glDetachShader       := null;
+         glLinkProgram        := null;
+         glGetProgramiv       := null;
+         glGetShaderInfoLog   := null;
+         glGetUniformLocation := null;
+         glGetProgramInfoLog  := null;
+         glCreateShader       := null;
+         glDeleteShader       := null;
+         glShaderSource       := null;
+         glCompileShader      := null;
+         glCompileShader      := null;
+         glGetShaderiv        := null;
+         glUniform1i          := null;
+
+         Free(CurrentTextures);
+
+      end if;
+
+   end UnloadFunctions;
    ---------------------------------------------------------------------------
 
    procedure AssertError

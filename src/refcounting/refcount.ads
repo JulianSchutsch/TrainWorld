@@ -6,6 +6,14 @@ package RefCount is
 
    type Ref_Interface is new Ada.Finalization.Limited_Controlled with private;
 
+   not overriding
+   procedure IncrementRefCount
+     (Ref : in out Ref_Interface);
+
+   not overriding
+   procedure DecrementRefCount
+     (Ref : in out Ref_Interface);
+
    generic
 
       type Interface_Type is abstract new Ref_Interface with private;
@@ -15,7 +23,7 @@ package RefCount is
 
       type Ref_Type is new Ada.Finalization.Controlled with
          record
-            I : Interface_ClassAccess;
+            I : Interface_ClassAccess:=null;
          end record;
 
       not overriding
@@ -31,11 +39,11 @@ package RefCount is
         (Ref : in out Ref_Type);
       ------------------------------------------------------------------------
 
-      function MakeConstRef
+      function MakeAdditionalRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type;
 
-      function MakeNewRef
+      function MakeInitialRef
         (Object : Interface_ClassAccess)
          return Ref.Ref_Type;
 
