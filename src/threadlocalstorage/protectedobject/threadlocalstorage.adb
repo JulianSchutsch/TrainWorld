@@ -5,7 +5,7 @@ package body ThreadLocalStorage is
    type StorageElement_Type is
       record
          TaskID  : Task_Id:=Null_Task_Id;
-         Content : Content_Type;
+         Content : Content_ClassAccess:=null;
       end record;
 
    type StorageElement_Array is array(0..999) of StorageElement_Type;
@@ -14,11 +14,11 @@ package body ThreadLocalStorage is
 
       procedure Set
         (ID      : Task_ID;
-         Content : Content_Type);
+         Content : Content_ClassAccess);
 
       procedure Get
         (ID      : Task_ID;
-         Content : out Content_Type);
+         Content : out Content_ClassAccess);
 
    private
 
@@ -30,7 +30,7 @@ package body ThreadLocalStorage is
 
       procedure Set
         (ID      : Task_ID;
-         Content : Content_Type) is
+         Content : Content_ClassAccess) is
       begin
 
          for i in Elements'Range loop
@@ -55,7 +55,7 @@ package body ThreadLocalStorage is
 
       procedure Get
         (ID      : Task_ID;
-         Content : out Content_Type) is
+         Content : out Content_ClassAccess) is
       begin
 
          for i in Elements'Range loop
@@ -67,7 +67,7 @@ package body ThreadLocalStorage is
 
          end loop;
 
-         Content:=NullValue;
+         Content:=null;
 
       end Get;
       ------------------------------------------------------------------------
@@ -77,13 +77,13 @@ package body ThreadLocalStorage is
 
    Storage : Storage_Type;
 
-   procedure Set(Content : Content_Type) is
+   procedure Set(Content : Content_ClassAccess) is
    begin
       Storage.Set(Current_Task,Content);
    end Set;
    ---------------------------------------------------------------------------
 
-   procedure Get(Content : out Content_Type) is
+   procedure Get(Content : out Content_ClassAccess) is
    begin
       Storage.Get(Current_Task,Content);
    end Get;
