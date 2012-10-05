@@ -32,6 +32,8 @@ with GlobalLoop.Test;
 with InterfaceTest;
 with ProtectedBasics.Test;
 with Allocators.Test;
+pragma Warnings(Off);
+with ThreadLocalStorage;
 
 procedure CoreTest is
    Tests : constant TestFrameWork.Test_Array:=

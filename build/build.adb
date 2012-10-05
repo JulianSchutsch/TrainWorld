@@ -80,6 +80,13 @@ procedure Build is
    end GLXOpenGL;
    ---------------------------------------------------------------------------
 
+   function ThreadLocalStorage
+     return Boolean is
+   begin
+      return Detected/=PlattformNetBSD;
+   end ThreadLocalStorage;
+   ---------------------------------------------------------------------------
+
 begin
 
    Plattform.Initialize;
@@ -102,7 +109,8 @@ begin
    Put_Line(File,"   type Plattform_Type is");
    Put_Line(File,"      (""Unknown"",");
    Put_Line(File,"       ""Linux"",");
-   Put_Line(File,"       ""BSD"",");
+   Put_Line(File,"       ""FreeBSD"",");
+   Put_Line(File,"       ""NetBSD"",");
    Put_Line(File,"       ""WindowsNT"");");
    Put_Line(File,"");
    Put_Line(File,"   type Switch_Type is");
@@ -113,10 +121,13 @@ begin
    Put_Line(File,"");
 
    -- Win32 OpenGL
-   Put_Line(File,"   Win32OpenGL : Switch_Type:="""&StrOn(Win32OpenGL)&""";");
+   Put_Line(File,"   Win32OpenGL        : Switch_Type:="""&StrOn(Win32OpenGL)&""";");
 
    -- GLX OpenGL
-   Put_Line(File,"   XOpenGL     : Switch_Type:="""&StrOn(GLXOpenGL)&""";");
+   Put_Line(File,"   XOpenGL            : Switch_Type:="""&StrOn(GLXOpenGL)&""";");
+
+   -- ThreadLocalStorage
+   Put_Line(File,"   ThreadLocalStorage : Switch_Type:="""&StrOn(ThreadLocalStorage)&""";");
 
    Put_Line(File,"");
    Put_Line(File,"end Config;");

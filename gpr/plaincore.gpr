@@ -17,7 +17,6 @@ project PlainCore is
      Dir & "../src/implementations",
      Dir & "../src/bytes/littleendian",
      Dir & "../src/refcounting",
-     Dir & "../src/globalloop",
      Dir & "../src/testframework",
      Dir & "../src/parsers",
      Dir & "../src/resourcefilesystem",

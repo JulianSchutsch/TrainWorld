@@ -10,6 +10,7 @@ with GlobalLoop;
 with Config;
 with Basics; use Basics;
 with Ada.Exceptions;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body OpenGL.GLXContext is
 

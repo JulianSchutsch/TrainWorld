@@ -42,13 +42,15 @@ package Plattform is
    type Plattform_Enum is
      (PlattformUnknown,
       PlattformLinux,
-      PlattformBSD,
+      PlattformFreeBSD,
+      PlattformNetBSD,
       PlattformWindowsNT);
 
    PlattformID:array(Plattform_Enum) of Unbounded_String:=
      (PlattformUnknown   => U("Unknown"),
       PlattformLinux     => U("Linux"),
-      PlattformBSD       => U("BSD"),
+      PlattformFreeBSD   => U("FreeBSD"),
+      PlattformNetBSD    => U("NetBSD"),
       PlattformWindowsNT => U("WindowsNT"));
 
    Detected         : Plattform_Enum:=PlattformUnknown;

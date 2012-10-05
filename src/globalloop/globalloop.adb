@@ -1,11 +1,12 @@
 pragma Ada_2012;
 
+with ThreadLocalStorage;
+
 package body GlobalLoop is
 
-   Processes : Process_ClassAccess:=null;
-
-   -- TODO: Find alternative solution for thread local storage
---   pragma Thread_Local_Storage(Processes);
+   package ProcessStorage is new ThreadLocalStorage
+     (Content_Type => Process_ClassAccess,
+      NullValue    => null);
 
    procedure Finalize
      (P: in out Process_Type) is
@@ -18,7 +19,13 @@ package body GlobalLoop is
 
    procedure Enable
      (P : in out Process_Type) is
+
+      Processes : Process_ClassAccess;
+
    begin
+
+      ProcessStorage.Get(Processes);
+
       if P.Enabled then
          raise ProcessAllreadyEnabled;
       end if;
@@ -36,6 +43,7 @@ package body GlobalLoop is
       end if;
       Processes:=P'Unrestricted_Access;
 
+      ProcessStorage.Set(Processes);
       P.Enabled:=True;
 
    end Enable;
@@ -43,7 +51,12 @@ package body GlobalLoop is
 
    procedure Disable
      (P : in out Process_Type) is
+
+      Processes : Process_ClassAccess;
+
    begin
+
+      ProcessStorage.Get(Processes);
 
       if not P.Enabled then
          raise ProcessAllreadyDisabled;
@@ -64,14 +77,18 @@ package body GlobalLoop is
 
       P.Enabled:=False;
 
+      ProcessStorage.Set(Processes);
+
    end Disable;
    ---------------------------------------------------------------------------
 
    procedure Process is
 
-      Current : Process_ClassAccess:=Processes;
+      Current : Process_ClassAccess;
 
    begin
+
+      ProcessStorage.Get(Current);
 
       while Current/=null loop
          Current.Process;

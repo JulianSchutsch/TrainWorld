@@ -39,7 +39,11 @@ package body Plattform is
             return;
          end if;
          if PortableExec.StringInOutput("FreeBSD") then
-            Detected:=PlattformBSD;
+            Detected:=PlattformFreeBSD;
+            return;
+         end if;
+         if PortableExec.StringInOutput("NetBSD") then
+            Detected:=PlattformNetBSD;
             return;
          end if;
       end if;

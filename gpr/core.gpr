@@ -17,12 +17,22 @@ project Core is
   end Compiler;
 
   case Config.Plattform is
-     when "Unknown" =>
-     when "Linux"|"BSD" =>
+     when "Unknown"|"Linux"|"FreeBSD"|"NetBSD" =>
         Sources:=Sources&(Dir&"../src/unix");
      when "WindowsNT" =>
         Sources:=Sources&(Dir&"../src/win32");
    end case;
+
+   case Config.Plattform is
+      when "Unknown"|"NetBSD" =>
+         Sources:=Sources&(Dir&"../src/threadlocalstorage/protectedobject");
+      when "FreeBSD"|"Linux"|"WindowsNT" =>
+         Sources:=Sources&(Dir&"../src/threadlocalstorage/ada");
+   end case;
+
+   Sources:=Sources
+      &(Dir&"../src/threadlocalstorage",
+        Dir&"../src/globalloop");
 
    for Source_Dirs use Sources;
 
