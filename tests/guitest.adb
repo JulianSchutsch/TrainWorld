@@ -35,7 +35,6 @@ with OpenGL.Textures;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with System;
 with Ada.Finalization;
-pragma Warnings(off);
 with Cairo; use Cairo;
 with Cairo.Surface; use Cairo.Surface;
 with Cairo.Surface.Image; use Cairo.Surface.Image;
@@ -43,7 +42,6 @@ with Cairo.Context; use Cairo.Context;
 with Ada.Numerics;
 with Interfaces.C;
 with OpenGL.TextureBuffer;
-with System;
 
 procedure GUITest is
 
@@ -52,7 +50,7 @@ procedure GUITest is
    Terminated    : Boolean:=False;
    pragma Warnings(Off,Terminated);
 
-   Pi : Interfaces.C.double:=Interfaces.C.double(Ada.Numerics.PI);
+   Pi : constant Interfaces.C.double:=Interfaces.C.double(Ada.Numerics.PI);
 
    VertexShaderSource : constant String:=
      "#version 140"&Character'Val(10)&
