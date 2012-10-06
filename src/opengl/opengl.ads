@@ -50,6 +50,8 @@ package OpenGL is
    subtype GLfloat_Type is Float;
    type GLfloat_Array is array (Integer range <>) of aliased GLfloat_Type;
    pragma Convention(C,GLfloat_Array);
+   type GLfloat_Matrix4x4 is array(0..3,0..3) of aliased GLfloat_Type;
+   pragma Convention(C,GLfloat_Matrix4x4);
 
    subtype GLclampf_Type is Float;
    type GLbitfield_Type is new Interfaces.C.unsigned;
@@ -502,6 +504,14 @@ package OpenGL is
         v0       : GLint_Type);
    pragma Convention(StdCall,glUniform1i_Access);
 
+   type glUniformMatrix4fv_Access is
+     access procedure
+       (location  : GLint_Type;
+        count     : GLsizei_Type;
+        transpose : GLboolean_Type;
+        value     : access GLfloat_Type);
+   pragma Convention(StdCall,glUniformMatrix4fv_Access);
+
    glCreateProgram      : glCreateProgram_Access      := null;
    glDeleteProgram      : glDeleteProgram_Access      := null;
    glUseProgram         : glUseProgram_Access         := null;
@@ -520,6 +530,7 @@ package OpenGL is
    glGetShaderiv        : glGetShaderiv_Access   := null;
 
    glUniform1i : glUniform1i_Access:=null;
+   glUniformMatrix4fv : glUniformMatrix4fv_Access:=null;
 
    SupportProgram  : Boolean := False;
 
@@ -572,5 +583,17 @@ package OpenGL is
 
    procedure DeleteTexture
      (Texture : GLuint_Type);
+
+   function OrthoMatrix
+     (Left   : GLfloat_Type;
+      Right  : GLfloat_Type;
+      Bottom : GLfloat_Type;
+      Top    : GLfloat_Type;
+      Near   : GLfloat_Type:=-1.0;
+      Far    : Glfloat_Type:=1.0)
+      return GLFloat_Matrix4x4;
+
+   function IdentityMatrix
+     return GLFloat_Matrix4x4;
 
 end OpenGL;

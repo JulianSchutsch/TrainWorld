@@ -77,6 +77,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetProgramInfoLog_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glBindAttribLocation_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glUniform1i_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glUniformMatrix4fv_Access);
 
    type Texture_Array is array(Natural range <>) of GLuint_Type;
    type Texture_ArrayAccess is access all Texture_Array;
@@ -92,6 +93,53 @@ package body OpenGL is
    CurrentUnit          : Natural;
    CurrentTextures      : Texture_ArrayAccess:=null;
    CurrentTextureBuffer : GLuint_Type:=0;
+
+   function IdentityMatrix
+     return GLFloat_Matrix4x4 is
+   begin
+      return Matrix:GLFloat_Matrix4x4 do
+         for i in Matrix'Range(1) loop
+            for n in Matrix'Range(2) loop
+               if i=n then
+                  Matrix(i,n):=1.0;
+               else
+                  Matrix(i,n):=0.0;
+               end if;
+            end loop;
+         end loop;
+      end return;
+   end IdentityMatrix;
+   ---------------------------------------------------------------------------
+
+   function OrthoMatrix
+     (Left   : GLfloat_Type;
+      Right  : GLfloat_Type;
+      Bottom : GLfloat_Type;
+      Top    : GLfloat_Type;
+      Near   : GLfloat_Type:=-1.0;
+      Far    : Glfloat_Type:=1.0)
+      return GLFloat_Matrix4x4 is
+   begin
+      return Matrix:GLFloat_Matrix4x4 do
+         Matrix(0,0) := 2.0/(Right-Left);
+         Matrix(0,1) := 0.0;
+         Matrix(0,2) := 0.0;
+         Matrix(0,3) := -(Right+Left)/(Right-Left);
+         Matrix(1,0) := 0.0;
+         Matrix(1,1) := 2.0/(Top-Bottom);
+         Matrix(1,2) := 0.0;
+         Matrix(1,3) := -(Top+Bottom)/(Top-Bottom);
+         Matrix(2,0) := 0.0;
+         Matrix(2,1) := 0.0;
+         Matrix(2,2) := -2.0/(Far-Near);
+         Matrix(2,3) := -(Far+Near)/(Far-Near);
+         Matrix(3,0) := 0.0;
+         Matrix(3,1) := 0.0;
+         Matrix(3,2) := 0.0;
+         Matrix(3,3) := 1.0;
+      end return;
+   end OrthoMatrix;
+   ---------------------------------------------------------------------------
 
    function GetMaxCombinedTextureImageUnits
      return Natural is
@@ -426,6 +474,7 @@ package body OpenGL is
          glCompileShader      := Conv(GetProc("glCompileShader"));
          glGetShaderiv        := Conv(GetProc("glGetShaderiv"));
          glUniform1i          := Conv(GetProc("glUniform1i"));
+         glUniformMatrix4fv   := Conv(GetProc("glUniformMatrix4fv"));
       end if;
       AssertError("Load Program");
 
@@ -488,6 +537,7 @@ package body OpenGL is
          glCompileShader      := null;
          glGetShaderiv        := null;
          glUniform1i          := null;
+         glUniformMatrix4fv   := null;
 
          Free(CurrentTextures);
 

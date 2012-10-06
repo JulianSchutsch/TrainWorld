@@ -84,6 +84,38 @@ package body OpenGL.TextureBuffer is
    end SetBufferBlockSize;
    ---------------------------------------------------------------------------
 
+   procedure ReleaseBuffer
+     (TextureBuffers : in out TextureBuffers_Type'Class;
+      Buffer         : TextureBuffersBuffer_Access) is
+   begin
+      pragma Assert(Buffer/=null);
+
+      -- Unlink buffer
+      if Buffer.Previous/=null then
+         Buffer.Previous.Next:=Buffer.Next;
+      else
+         TextureBuffers.FirstBuffer:=Buffer.Next;
+      end if;
+
+      if Buffer.Next/=null then
+         Buffer.Next.Previous:=Buffer.Previous;
+      else
+         TextureBuffers.LastBuffer:=Buffer.Previous;
+      end if;
+
+--      pragma Assert(Buffer.TextureID/=0);
+--      pragma Assert(Buffer.BufferID/=0);
+
+      if Buffer.TextureID/=0 then
+         DeleteTexture(Buffer.TextureID);
+      end if;
+      if Buffer.BufferID/=0 then
+         DeleteBuffer(Buffer.BufferID);
+      end if;
+
+   end ReleaseBuffer;
+   ---------------------------------------------------------------------------
+
    procedure Allocate
      (TextureBuffers : in out TextureBuffers_Type;
       Size           : PtrInt_Type;
@@ -111,7 +143,6 @@ package body OpenGL.TextureBuffer is
 
          if BufferBlock=null then
 
-            Put_Line("Create new Buffer");
             Buffer:=new TextureBuffersBuffer_Type;
             Buffer.Previous:=TextureBuffers.LastBuffer;
             if Buffer.Previous/=null then
@@ -121,31 +152,33 @@ package body OpenGL.TextureBuffer is
             end if;
             TextureBuffers.LastBuffer:=Buffer;
 
-            -- TODO : This part must be updated to handle cases with exceptions!!!
-            -- Generate Buffer
             glGenBuffers
               (n        => 1,
                buffers  => Buffer.BufferID'Access);
 
-            Put_Line(GLuint_Type'Image(Buffer.BufferID));
-            -- TODO : HANDLE BufferID=0
+            if Buffer.BufferID=0 then
+               ReleaseBuffer(TextureBuffers,Buffer);
+               raise FailedAllocate with "Couldn't allocate buffer with glGenBuffers";
+            end if;
 
             -- Assign buffer size
-            Put_Line("Bind Buffer");
             BindTextureBuffer(Buffer.BufferID);
-            Put_Line("Buffer Bound?");
             glBufferData
               (target => GL_TEXTURE_BUFFER,
                size   => GLsizeiptr_Type(size),
                data   => System.Null_Address,
                usage  => GL_DYNAMIC_DRAW);
-            Put_Line("Gen Tex");
+            -- TODO: Check if OpenGL could allocate enough memory for this at all
             AssertError("Initialize TexBuffer Object 2");
 
             -- Generate Texture
             glGenTextures
               (n        => 1,
                textures => Buffer.TextureID'Access);
+            if Buffer.TextureID=0 then
+               ReleaseBuffer(TextureBuffers,Buffer);
+               raise FailedAllocate with "Couldn't allocate texture with glGenTextures";
+            end if;
             -- TODO: Handle TextureID=0
             AssertError("Initialize TexBuffer Object 3");
 
@@ -186,35 +219,6 @@ package body OpenGL.TextureBuffer is
       end;
 
    end Allocate;
-   ---------------------------------------------------------------------------
-
-   procedure ReleaseBuffer
-     (TextureBuffers : in out TextureBuffers_Type'Class;
-      Buffer         : TextureBuffersBuffer_Access) is
-   begin
-      pragma Assert(Buffer/=null);
-
-      -- Unlink buffer
-      if Buffer.Previous/=null then
-         Buffer.Previous.Next:=Buffer.Next;
-      else
-         TextureBuffers.FirstBuffer:=Buffer.Next;
-      end if;
-
-      if Buffer.Next/=null then
-         Buffer.Next.Previous:=Buffer.Previous;
-      else
-         TextureBuffers.LastBuffer:=Buffer.Previous;
-      end if;
-
-      pragma Assert(Buffer.TextureID/=0);
-      pragma Assert(Buffer.BufferID/=0);
-
-      Put_Line("Release Buffer");
-      DeleteTexture(Buffer.TextureID);
-      DeleteBuffer(Buffer.BufferID);
-
-   end ReleaseBuffer;
    ---------------------------------------------------------------------------
 
    procedure Finalize

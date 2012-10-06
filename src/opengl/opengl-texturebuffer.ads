@@ -9,6 +9,7 @@ package OpenGL.TextureBuffer is
 
    FailedMap           : Exception;
    FailedUnmap         : Exception;
+   FailedAllocate       : Exception;
 
    type TextureBuffersRange_Interface is abstract new RefCount.Ref_Interface with null record;
    type TextureBuffersRange_ClassAccess is access all TextureBuffersRange_Interface'Class;

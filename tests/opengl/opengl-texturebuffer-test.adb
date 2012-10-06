@@ -38,7 +38,6 @@ package body OpenGL.TextureBuffer.Test is
 
       use Ada.Numerics.Float_Random;
 
-
    begin
 
       BindEvents;
@@ -49,6 +48,7 @@ package body OpenGL.TextureBuffer.Test is
          Gen     : Ada.Numerics.Float_Random.Generator;
          Current : Natural;
          Size    : PtrInt_Type;
+
       begin
          Reset(Gen);
          Buffers.SetBufferBlockSize(1024*1024);
@@ -56,7 +56,12 @@ package body OpenGL.TextureBuffer.Test is
             Current:=Natural(Float'Rounding(Random(Gen)*Float(RangeCount-1)));
             if Ranges(Current).I=null then
                Size:=PtrInt_Type(Float'Rounding(Random(Gen)*Float(MaxSize-1)))+1;
-               Buffers.Allocate(Size,Ranges(Current));
+               begin
+                  Buffers.Allocate(Size,Ranges(Current));
+               exception
+                  when FailedAllocate =>
+                     null;
+               end;
             else
                Ranges(Current).SetNull;
             end if;

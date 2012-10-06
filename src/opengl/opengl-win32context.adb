@@ -69,6 +69,8 @@ package body OpenGL.Win32Context is
          LoopProcess         : Context_Process;
          CreatePending       : Boolean:=False;
          OpenGLLoaded        : Boolean:=False;
+         Height              : Natural:=0;
+         Width               : Natural:=0;
 
          CSTR_ClassName : Interfaces.C.Strings.chars_ptr
            := Interfaces.C.Strings.Null_Ptr;
@@ -101,6 +103,9 @@ package body OpenGL.Win32Context is
          end if;
          P.Context.CallBack.ContextCreate;
          P.Context.CreatePending:=False;
+         P.Context.CallBack.ContextResize
+           (Height => P.Context.Height,
+            Width  => P.Context.Width);
       end if;
 
       while PeekMessage
@@ -234,10 +239,15 @@ package body OpenGL.Win32Context is
             return 0;
 
          when WM_SIZE =>
---            GUI.PropagateContextResize
---              (Context => Context_ClassAccess(Context),
---               Width   => Integer(LOWORD(lParam)),
---               Height  => Integer(HIWORD(lParam)));
+            -- TODO: Take all the special cases into account, which
+            --       are stored in wmparam, like hidding for example
+            Context.Width  := Natural(LOWord(lParam));
+            Context.Height := Natural(HIWord(lParam));
+            if Context.CallBack/=null then
+               Context.CallBack.ContextResize
+                 (Height => Context.Height,
+                  Width  => Context.Width);
+            end if;
             return 0;
          when WM_SIZING =>
             return 0;

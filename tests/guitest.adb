@@ -59,30 +59,29 @@ procedure GUITest is
      "in vec3 in_Position;"&
      "in vec2 in_TexCoord;"&
      "out vec2 ex_TexCoord;"&
+     "uniform mat4 OrthoMatrix;"&
      "void main(void)"&
      "{"&
-     "  gl_Position = vec4(in_Position,1.0);"&
+     "  vec4 middle = OrthoMatrix*vec4(in_Position,1.0);"&
+     "  gl_Position = vec4(middle.xy,1.0,1.0);"&
      "  ex_TexCoord = in_TexCoord;"&
      "}"&Character'Val(0);
 
    FragmentShaderSource : constant String:=
      "#version 140"&Character'Val(10)&
---     "#extension GL_EXT_gpu_shader4 : require"&Character'Val(10)&
      "in vec2 ex_TexCoord;"&
      "out vec4 out_Color;"&
-   --     "uniform sampler2D tex;"&
      "uniform samplerBuffer tex;"&
      "void main(void)"&
      "{"&
-   --     "  out_Color=texture(tex,ex_TexCoord);"&--//texture(tex,in_TexCoord);"&
      "   out_Color=texelFetch(tex,int(ex_TexCoord.x*200)+int(ex_TexCoord.y*200)*200);"&
      "}"&Character'Val(0);
 
    Vert : GLfloat_Array(0..11):=
-     (0.2,0.2,-1.0,
-      0.8,0.2,-1.0,
-      0.2,0.8,-1.0,
-      0.8,0.8,-1.0);
+     (0.0  ,0.0  , -1.0,
+      200.0 ,0.0 , -1.0,
+      0.0  ,200.0 , -1.0,
+      200.0 ,200.0 , -1.0);
    Tex : GLfloat_Array(0..7):=
      (0.0,0.0,
       1.0,0.0,
@@ -101,10 +100,12 @@ procedure GUITest is
          TexBuffer      : aliased GLuint_Type;
          AttArray       : aliased GLuint_Type;
          TexUniform     : aliased GLint_Type;
+         OrthoMatrixUniform : aliased GLint_Type;
+         ZeroMatrixUniform : aliased GLint_Type;
          MyTexture      : OpenGL.Textures.BGRATexture_Type;
          Buffer         : OpenGL.TextureBuffer.TextureBuffers_Type;
          BufferRange    : OpenGL.TextureBuffer.TextureBuffersRange_Ref;
-         RangeMap : System.Address;
+         RangeMap       : System.Address;
       end record;
 
    overriding
@@ -118,6 +119,12 @@ procedure GUITest is
    overriding
    procedure ContextCreate
      (Data : in out ContextCallBack_Type);
+
+   overriding
+   procedure ContextResize
+     (Data   : in out ContextCallBack_Type;
+      Height : Natural;
+      Width  : Natural);
 
    overriding
    procedure Finalize
@@ -178,29 +185,20 @@ procedure GUITest is
 
       AssertError("Uniform set");
 
---      Data.MyTexture.Create
---        (Height => 200,
---         Width => 200);
---      Data.MyTexture.Pixels.all:=Pic.Pixels.all;
-
---      AssertError("Texture create");
-
---      Data.MyTexture.Upload;
---      AssertError("Texture upload");
-
       Data.Buffer.SetBufferBlockSize(200*200*4);
       Data.Buffer.Allocate(200*200*4,Data.BufferRange);
       Data.BufferRange.I.Bind;
       Data.RangeMap:=Data.BufferRange.I.Map;
-      Put_Line("Copy");
       Pic.CopyToRawData(Data.RangeMap);
-      Put_Line("Call unmap");
       pragma Assert(Data.BufferRange.I/=null);
       Data.BufferRange.I.Unmap;
-      Put_Line("Set Uniform");
 
       -- Set uniform
       Data.TexUniform:=Data.Program.GetUniformLocation("tex");
+      Data.OrthoMatrixUniform:=Data.Program.GetUniformLocation("OrthoMatrix");
+      Data.ZeroMatrixUniform:=Data.Program.GetUniformLocation("ZeroMatrix");
+      Put_Line("ZeroMatrix:"&GLint_Type'Image(Data.ZeroMatrixUniform));
+
       Data.Program.UseProgram;
       glUniform1i(Data.TexUniform,0);
       AssertError("Uniform");
@@ -220,11 +218,43 @@ procedure GUITest is
    end ContextClose;
    ---------------------------------------------------------------------------
 
+   procedure  ContextResize
+     (Data   : in out ContextCallBack_Type;
+      Height : Natural;
+      Width  : Natural) is
+   begin
+      Put_Line("Resize");
+      Put_Line(GLint_Type'Image(Data.TexUniform));
+      Put_Line(GLint_Type'Image(Data.OrthoMatrixUniform));
+      glViewport(0,0,GLsizei_Type(Width),GLsizei_Type(Height));
+      Data.Program.UseProgram;
+      declare
+         Matrix : GLFloat_Matrix4x4;
+      begin
+         Matrix:=OrthoMatrix
+           (Left   => 0.0,
+            Right  => GLfloat_Type(Width),
+            Bottom => GLfloat_Type(Height),
+            Top    => 0.0);
+         for i in 0..3 loop
+            for n in 0..3 loop
+               Put(GLfloat_Type'Image(Matrix(i,n)));
+            end loop;
+            Put_Line("");
+         end loop;
+         glUniformMatrix4fv
+           (location  => Data.OrthoMatrixUniform,
+            count     => 1,
+            transpose => 1,
+            value     => Matrix(0,0)'Access);
+      end;
+   end ContextResize;
+   ---------------------------------------------------------------------------
+
    procedure ContextPaint
      (Data : in out ContextCallBack_Type) is
    begin
       AssertError("ContextPaint.enter");
-      glViewport(0,0,400,400);
       AssertError("ClearColor");
       glClearColor(0.0,1.0,0.0,1.0);
       glClear(GL_COLOR_BUFFER_BIT);
@@ -272,8 +302,8 @@ begin
       Set_Source_RGBA
         (Context => Ref(Context).all,
          Red     => 0.0,
-         Green   => 1.0,
-         Blue    => 0.0,
+         Green   => 0.0,
+         Blue    => 1.0,
          Alpha   => 1.0);
       Fill(Ref(Context).all);
       Move_To

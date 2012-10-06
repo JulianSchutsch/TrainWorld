@@ -71,20 +71,6 @@ package Graphics is
       BufferKindDouble,
       BufferKindTriple);
 
-   type Context_OnClose is
-     access procedure
-       (Data : C_ClassAccess);
-
-   type Context_OnResize is
-     access procedure
-       (Data   : C_ClassAccess;
-        Height : Integer;
-        Width  : Integer);
-
-   type Context_OnPaint is
-     access procedure
-       (Data : C_ClassAccess);
-
    type ContextCallBack_Interface is limited interface;
    type ContextCallBack_ClassAccess is access all ContextCallBack_Interface'Class;
 
@@ -92,7 +78,9 @@ package Graphics is
      (T : in out ContextCallBack_Interface) is null;
 
    procedure ContextResize
-     (T : in out ContextCallBack_Interface) is null;
+     (T      : in out ContextCallBack_Interface;
+      Height : Natural;
+      Width  : Natural) is null;
 
    procedure ContextPaint
      (T : in out ContextCallBack_Interface) is null;
