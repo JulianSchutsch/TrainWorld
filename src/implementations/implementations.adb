@@ -1,4 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Implementations is
 
@@ -38,6 +39,7 @@ package body Implementations is
             declare
                Element : constant List_Entry:=List_Pack.Element(Cursor);
             begin
+               Put_Line("Test");
                if Element.Compatible
                  (ConfigNode.GetConfig,
                   ConfigNode.GetImplConfig(Element.Name),

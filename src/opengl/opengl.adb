@@ -27,8 +27,6 @@ with Basics; use Basics;
 
 package body OpenGL is
 
-   NullChar : constant Character:=Character'Val(0);
-
    function Conv is new Ada.Unchecked_Conversion(System.Address,glClearColor_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetString_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGetIntegerv_Access);
@@ -364,9 +362,9 @@ package body OpenGL is
       Compatible : Boolean) is
       pragma Unreferenced(Compatible);
 
-      Version : constant OpenGLVersion_Type:=GetVersion(GetProc);
-
    begin
+
+      Version:=GetVersion(GetProc);
 
       ActiveContexts:=ActiveContexts+1;
       -- TODO: It is not entirely safe to say what can be loaded with ExtensionProc
@@ -387,7 +385,7 @@ package body OpenGL is
       AssertError("Default Load");
 
       if Version.Major>=3 then
-         glGetStringi := Conv(GetProc("glGetStringi"&NullChar));
+         glGetStringi := Conv(GetProc("glGetStringi"));
       end if;
       -- TODO: Check if this is still a valid method or if you
       --  need to apply something new for OGL 3
