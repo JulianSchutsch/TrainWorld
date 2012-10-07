@@ -162,8 +162,16 @@ package body Config is
      (ConfigNode : in out ConfigNode_Type) is
    begin
 
+      ConfigNode.Count:=ConfigNode.Count-1;
+      if ConfigNode.Count/=0 then
+         return;
+      end if;
+
       if ConfigNode.Config/=null then
-         Free(ConfigNode.Config);
+         ConfigNode.Config.Count:=ConfigNode.Config.Count-1;
+         if ConfigNode.Config.Count=0 then
+            Free(ConfigNode.Config);
+         end if;
       end if;
 
       -- Remove all Implementation specific configurations
@@ -178,7 +186,10 @@ package body Config is
             next:=p.Next;
 
             if p.Config/=null then
-               Free(p.Config);
+               p.Config.Count:=p.Config.Count-1;
+               if p.Config.Count=0 then
+                  Free(p.Config);
+               end if;
             end if;
             Free(p);
 
@@ -189,14 +200,17 @@ package body Config is
 
       -- Remove all children
       declare
-         p : ConfigNode_Access;
+         p    : ConfigNode_Access;
          next : ConfigNode_access;
       begin
 
          p:=ConfigNode.ChildNodes;
          while p/=null loop
             next:=p.Next;
-            Free(p);
+            p.Count:=p.Count-1;
+            if p.Count=0 then
+               Free(p);
+            end if;
             p:=next;
          end loop;
 
@@ -207,13 +221,62 @@ package body Config is
    end Finalize;
    ---------------------------------------------------------------------------
 
+   procedure Adjust
+     (ConfigNode : in out ConfigNode_Type) is
+   begin
+      if ConfigNode.Config/=null then
+         ConfigNode.Config.Count:=ConfigNode.Config.Count+1;
+      end if;
+
+      declare
+         p        : ImplConfig_Access;
+         n        : ImplConfig_Access;
+         previous : ImplConfig_Access:=null;
+      begin
+         p:=ConfigNode.ImplConfig;
+         ConfigNode.ImplConfig:=null;
+         while p/=null loop
+
+            n                := new ImplConfig_Type;
+            n.Implementation := p.Implementation;
+            n.Config         := p.Config;
+            n.Config.Count   := n.Config.Count+1;
+            if previous/=null then
+               previous.Next:=n;
+            else
+               ConfigNode.ImplConfig:=n;
+            end if;
+
+            previous:=n;
+
+            p:=p.Next;
+
+         end loop;
+      end;
+
+      declare
+         p : ConfigNode_Access;
+      begin
+         p:=ConfigNode.ChildNodes;
+         while p/=null loop
+            p.Count:=p.Count+1;
+            p:=p.Next;
+         end loop;
+      end;
+
+   end Adjust;
+   ---------------------------------------------------------------------------
+
    procedure SetConfig
      (ConfigNode : in out ConfigNode_Type;
       Config     : Config_ClassAccess) is
    begin
 
       if ConfigNode.Config/=null then
-         Free(ConfigNode.Config);
+         ConfigNode.Config.Count:=ConfigNode.Config.Count-1;
+         if ConfigNode.Config.Count=0 then
+            Free(ConfigNode.Config);
+         end if;
       end if;
       ConfigNode.Config:=Config;
 
@@ -235,7 +298,10 @@ package body Config is
 
             if p.Implementation=Implementation then
                if p.Config/=null then
-                  Free(p.Config);
+                  p.Config.Count:=p.Config.Count-1;
+                  if p.Config.Count=0 then
+                     Free(p.Config);
+                  end if;
                end if;
                p.Config:=Config;
                return;

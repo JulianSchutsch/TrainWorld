@@ -33,7 +33,7 @@ package body Graphics is
       StencilBits : Natural:=0) is
 
    begin
-      Configuration.SetConfig(new Context_Config'(
+      Configuration.SetConfig(new Context_Config'(Config.Config_Type with
         WindowType  => WindowType,
         BufferKind  => BufferKind,
         Height      => Height,

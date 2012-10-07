@@ -89,19 +89,31 @@ package Graphics is
      (T : in out ContextCallBack_Interface) is null;
    ---------------------------------------------------------------------------
 
-   type Context_Interface is new RefCount.Ref_Interface with
+   type Context_Info is
+      record
+         InterfaceType : Unbounded_String;
+         VersionMajor  : Natural;
+         VersionMinor  : Natural;
+         VersionPatch  : Natural;
+      end record;
+   ---------------------------------------------------------------------------
+
+   type Context_Interface is abstract new RefCount.Ref_Interface with
       record
          CallBack : ContextCallBack_ClassAccess;
       end record;
    type Context_ClassAccess is access all Context_Interface'Class;
 
-   type Context_Info is
-      record
-         InterfaceType : Unbounded_String;
-         VersionMajor : Natural;
-         VersionMinor : Natural;
-         VersionPatch : Natural;
-      end record;
+   not overriding
+   function IsInitialized
+     (Context : Context_Interface)
+      return Boolean is abstract;
+
+   not overriding
+   function GetInfo
+     (Context : Context_Interface)
+      return Context_Info is abstract;
+   ---------------------------------------------------------------------------
 
    package Ref is new RefCount.Ref(Context_Interface,Context_ClassAccess);
 

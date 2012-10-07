@@ -565,6 +565,7 @@ package OpenGL is
    procedure AssertError
      (Extra : String);
 
+   Version     : OpenGLVersion_Type;
    GLSLVersion : GLSLVersion_Type;
 
    function GetMaxCombinedTextureImageUnits

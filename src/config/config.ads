@@ -32,10 +32,10 @@ package Config is
 
    type ConfigPath_Type is array (Integer range <>) of Unbounded_String;
 
-   type Config_Type is tagged null record;
+   type Config_Type is tagged private;
    type Config_ClassAccess is access all Config_Type'Class;
 
-   type ConfigNode_Type is new Ada.Finalization.Limited_Controlled with private;
+   type ConfigNode_Type is new Ada.Finalization.Controlled with private;
    type ConfigNode_Access is access all ConfigNode_Type;
 
    not overriding
@@ -83,6 +83,10 @@ package Config is
      (ConfigNode : in out ConfigNode_Type)
    with Post => (GetChildNodeCount(ConfigNode)=0);
 
+   overriding
+   procedure Adjust
+     (ConfigNode : in out ConfigNode_Type);
+
    not overriding
    procedure SetConfig
      (ConfigNode : in out ConfigNode_Type;
@@ -126,6 +130,11 @@ package Config is
 
 private
 
+   type Config_Type is tagged
+      record
+         Count : Natural:=1;
+      end record;
+
    type ImplConfig_Type;
    type ImplConfig_Access is access all ImplConfig_Type;
    type ImplConfig_Type is
@@ -135,8 +144,9 @@ private
          Next           : ImplConfig_Access;
       end record;
 
-   type ConfigNode_Type is new Ada.Finalization.Limited_Controlled with
+   type ConfigNode_Type is new Ada.Finalization.Controlled with
       record
+         Count          : Natural:=1;
          Name           : Unbounded_String;
          Implementation : Unbounded_String;
          Config         : Config_ClassAccess:=null;

@@ -82,6 +82,47 @@ package body OpenGL.Win32Context is
    overriding
    procedure Finalize
      (Context : in out Context_Type);
+
+   overriding
+   function IsInitialized
+     (Context : Context_Type)
+      return Boolean;
+
+   overriding
+   function GetInfo
+     (Context : Context_Type)
+      return Context_Info;
+   ---------------------------------------------------------------------------
+
+   function IsInitialized
+     (Context : Context_Type)
+      return Boolean is
+   begin
+
+      return Context.OpenGLLoaded and not Context.CreatePending;
+
+   end IsInitialized;
+   ---------------------------------------------------------------------------
+
+   function GetInfo
+     (Context : Context_Type)
+      return Context_Info is
+   begin
+
+      if Context.OpenGLLoaded then
+         return C:Context_Info do
+            C.InterfaceType := U("OpenGL");
+            C.VersionMajor  := Integer(OpenGL.Version.Major);
+            C.VersionMinor  := Integer(OpenGL.Version.Minor);
+            C.VersionPatch  := 0;
+         end return;
+      else
+         return C:Context_Info do
+            C.InterfaceType:=U("Uninitialized OpenGL");
+         end return;
+      end if;
+
+   end GetInfo;
    ---------------------------------------------------------------------------
 
    procedure Process
@@ -453,6 +494,7 @@ null;
 
       if Context.OpenGLLoaded then
          UnloadFunctions;
+         Context.OpenGLLoaded:=False;
       end if;
 
       Put_Line("Finalize Win32 Context");
