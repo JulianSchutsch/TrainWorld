@@ -42,6 +42,8 @@ with Cairo.Context; use Cairo.Context;
 with Ada.Numerics;
 with Interfaces.C;
 with OpenGL.TextureBuffer;
+pragma Warnings(Off);
+with GUI;
 
 procedure GUITest is
 
@@ -346,7 +348,7 @@ begin
 
    Put_Line("Cairo part done, initialize Context");
    declare
-      Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration);
+      Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration,(others => <>));
    begin
 
       declare

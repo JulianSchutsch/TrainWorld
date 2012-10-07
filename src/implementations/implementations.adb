@@ -5,6 +5,7 @@ package body Implementations is
    type List_Entry is
       record
          Name           : Unbounded_String;
+         Compatible     : Implementation_Compatible;
          Constructor    : Implementation_Constructor;
       end record;
 
@@ -15,7 +16,8 @@ package body Implementations is
    List : List_Pack.List;
 
    function Utilize
-     (ConfigNode : Config.ConfigNode_Type)
+     (ConfigNode : Config.ConfigNode_Type;
+      Parameters : Parameter_Type)
       return Implementation_Type is
 
       use type List_Pack.Cursor;
@@ -29,22 +31,44 @@ package body Implementations is
          if List.First=List_Pack.No_Element then
             raise ImplementationNotFound;
          end if;
-         declare
-            First : constant List_Entry:=List_Pack.Element(List.First);
-         begin
-            return First.Constructor
-              (ConfigNode.GetConfig,
-               ConfigNode.GetImplConfig(First.Name));
-         end;
+
+         Cursor:=List.First;
+
+         while Cursor/=List_Pack.No_Element loop
+            declare
+               Element : constant List_Entry:=List_Pack.Element(Cursor);
+            begin
+               if Element.Compatible
+                 (ConfigNode.GetConfig,
+                  ConfigNode.GetImplConfig(Element.Name),
+                  Parameters) then
+                  return Element.Constructor
+                    (ConfigNode.GetConfig,
+                     ConfigNode.GetImplConfig(Element.Name),
+                     Parameters);
+               end if;
+            end;
+            Cursor:=List_Pack.Next(Cursor);
+         end loop;
+         raise ImplementationNotFound;
       end if;
 
       Cursor:=List.First;
       while Cursor/=List_Pack.No_Element loop
-         if List_Pack.Element(Cursor).Name=Implementation then
-            return List_Pack.Element(Cursor).Constructor
-              (ConfigNode.GetConfig,
-               ConfigNode.GetImplConfig(Implementation));
-         end if;
+         declare
+            Element : constant List_Entry:=List_Pack.Element(Cursor);
+         begin
+            if Element.Name=Implementation and then
+              Element.Compatible
+                (ConfigNode.GetConfig,
+                 ConfigNode.GetImplConfig(Implementation),
+                 Parameters) then
+               return List_Pack.Element(Cursor).Constructor
+                 (ConfigNode.GetConfig,
+                  ConfigNode.GetImplConfig(Implementation),
+                  Parameters);
+            end if;
+         end;
          Cursor:=List_Pack.Next(Cursor);
       end loop;
       raise ImplementationNotFound;
@@ -76,6 +100,7 @@ package body Implementations is
 
    procedure Register
      (Name        : Unbounded_String;
+      Compatible  : Implementation_Compatible;
       Constructor : Implementation_Constructor) is
    begin
 
@@ -84,6 +109,7 @@ package body Implementations is
       end if;
       List.Append
         ((Name        => Name,
+          Compatible  => Compatible,
           Constructor => Constructor));
 
    end Register;

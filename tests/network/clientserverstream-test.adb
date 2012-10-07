@@ -300,7 +300,7 @@ package body ClientServerStream.Test is
                   Server : constant Integer:=Random(RandomServer);
                begin
                   if Servers(Server).I=null then
-                     Servers(Server):=ServerImplementations.Utilize(CreateServerConfig(Server));
+                     Servers(Server):=ServerImplementations.Utilize(CreateServerConfig(Server),(null record));
                      ServerC(Server):=new ServerControl_Type;
                      Servers(Server).I.CallBack:=ServerCallBack_ClassAccess(ServerC(Server));
                   else
@@ -326,7 +326,7 @@ package body ClientServerStream.Test is
 
                      CheckAddress:=Client;
 
-                     Clients(Client):=ClientImplementations.Utilize(CreateClientConfig(Client,Server));
+                     Clients(Client):=ClientImplementations.Utilize(CreateClientConfig(Client,Server),(null record));
                      ClientC(Client):=new Connection_Type;
                      Clients(Client).I.CallBack:=ConnectionCallBack_ClassAccess(ClientC(Client));
                      ClientC(Client).ServerAddress:=Server;
@@ -496,7 +496,7 @@ package body ClientServerStream.Test is
       begin
          Reset(RndGen);
          begin
-            Server:=ServerImplementations.Utilize(CreateServerConfig(0));
+            Server:=ServerImplementations.Utilize(CreateServerConfig(0),(null record));
             Server.I.CallBack:=ServerC'Unrestricted_Access;
             Barrier.Join(BarrierState);
             while Barrier.GetMemberCount/=2 loop
@@ -560,7 +560,7 @@ package body ClientServerStream.Test is
       while Barrier.GetMemberCount/=2 loop
          Delay Duration'Small;
       end loop;
-      Client:=ClientImplementations.Utilize(CreateClientConfig(1,0));
+      Client:=ClientImplementations.Utilize(CreateClientConfig(1,0),(null record));
       Client.I.CallBack:=ClientC'Unrestricted_Access;
       while not ClientC.Connected loop
          GlobalLoop.Process;

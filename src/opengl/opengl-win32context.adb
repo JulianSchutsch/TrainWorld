@@ -445,8 +445,8 @@ null;
    ---------------------------------------------------------------------------
 
    procedure Finalize
-     (Context : in out Context_Type) is
-      IntResult : Interfaces.C.int;
+     (Context    : in out Context_Type) is
+      IntResult  : Interfaces.C.int;
       BoolResult : BOOL_Type;
       pragma Unreferenced(IntResult,BoolResult);
    begin
@@ -474,9 +474,10 @@ null;
 
    function ContextConstructor
      (GenConfig  : Config.Config_ClassAccess;
-      ImplConfig : Config.Config_ClassAccess)
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Graphics.Parameter_Type)
       return Graphics.Context_Ref is
-      pragma Unreferenced(ImplConfig);
+      pragma Unreferenced(ImplConfig,Parameters);
 
       use type Interfaces.C.int;
       use type Config.Config_ClassAccess;
@@ -679,10 +680,22 @@ null;
    end ContextConstructor;
    ---------------------------------------------------------------------------
 
+   function ContextCompatible
+     (GenConfig  : Config.Config_ClassAccess;
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Graphics.Parameter_Type)
+      return Boolean is
+      pragma Unreferenced(GenConfig,ImplConfig,Parameters);
+   begin
+      return True;
+   end ContextCompatible;
+
    procedure Register is
    begin
       Graphics.Implementations.Register
-        (U("OpenGL"),ContextConstructor'Access);
+        (Name        => U("OpenGL"),
+         Compatible  => ContextCompatible'Access,
+         Constructor => ContextConstructor'Access);
    end Register;
 
 end OpenGL.Win32Context;

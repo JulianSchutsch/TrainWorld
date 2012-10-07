@@ -119,7 +119,7 @@ begin
       BufferKind    => Graphics.BufferKindDefault);
 
    declare
-      Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration);
+      Context:constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration,(others => <>));
    begin
 
       declare

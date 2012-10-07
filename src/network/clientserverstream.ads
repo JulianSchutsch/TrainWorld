@@ -149,8 +149,10 @@ package ClientServerStream is
    package ClientRef is new RefCount.Ref(Client_Interface,Client_ClassAccess);
    subtype Client_Ref is ClientRef.Ref_Type;
 
-   package ServerImplementations is new Standard.Implementations(Server_Ref);
-   package ClientImplementations is new Standard.Implementations(Client_Ref);
+   type Parameter_Type is null record;
+
+   package ServerImplementations is new Standard.Implementations(Server_Ref,Parameter_Type);
+   package ClientImplementations is new Standard.Implementations(Client_Ref,Parameter_Type);
 
    procedure X;
 

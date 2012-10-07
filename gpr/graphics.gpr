@@ -8,9 +8,7 @@ project Graphics is
   Linker_Switches:=();
 
   Sources:=
-     (Dir & "../src/gui",
-      Dir & "../src/canvas",
-      Dir & "../src/graphics",
+     (Dir & "../src/graphics",
       Dir & "../src/opengl",
       Dir & "../src/bounds");
 

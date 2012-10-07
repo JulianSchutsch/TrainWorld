@@ -995,10 +995,11 @@ package body ClientServerStream.SMPipe is
 
    function ServerConstructor
      (GenConfig  : Config.Config_ClassAccess;
-      ImplConfig : Config.Config_ClassAccess)
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Parameter_Type)
       return Server_Ref is
 
-      pragma Unreferenced(GenConfig);
+      pragma Unreferenced(GenConfig,Parameters);
 
       Server  : constant Server_Access := new Server_Type;
       IConfig : constant Server_ConfigAccess := Server_ConfigAccess(ImplConfig);
@@ -1021,10 +1022,11 @@ package body ClientServerStream.SMPipe is
 
    function ClientConstructor
      (GenConfig  : Config.Config_ClassAccess;
-      ImplConfig : Config.Config_ClassAccess)
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Parameter_Type)
       return Client_Ref is
 
-      pragma Unreferenced(GenConfig);
+      pragma Unreferenced(GenConfig,Parameters);
 
       Client  : constant Client_Access:=new Client_Type;
       IConfig : constant Client_ConfigAccess := Client_ConfigAccess(ImplConfig);
@@ -1085,10 +1087,21 @@ package body ClientServerStream.SMPipe is
    end CreateClientConfig;
    ---------------------------------------------------------------------------
 
+   function Compatible
+     (GenConfig : Config.Config_ClassAccess;
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Parameter_Type)
+      return Boolean is
+      pragma Unreferenced(GenConfig,ImplConfig,Parameters);
+   begin
+      return True;
+   end Compatible;
+   ---------------------------------------------------------------------------
+
    procedure Register is
    begin
-      ServerImplementations.Register(ImplementationName,ServerConstructor'Access);
-      ClientImplementations.Register(ImplementationName,ClientConstructor'Access);
+      ServerImplementations.Register(ImplementationName,Compatible'Access,ServerConstructor'Access);
+      ClientImplementations.Register(ImplementationName,Compatible'Access,ClientConstructor'Access);
    end Register;
    ---------------------------------------------------------------------------
 

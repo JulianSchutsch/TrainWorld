@@ -30,14 +30,18 @@ package body Config.Test is
          record
             ID : Unbounded_String;
          end record;
+      type Parameter_Type is null record;
 
       package Impl is new Implementations
-        (Implementation_Type => Impl_Type);
+        (Implementation_Type => Impl_Type,
+         Parameter_Type      => Parameter_Type);
 
       function Constructor1
         (GenConfig  : Config.Config_ClassAccess;
-         ImplConfig : config.Config_ClassAccess)
+         ImplConfig : config.Config_ClassAccess;
+         Parameters : Parameter_Type)
          return Impl_Type is
+         pragma Unreferenced(Parameters);
          X : constant Impl_Type:=(ID=>U("1"));
       begin
          if TestConfig_Access(GenConfig)/=TestConfig then
@@ -51,9 +55,11 @@ package body Config.Test is
       ------------------------------------------------------------------------
 
       function Constructor2
-        (GenConfig : Config.Config_ClassAccess;
-         ImplConfig : Config.Config_ClassAccess)
+        (GenConfig  : Config.Config_ClassAccess;
+         ImplConfig : Config.Config_ClassAccess;
+         Parameters : Parameter_Type)
          return Impl_Type is
+         pragma Unreferenced(Parameters);
          X : constant Impl_Type:=(ID=>U("2"));
       begin
          if TestConfig_Access(GenConfig)/=TestConfig then
@@ -64,6 +70,17 @@ package body Config.Test is
          end if;
          return X;
       end Constructor2;
+      ------------------------------------------------------------------------
+
+      function Compatible
+        (GenConfig  : Config.Config_ClassAccess;
+         ImplConfig : Config.Config_ClassAccess;
+         Parameters : Parameter_Type)
+         return Boolean is
+         pragma Unreferenced(GenConfig,ImplConfig,Parameters);
+      begin
+         return True;
+      end Compatible;
       ------------------------------------------------------------------------
 
       CR1 : Impl_Type;
@@ -78,24 +95,24 @@ package body Config.Test is
       RootNode.SetImplConfig(U("1"),Config_ClassAccess(TestImpl1));
       RootNode.SetImplConfig(U("2"),Config_ClassAccess(TestImpl2));
 
-      Impl.Register(U("1"),Constructor1'Access);
-      Impl.Register(U("2"),Constructor2'Access);
+      Impl.Register(U("1"),Compatible'Access,Constructor1'Access);
+      Impl.Register(U("2"),Compatible'Access,Constructor2'Access);
 
       RootNode.SetImplementation(U("1"));
-      CR1:=Impl.Utilize(RootNode);
+      CR1:=Impl.Utilize(RootNode,(null record));
       if CR1.ID/=U("1") then
          ReportIssue("Wrong constructor called, expected ID=1");
       end if;
 
       RootNode.SetImplementation(U("2"));
-      CR2:=Impl.Utilize(RootNode);
+      CR2:=Impl.Utilize(RootNode,(null record));
       if CR2.ID/=U("2") then
          ReportIssue("Wrong constructor called, expected ID=2");
       end if;
 
       RootNode.SetImplementation(U("Something else"));
       begin
-         CR3:=Impl.Utilize(RootNode);
+         CR3:=Impl.Utilize(RootNode,(null record));
          ReportIssue("Expected exception after asking for a non existent implementation");
       exception
          when Impl.ImplementationNotFound =>

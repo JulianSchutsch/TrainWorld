@@ -119,25 +119,27 @@ package Graphics is
          AlphaBits              : Natural:=8;
          DepthBits              : Natural:=24;
          StencilBits            : Natural:=0;
-         WindowTitle            : Unbounded_String:=U("Win");
-         ApplicationTitle       : Unbounded_String:=U("App");
       end record;
 
-   package Implementations is new Standard.Implementations(Context_Ref);
+   type Parameter_Type is
+      record
+         ApplicationTitle : Unbounded_String:=U("App");
+         WindowTitle      : Unbounded_String:=U("Win");
+      end record;
+
+   package Implementations is new Standard.Implementations(Context_Ref,Parameter_Type);
 
    procedure CreateConfig
-     (Configuration    : in out Config.ConfigNode_Type;
-      WindowType       : WindowType_Enum:=WindowTypeWindow;
-      BufferKind       : BufferKind_Enum:=BufferKindDefault;
-      Height           : Natural:=768;
-      Width            : Natural:=1024;
-      RedBits          : Natural:=8;
-      GreenBits        : Natural:=8;
-      BlueBits         : Natural:=8;
-      AlphaBits        : Natural:=8;
-      DepthBits        : Natural:=24;
-      StencilBits      : Natural:=0;
-      WindowTitle      : Unbounded_String:=U("Win");
-      ApplicationTitle : Unbounded_String:=U("App"));
+     (Configuration : in out Config.ConfigNode_Type;
+      WindowType    : WindowType_Enum:=WindowTypeWindow;
+      BufferKind    : BufferKind_Enum:=BufferKindDefault;
+      Height        : Natural:=768;
+      Width         : Natural:=1024;
+      RedBits       : Natural:=8;
+      GreenBits     : Natural:=8;
+      BlueBits      : Natural:=8;
+      AlphaBits     : Natural:=8;
+      DepthBits     : Natural:=24;
+      StencilBits   : Natural:=0);
 
 end Graphics;
