@@ -8,6 +8,8 @@ package body GUI is
      (Object : in out GUIObject_Type;
       Parent : access GUIObject_Type'Class) is
    begin
+      -- Disconnect from current parent
+      -- Connect to current parent
       null;
    end SetParent;
    ---------------------------------------------------------------------------

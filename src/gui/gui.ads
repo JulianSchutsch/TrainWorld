@@ -1,15 +1,27 @@
-pragma Ada_2005;
+pragma Ada_2012;
 
 with GUIBounds; use GUIBounds;
 with Graphics;
 with RefCount;
 with Config;
 with Implementations;
+with GUIImplInterface_Window;
 
 package GUI is
 
    type GUIObjectImplementation_Interface is abstract new RefCount.Ref_Interface with null record;
    type GUIObjectImplementation_ClassAccess is access all GUIObjectImplementation_Interface'Class;
+
+   not overriding
+   function CreateWindowImpl
+     (ObjectImplementation : in out GUIObjectImplementation_Interface)
+      return GUIImplInterface_Window.WindowImpl_ClassAccess is abstract;
+
+   not overriding
+   procedure DestroyWindowImpl
+     (ObjectImplementation : in out GUIObjectImplementation_Interface;
+      WindowImpl           : in out GUIImplInterface_Window.WindowImpl_ClassAccess) is abstract;
+   ---------------------------------------------------------------------------
 
    package GUIObjectImplementationRef is new RefCount.Ref(GUIObjectImplementation_Interface,GUIObjectImplementation_ClassAccess);
 

@@ -65,7 +65,6 @@ begin
       WindowType    => Graphics.WindowTypeWindow,
       BufferKind    => Graphics.BufferKindDefault);
 
-
    declare
       Context     : constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration,(others => <>));
       TGUI        : GUI.GUI_Type;

@@ -90,6 +90,8 @@
 --  the GUI to implement a sane behaviour with nested objects moving and
 --  at the same time keeping constraints.
 
+pragma Ada_2012;
+
 package GUIBounds is
 
    type Constraint_Enum is
@@ -185,5 +187,48 @@ package GUIBounds is
 
    procedure Put
      (Item : Anchors_Type);
+
+   type Tex_Type is
+      record
+         Top       : Integer;
+         Left      : Integer;
+         Bottom    : Integer;
+         Right     : Integer;
+         TexTop    : Integer;
+         TexLeft   : Integer;
+         TexBottom : Integer;
+         TexRight  : Integer;
+      end record;
+
+   type BoundsTexFunction_Interface is interface;
+
+   function Func
+     (Func   : BoundsTexFunction_Interface;
+      Bounds : Bounds_Type)
+      return Tex_Type is abstract;
+
+   type BoundsTex_SimpleTopLeft is new BoundsTexFunction_Interface with
+      record
+         Top       : Integer;
+         Left      : Integer;
+         Bottom    : Integer;
+         Right     : Integer;
+         TexBottom : Integer;
+         TexRight  : Integer;
+      end record;
+
+   overriding
+   function Func
+     (Func   : BoundsTex_SimpleTopLeft;
+      Bounds : Bounds_Type)
+      return Tex_Type is  (Tex_Type'
+                             (Top       => Func.Top,
+                              Left      => Func.Left,
+                              Bottom    => Func.Bottom,
+                              Right     => Func.Right,
+                              TexTop    => 0,
+                              TexLeft   => 0,
+                              TexBottom => Func.TexBottom,
+                              TexRight  => Func.TexRight));
 
 end GUIBounds;

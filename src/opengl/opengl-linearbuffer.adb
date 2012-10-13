@@ -3,36 +3,36 @@ pragma Ada_2012;
 with Ada.Tags; use Ada.Tags;
 with Ada.Text_IO; use Ada.Text_IO;
 
-package body OpenGL.TextureBuffer is
+package body OpenGL.LinearBuffer is
 
    procedure Finalize
-     (TextureBufferRange : in out TextureBuffersRange_Type) is
+     (BufferRange : in out LinearRange_Type) is
    begin
 
 --      Put_Line("TextureBufferRange.Finalize");
-      if TextureBufferRange.Buffer/=null then
-         TextureBufferRange.Buffer.Allocator.Release(TextureBufferRange.Block);
-         TextureBufferRange.Buffers.DecrementRefCount;
-         TextureBufferRange.Buffer:=null;
-         TextureBufferRange.Buffers:=null;
+      if BufferRange.Buffer/=null then
+         BufferRange.Buffer.Allocator.Release(BufferRange.Block);
+         BufferRange.Buffers.DecrementRefCount;
+         BufferRange.Buffer:=null;
+         BufferRange.Buffers:=null;
       end if;
 
    end Finalize;
    ---------------------------------------------------------------------------
 
    procedure Bind
-     (TextureBufferRange : in out TextureBuffersRange_Type) is
+     (BufferRange : in out LinearRange_Type) is
    begin
       BindTexture
         (target  => GL_TEXTURE_BUFFER,
          unit    => 0,
-         texture => TextureBufferRange.Buffer.TextureID);
+         texture => BufferRange.Buffer.TextureID);
    end Bind;
    ---------------------------------------------------------------------------
 
    procedure Unmap
-     (TextureBufferRange : in out TextureBuffersRange_Type) is
-      pragma Unreferenced(TextureBufferRange);
+     (BufferRange : in out LinearRange_Type) is
+      pragma Unreferenced(BufferRange);
    begin
       if glUnmapBuffer(GL_TEXTURE_BUFFER)=0 then
          raise FailedUnmap;
@@ -42,7 +42,7 @@ package body OpenGL.TextureBuffer is
    ---------------------------------------------------------------------------
 
    function Map
-     (TextureBufferRange : in out TextureBuffersRange_Type)
+     (BufferRange : in out LinearRange_Type)
       return System.Address is
 
       use type System.Address;
@@ -52,11 +52,11 @@ package body OpenGL.TextureBuffer is
    begin
 
       -- TODO: Make aaccess an option
-      BindTextureBuffer(TextureBufferRange.Buffer.BufferID);
+      BindTextureBuffer(BufferRange.Buffer.BufferID);
       Result:=glMapBufferRange
         (target  => GL_TEXTURE_BUFFER,
-         offset  => GLintptr_Type(TextureBufferRange.Block.Start),
-         length  => GLsizeiptr_Type(TextureBufferRange.Block.Size),
+         offset  => GLintptr_Type(BufferRange.Block.Start),
+         length  => GLsizeiptr_Type(BufferRange.Block.Size),
          aaccess => GL_MAP_WRITE_BIT);
       if Result=System.Null_Address then
          raise FailedMap with "GLError:"&GLenum_Type'Image(glGetError.all);
@@ -67,26 +67,26 @@ package body OpenGL.TextureBuffer is
    ---------------------------------------------------------------------------
 
    procedure SetInternalFormat
-     (TextureBuffers : in out TextureBuffers_Type;
-      Format         : GLenum_Type) is
+     (Buffers : in out LinearBuffers_Type;
+      Format  : GLenum_Type) is
    begin
       -- TODO: This either requires a check or an update on all buffers
-      TextureBuffers.Format:=Format;
+      Buffers.Format:=Format;
    end SetInternalFormat;
    ---------------------------------------------------------------------------
 
    procedure SetBufferBlockSize
-     (TextureBuffers : in out TextureBuffers_Type;
+     (Buffers : in out LinearBuffers_Type;
       Size           : PtrInt_Type) is
    begin
       pragma Assert(Size>0 and Size<=PtrInt_Type'Last);
-      TextureBuffers.BufferSize:=Size;
+      Buffers.BufferSize:=Size;
    end SetBufferBlockSize;
    ---------------------------------------------------------------------------
 
    procedure ReleaseBuffer
-     (TextureBuffers : in out TextureBuffers_Type'Class;
-      Buffer         : TextureBuffersBuffer_Access) is
+     (Buffers : in out LinearBuffers_Type'Class;
+      Buffer         : LinearBuffer_Access) is
    begin
       pragma Assert(Buffer/=null);
 
@@ -94,13 +94,13 @@ package body OpenGL.TextureBuffer is
       if Buffer.Previous/=null then
          Buffer.Previous.Next:=Buffer.Next;
       else
-         TextureBuffers.FirstBuffer:=Buffer.Next;
+         Buffers.FirstBuffer:=Buffer.Next;
       end if;
 
       if Buffer.Next/=null then
          Buffer.Next.Previous:=Buffer.Previous;
       else
-         TextureBuffers.LastBuffer:=Buffer.Previous;
+         Buffers.LastBuffer:=Buffer.Previous;
       end if;
 
 --      pragma Assert(Buffer.TextureID/=0);
@@ -117,19 +117,19 @@ package body OpenGL.TextureBuffer is
    ---------------------------------------------------------------------------
 
    procedure Allocate
-     (TextureBuffers : in out TextureBuffers_Type;
+     (Buffers : in out LinearBuffers_Type;
       Size           : PtrInt_Type;
-      BufferRange    : in out TextureBuffersRange_Ref) is
+      BufferRange    : in out LinearRange_Ref) is
 
       use type Allocators.Block_ClassAccess;
 
    begin
 
       pragma Assert(Size/=0,"Buffer range size too small");
-      pragma Assert(Size<=TextureBuffers.BufferSize,"Buffer range size too large");
+      pragma Assert(Size<=Buffers.BufferSize,"Buffer range size too large");
 
       declare
-         Buffer      : TextureBuffersBuffer_Access:=TextureBuffers.FirstBuffer;
+         Buffer      : LinearBuffer_Access:=Buffers.FirstBuffer;
          BufferBlock : Allocators.Block_ClassAccess;
       begin
 
@@ -143,21 +143,21 @@ package body OpenGL.TextureBuffer is
 
          if BufferBlock=null then
 
-            Buffer:=new TextureBuffersBuffer_Type;
-            Buffer.Previous:=TextureBuffers.LastBuffer;
+            Buffer          := new LinearBuffer_Type;
+            Buffer.Previous := Buffers.LastBuffer;
             if Buffer.Previous/=null then
                Buffer.Previous.Next:=Buffer;
             else
-               TextureBuffers.FirstBuffer:=Buffer;
+               Buffers.FirstBuffer:=Buffer;
             end if;
-            TextureBuffers.LastBuffer:=Buffer;
+            Buffers.LastBuffer:=Buffer;
 
             glGenBuffers
               (n        => 1,
                buffers  => Buffer.BufferID'Access);
 
             if Buffer.BufferID=0 then
-               ReleaseBuffer(TextureBuffers,Buffer);
+               ReleaseBuffer(Buffers,Buffer);
                raise FailedAllocate with "Couldn't allocate buffer with glGenBuffers";
             end if;
 
@@ -176,7 +176,7 @@ package body OpenGL.TextureBuffer is
               (n        => 1,
                textures => Buffer.TextureID'Access);
             if Buffer.TextureID=0 then
-               ReleaseBuffer(TextureBuffers,Buffer);
+               ReleaseBuffer(Buffers,Buffer);
                raise FailedAllocate with "Couldn't allocate texture with glGenTextures";
             end if;
             -- TODO: Handle TextureID=0
@@ -189,11 +189,11 @@ package body OpenGL.TextureBuffer is
 
             glTexBuffer
               (target         => GL_TEXTURE_BUFFER,
-               internalformat => TextureBuffers.Format,
+               internalformat => Buffers.Format,
                buffer         => Buffer.BufferID);
             AssertError("Initialize TexBuffer Object");
 
-            Buffer.Allocator.Init(TextureBuffers.BufferSize);
+            Buffer.Allocator.Init(Buffers.BufferSize);
             BufferBlock:=Buffer.Allocator.Allocate(Size);
             pragma Assert(BufferBlock/=null);
          end if;
@@ -201,18 +201,18 @@ package body OpenGL.TextureBuffer is
          pragma Assert(Buffer/=null);
 
          -- Check if the buffer range is allocated and has the right tag
-         if not (BufferRange.I/=null and then BufferRange.I'Tag=TextureBuffersRange_Type'Tag) then
-            BufferRange:=TextureBuffersRangeRef.MakeInitialRef(new TextureBuffersRange_Type);
+         if not (BufferRange.I/=null and then BufferRange.I'Tag=LinearRange_Type'Tag) then
+            BufferRange:=LinearRangeRef.MakeInitialRef(new LinearRange_Type);
          end if;
 
          declare
-            BufferRangeI : constant TextureBuffersRange_Access:=TextureBuffersRange_Access(BufferRange.I);
+            BufferRangeI : constant LinearRange_Access:=LinearRange_Access(BufferRange.I);
          begin
 
-            TextureBuffers.IncrementRefCount;
-            BufferRangeI.Buffer:=Buffer;
-            BufferRangeI.Buffers:=TextureBuffers'Unrestricted_Access;
-            BufferRangeI.Block:=Bufferblock;
+            Buffers.IncrementRefCount;
+            BufferRangeI.Buffer  := Buffer;
+            BufferRangeI.Buffers := Buffers'Unrestricted_Access;
+            BufferRangeI.Block   := Bufferblock;
 
          end;
 
@@ -222,16 +222,16 @@ package body OpenGL.TextureBuffer is
    ---------------------------------------------------------------------------
 
    procedure Finalize
-     (TextureBuffers : in out TextureBuffers_Type) is
+     (Buffers : in out LinearBuffers_Type) is
    begin
 --      Put_Line("TextureBuffers.Finalize");
 
       Put_Line("Finalize TextureBuffers");
-      while TextureBuffers.FirstBuffer/=null loop
-         ReleaseBuffer(TextureBuffers,TextureBuffers.FirstBuffer);
+      while Buffers.FirstBuffer/=null loop
+         ReleaseBuffer(Buffers,Buffers.FirstBuffer);
       end loop;
 
    end Finalize;
    ---------------------------------------------------------------------------
 
-end OpenGL.TextureBuffer;
+end OpenGL.LinearBuffer;

@@ -1,6 +1,6 @@
 with TestFrameWork; use TestFrameWork;
 
-package OpenGL.TextureBuffer.Test is
+package OpenGL.LinearBuffer.Test is
 
    procedure TestAllocation;
    procedure TestMonteCarlo;
@@ -11,4 +11,4 @@ package OpenGL.TextureBuffer.Test is
       (Name=>U("OpenGL.TextureBuffer.MonteCarlo"),
        Test=>TestMonteCarlo'Access));
 
-end OpenGL.TextureBuffer.Test;
+end OpenGL.LinearBuffer.Test;

@@ -25,12 +25,12 @@ pragma Ada_2012;
 
 with TestFrameWork; use TestFrameWork;
 with OpenGL.Test;
-with OpenGL.TextureBuffer.Test;
+with OpenGL.LinearBuffer.Test;
 
 procedure GraphicsTest is
    Tests : constant TestFrameWork.Test_Array:=
      OpenGL.Test.Tests&
-     OpenGL.TextureBuffer.Test.Tests;
+     OpenGL.LinearBuffer.Test.Tests;
 begin
    TestFrameWork.Run(Tests);
 end GraphicsTest;

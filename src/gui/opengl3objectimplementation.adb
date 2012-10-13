@@ -1,19 +1,46 @@
 pragma Ada_2012;
 
-with GUI;
-with Config;
 with Graphics;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Basics; use Basics;
 with Ada.Text_IO; use Ada.Text_IO;
+with GUIImplInterface_Window;
+with OpenGL3ObjectImplementation.Window;
 
 package body OpenGL3ObjectImplementation is
 
-   type OpenGL3OI_Type is new GUI.GUIObjectImplementation_Interface with
+   type OpenGL3OI_Type is new OGL3Impl_Type with
       record
-         null;
+         WindowData : OpenGL3ObjectImplementation.Window.WindowImpl_Data;
       end record;
-   type openGL3OI_Access is access all OpeNGL3OI_Type'Class;
+   type OpenGL3OI_Access is access all OpeNGL3OI_Type'Class;
+
+   overriding
+   function CreateWindowImpl
+     (ObjectImplementation : in out OpenGL3OI_Type)
+      return GUIImplInterface_Window.WindowImpl_ClassAccess;
+
+   overriding
+   procedure DestroyWindowImpl
+     (ObjectImplementation : in out OpenGL3OI_Type;
+      WindowImpl           : in out GUIImplInterface_Window.WindowImpl_ClassAccess);
+   ---------------------------------------------------------------------------
+
+   function CreateWindowImpl
+     (ObjectImplementation : in out OpenGL3OI_Type)
+      return GUIImplInterface_Window.WindowImpl_ClassAccess is
+   begin
+      return OpenGL3ObjectImplementation.Window.Create(ObjectImplementation.WindowData);
+   end CreateWindowImpl;
+   ---------------------------------------------------------------------------
+
+   procedure DestroyWindowImpl
+     (ObjectImplementation : in out OpenGL3OI_Type;
+      WindowImpl           : in out GUIImplInterface_Window.WindowImpl_ClassAccess) is
+   begin
+      null;
+   end DestroyWindowImpl;
+   ---------------------------------------------------------------------------
 
    function Constructor
      (GenConfig  : Config.Config_ClassAccess;
@@ -21,12 +48,18 @@ package body OpenGL3ObjectImplementation is
       Parameter  : Graphics.Context_Info)
       return GUI.GUIObjectImplementation_Ref is
 
-      pragma Unreferenced(GenConfig,ImplConfig,Parameter);
+      pragma Unreferenced(GenConfig,Parameter);
 
-      NewOpenGL3OI : constant OpenGL3OI_Access:=new OpeNGL3OI_Type;
+      use type Config.Config_ClassAccess;
+
+      NewOpenGL3OI : constant OpenGL3OI_Access:=new OpenGL3OI_Type;
+      Config       : aliased OGL3ImplConfig_Type;
 
    begin
-      return GUI.GUIObjectImplementationRef.MakeInitialRef(GUI.GUIObjectImplementation_ClassAccess(NewOpeNGL3OI));
+      if ImplConfig/=null then
+         Config:=OGL3ImplConfig_Type(ImplConfig.all);
+      end if;
+      return GUI.GUIObjectImplementationRef.MakeInitialRef(GUI.GUIObjectImplementation_ClassAccess(NewOpenGL3OI));
    end Constructor;
    ---------------------------------------------------------------------------
 

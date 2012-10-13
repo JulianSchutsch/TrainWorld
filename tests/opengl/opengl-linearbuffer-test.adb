@@ -1,7 +1,7 @@
 with OpenGL.Test; use OpenGL.Test;
 with Ada.Numerics.Float_Random;
 
-package body OpenGL.TextureBuffer.Test is
+package body OpenGL.LinearBuffer.Test is
 
    procedure TestAllocation is
    begin
@@ -9,8 +9,8 @@ package body OpenGL.TextureBuffer.Test is
       BindEvents;
       -- Automatic finalization
       declare
-         Buffers     : TextureBuffers_Type;
-         BufferRange : TextureBuffersRange_Ref;
+         Buffers     : LinearBuffers_Type;
+         BufferRange : LinearRange_Ref;
       begin
          Buffers.SetBufferBlockSize(1024*1024);
          Buffers.Allocate(1024,BufferRange);
@@ -18,8 +18,8 @@ package body OpenGL.TextureBuffer.Test is
 
       -- Manual finalization for BufferRange
       declare
-         Buffers     : TextureBuffers_Type;
-         BufferRange : TextureBuffersRange_Ref;
+         Buffers     : LinearBuffers_Type;
+         BufferRange : LinearRange_Ref;
       begin
          Buffers.SetBufferBlockSize(1024*1024);
          Buffers.Allocate(1024,BufferRange);
@@ -43,8 +43,8 @@ package body OpenGL.TextureBuffer.Test is
       BindEvents;
 
       declare
-         Buffers : TextureBuffers_Type;
-         Ranges  : array(0..RangeCount-1) of TextureBuffersRange_Ref;
+         Buffers : LinearBuffers_Type;
+         Ranges  : array(0..RangeCount-1) of LinearRange_Ref;
          Gen     : Ada.Numerics.Float_Random.Generator;
          Current : Natural;
          Size    : PtrInt_Type;
@@ -73,4 +73,4 @@ package body OpenGL.TextureBuffer.Test is
    end TestMonteCarlo;
    ---------------------------------------------------------------------------
 
-end OpenGL.TextureBuffer.Test;
+end OpenGL.LinearBuffer.Test;
