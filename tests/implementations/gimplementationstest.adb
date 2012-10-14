@@ -33,21 +33,24 @@ package body GImplementationsTest is
    end Compatible;
    ---------------------------------------------------------------------------
 
+   S1 : aliased constant String:="S1";
+   S2 : aliased constant String:="S2";
+
    procedure CreateTest is
    begin
-      Impl.Register(U("1"),Compatible'Access,Constructor'Access);
-      if not Impl.Has(U("1")) then
+      Impl.Register(RefConstStr(S1'Access),Compatible'Access,Constructor'Access);
+      if not Impl.Has(RefConstStr(S1'Access)) then
          ReportIssue("Missing Implementation 1");
       end if;
-      Impl.Register(U("2"),Compatible'Access,Constructor'Access);
-      if not Impl.Has(U("2")) then
+      Impl.Register(RefConstStr(S2'Access),Compatible'Access,Constructor'Access);
+      if not Impl.Has(RefConstStr(S2'Access)) then
          ReportIssue("Missing Implementation 2");
       end if;
-      if not Impl.Has(U("1")) then
+      if not Impl.Has(RefConstStr(S1'Access)) then
          ReportIssue("Missing Implementation 1 after creation of Impl 2");
       end if;
       begin
-         Impl.Register(U("1"),Compatible'Access,Constructor'Access);
+         Impl.Register(RefConstStr(S1'Access),Compatible'Access,Constructor'Access);
          ReportIssue("Unexpected exception");
       exception
          when Impl.ImplementationRegisteredTwice =>

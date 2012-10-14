@@ -112,7 +112,7 @@ begin
 
    Graphics.Impl.Register;
 
-   Configuration.SetImplementation( U("OpenGL"));
+   Configuration.SetImplementation(RefStr("OpenGL"));
    Graphics.CreateConfig
      (Configuration => Configuration,
       WindowType    => Graphics.WindowTypeWindow,

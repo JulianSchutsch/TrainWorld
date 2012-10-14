@@ -4,20 +4,24 @@ with Implementations;
 
 package body Config.Test is
 
-   TestConfigID     : constant Unbounded_String:=U("SomeConfigID#####");
-   TestImplConfigID : constant Unbounded_String:=U("SomeImplConfigID#####");
+   TestConfigID     : aliased constant String:="SomeConfigID#####";
+   TestImplConfigID : aliased constant String:="SomeImplConfigID#####";
 
    type TestConfig_Type is new Config.Config_Type with
       record
-         ID : Unbounded_String:=TestConfigID;
+         ID : String_Ref:=RefConstStr(TestConfigID'Access);
       end record;
    type TestConfig_Access is access all TestConfig_Type;
 
    type TestImplConfig_Type is new Config.Config_Type with
       record
-         ID  : Unbounded_String:=TestImplConfigID;
+         ID  : String_Ref:=RefConstStr(TestImplConfigID'Access);
       end record;
    type TestImplConfig_Access is access all TestImplConfig_Type;
+
+   S1 : aliased constant String:="1";
+   S2 : aliased constant String:="2";
+   SomeElse : aliased constant String:="Something else";
 
    procedure PassConfigTest is
 
@@ -28,7 +32,7 @@ package body Config.Test is
 
       type Impl_Type is
          record
-            ID : Unbounded_String;
+            ID : String_Ref;
          end record;
       type Parameter_Type is null record;
 
@@ -42,7 +46,7 @@ package body Config.Test is
          Parameters : Parameter_Type)
          return Impl_Type is
          pragma Unreferenced(Parameters);
-         X : constant Impl_Type:=(ID=>U("1"));
+         X : constant Impl_Type:=(ID=>RefConstStr(S1'Access));
       begin
          if TestConfig_Access(GenConfig)/=TestConfig then
             ReportIssue("Implementation 1 created with wrong generic config");
@@ -60,7 +64,7 @@ package body Config.Test is
          Parameters : Parameter_Type)
          return Impl_Type is
          pragma Unreferenced(Parameters);
-         X : constant Impl_Type:=(ID=>U("2"));
+         X : constant Impl_Type:=(ID=>RefConstStr(S2'Access));
       begin
          if TestConfig_Access(GenConfig)/=TestConfig then
             ReportIssue("Implementation 2 created with wrong generic config");
@@ -92,25 +96,25 @@ package body Config.Test is
 
       -- This is expected to work after ConfigTest
       RootNode.SetConfig(Config_ClassAccess(TestConfig));
-      RootNode.SetImplConfig(U("1"),Config_ClassAccess(TestImpl1));
-      RootNode.SetImplConfig(U("2"),Config_ClassAccess(TestImpl2));
+      RootNode.SetImplConfig(RefConstStr(S1'Access),Config_ClassAccess(TestImpl1));
+      RootNode.SetImplConfig(RefConstStr(S2'Access),Config_ClassAccess(TestImpl2));
 
-      Impl.Register(U("1"),Compatible'Access,Constructor1'Access);
-      Impl.Register(U("2"),Compatible'Access,Constructor2'Access);
+      Impl.Register(RefConstStr(S1'Access),Compatible'Access,Constructor1'Access);
+      Impl.Register(RefConstStr(S2'Access),Compatible'Access,Constructor2'Access);
 
-      RootNode.SetImplementation(U("1"));
+      RootNode.SetImplementation(RefConstStr(S1'Access));
       CR1:=Impl.Utilize(RootNode,(null record));
-      if CR1.ID/=U("1") then
+      if CR1.ID/=S1 then
          ReportIssue("Wrong constructor called, expected ID=1");
       end if;
 
-      RootNode.SetImplementation(U("2"));
+      RootNode.SetImplementation(RefConstStr(S2'Access));
       CR2:=Impl.Utilize(RootNode,(null record));
-      if CR2.ID/=U("2") then
+      if CR2.ID/=S2 then
          ReportIssue("Wrong constructor called, expected ID=2");
       end if;
 
-      RootNode.SetImplementation(U("Something else"));
+      RootNode.SetImplementation(RefConstStr(SomeElse'Access));
       begin
          CR3:=Impl.Utilize(RootNode,(null record));
          ReportIssue("Expected exception after asking for a non existent implementation");
@@ -146,50 +150,57 @@ package body Config.Test is
          ReportIssue("TestConfig2 not set properly");
       end if;
 
-      RootNode.SetImplConfig(U("1"),Config_ClassAccess(TestImpl1));
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("1")))/=TestImpl1 then
+      RootNode.SetImplConfig(RefConstStr(S1'Access),Config_ClassAccess(TestImpl1));
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S1'Access)))/=TestImpl1 then
          ReportIssue("TestImpl1 not set properly");
       end if;
-      RootNode.SetImplConfig(U("2"),Config_ClassAccess(TestImpl2));
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("2")))/=TestImpl2 then
+      RootNode.SetImplConfig(RefConstStr(S2'Access),Config_ClassAccess(TestImpl2));
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S2'Access)))/=TestImpl2 then
          ReportIssue("TestImpl2 not set properly");
       end if;
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("1")))/=TestImpl1 then
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S1'Access)))/=TestImpl1 then
          ReportIssue("TestImpl1 corrupted after adding TestImpl2");
       end if;
 
-      RootNode.SetImplConfig(U("1"),Config_ClassAccess(TestImpl12));
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("1")))/=TestImpl12 then
+      RootNode.SetImplConfig(RefConstStr(S1'Access),Config_ClassAccess(TestImpl12));
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S1'Access)))/=TestImpl12 then
          ReportIssue("TestImpl12 not set properly");
       end if;
-      if TestImplConfig_Access(RootNode.GetImplconfig(U("2")))/=TestImpl2  then
+      if TestImplConfig_Access(RootNode.GetImplconfig(RefConstStr(S2'Access)))/=TestImpl2  then
          ReportIssue("TestImpl2 lost after replacing TestImpl1 with TestImpl12");
       end if;
 
-      RootNode.SetImplConfig(U("2"),Config_ClassAccess(TestImpl22));
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("2")))/=TestImpl22 then
+      RootNode.SetImplConfig(RefConstStr(S2'Access),Config_ClassAccess(TestImpl22));
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S2'Access)))/=TestImpl22 then
          ReportIssue("TestImpl22 not set proplery");
       end if;
-      if TestImplConfig_Access(RootNode.GetImplConfig(U("1")))/=TestImpl12 then
+      if TestImplConfig_Access(RootNode.GetImplConfig(RefConstStr(S1'Access)))/=TestImpl12 then
          ReportIssue("TestImpl12 lost after replacing TestImpl2 with TestImpl22");
       end if;
 
    end ConfigTest;
    ---------------------------------------------------------------------------
 
+   C1 : aliased constant String:="C1";
+   C2 : aliased constant String:="C2";
+   C3 : aliased constant String:="C3";
+   C4 : aliased constant String:="C4";
+   C5 : aliased constant String:="C5";
+   C6 : aliased constant String:="C6";
+
    procedure PathTest is
       RootNode : ConfigNode_Type;
 
       -- Test path for nesting
-      Path1 : constant ConfigPath_Type:=(U("C1"),U("C2"),U("C3"));
+      Path1 : constant ConfigPath_Type:=(RefConstStr(C1'Access),RefConstStr(C2'Access),RefConstStr(C3'Access));
       -- Test path for second child
-      Path2 : constant ConfigPath_Type:=(0=>U("C4"));
+      Path2 : constant ConfigPath_Type:=(0=>RefConstStr(C4'Access));
       -- Test path for empty path
       Path3 : ConfigPath_Type(0..-1);
       -- Test path for second child selection
-      Path4 : constant ConfigPath_Type:=(U("C4"),U("C5"));
+      Path4 : constant ConfigPath_Type:=(RefConstStr(C4'Access),RefConstStr(C5'Access));
       -- Test path for first child selection
-      Path5 : constant ConfigPath_Type:=(U("C1"),U("C6"));
+      Path5 : constant ConfigPath_Type:=(RefConstStr(C1'Access),RefConstStr(C6'Access));
 
       function CreatePath
         (Path:ConfigPath_Type)

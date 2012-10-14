@@ -7,8 +7,10 @@ package GlobalLoop.Test is
 
    procedure Test;
 
+   StrGlobalLoop : aliased constant String:="GlobalLoop";
+
    Tests : constant Test_Array:=
-     (0=>(Name => U("GlobalLoop"),
+     (0=>(Name => RefConstStr(StrGlobalLoop'Access),
           Test => Test'Access));
 
 end GlobalLoop.Test;

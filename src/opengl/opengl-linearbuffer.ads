@@ -32,6 +32,9 @@ package OpenGL.LinearBuffer is
    subtype LinearRange_Ref is LinearRangeRef.Ref_Type;
    ---------------------------------------------------------------------------
 
+   type LinearRange_Type is new LinearRange_Interface with private;
+   ---------------------------------------------------------------------------
+
    type LinearBuffers_Interface is abstract new RefCount.Ref_Interface with null record;
    type LinearBuffers_ClassAccess is access all LinearBuffers_Interface'Class;
 
@@ -43,13 +46,20 @@ package OpenGL.LinearBuffer is
    not overriding
    procedure SetBufferBlockSize
      (Buffers : in out LinearBuffers_Interface;
-      Size    : PtrInt_Type) is abstract;
+      Amount  : PtrInt_Type) is abstract;
 
    not overriding
    procedure Allocate
      (Buffers     : in out LinearBuffers_Interface;
-      Size        : PtrInt_Type;
+      Amount      : PtrInt_Type;
       BufferRange : in out LinearRange_Ref) is abstract;
+
+   -- Allocates without changing the reference pointer
+   not overriding
+   procedure AllocateConst
+     (Buffers     : in out LinearBuffers_Interface;
+      Amount      : PtrInt_Type;
+      BufferRange : access LinearRange_Type'Class) is abstract;
 
    package LinearBuffersRef is new RefCount.Ref(LinearBuffers_Interface,LinearBuffers_ClassAccess);
    ---------------------------------------------------------------------------
@@ -69,8 +79,14 @@ package OpenGL.LinearBuffer is
    overriding
    procedure Allocate
      (Buffers     : in out LinearBuffers_Type;
-      Size        : PtrInt_Type;
+      Amount      : PtrInt_Type;
       BufferRange : in out LinearRange_Ref);
+
+   overriding
+   procedure AllocateConst
+     (Buffers     : in out LinearBuffers_Type;
+      Amount      : PtrInt_Type;
+      BufferRange : access LinearRange_Type'Class);
 
    overriding
    procedure Finalize
@@ -78,7 +94,6 @@ package OpenGL.LinearBuffer is
 
 private
 
-   type LinearRange_Type;
    type LinearRange_Access is access all LinearRange_Type;
 
    type LinearBuffer_Type;

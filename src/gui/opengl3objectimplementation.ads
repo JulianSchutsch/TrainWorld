@@ -1,10 +1,11 @@
 pragma Ada_2012;
 
 with Config;
-with OpenGL.TextureBuffer;
+with OpenGL.LinearBuffer;
 with GUI;
 
 package OpenGL3ObjectImplementation is
+
    procedure Register;
 
 private
@@ -17,7 +18,7 @@ private
 
    type OGL3Impl_Type is abstract new GUI.GUIObjectImplementation_Interface with
       record
-         TexBuffer  : OpenGL.TextureBuffer.TextureBuffers_Type;
+         Buffers  : OpenGL.LinearBuffer.LinearBuffers_Type;
       end record;
    type OGL3Impl_Access is access all OGL3Impl_Type;
 

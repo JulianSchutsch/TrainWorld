@@ -1,15 +1,17 @@
 with TestFrameWork; use TestFrameWork;
-with Basics; use Basics;
 
 package ClientServerStream.Test is
 
    procedure ConnectionMonteCarloSMPipe;
    procedure TransferMonteCarloSMPipe;
 
+   StrCSNConnectionMonteCarloSMPipe : aliased constant String:="ClientServerNet.ConnectionMonteCarloSMPipe";
+   StrCSNTransferMonteCarloSMPipe   : aliased constant String:="ClientServerNet.TransferMonteCarloSMPipe";
+
    Tests : Test_Array:=
-     ((Name => U("ClientServerNet.ConnectionMonteCarloSMPipe"),
+     ((Name => RefConstStr(StrCSNConnectionMonteCarloSMPipe'Access),
        Test => ConnectionMonteCarloSMPipe'Access),
-      (Name => U("ClientServerNet.TransferMonteCarloSMPipe"),
+      (Name => RefConstStr(StrCSNTransferMonteCarloSMPipe'Access),
        Test => TransferMonteCarloSMPipe'Access));
 
    -- TODO: Corner cases:

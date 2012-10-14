@@ -21,14 +21,14 @@
 --   2.Aug 2012 Julian Schutsch
 --     - Original version
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Basics; use Basics;
 
 package TestFrameWork is
 
    type TestFunc_Access is access procedure;
    type Test_Type is
       record
-         Name : Unbounded_String;
+         Name : String_Ref;
          Test : TestFunc_Access;
       end record;
 

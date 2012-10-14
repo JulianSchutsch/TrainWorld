@@ -93,7 +93,7 @@ pragma Ada_2012;
 with Streams;
 with RefCount;
 with Implementations;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Basics; use Basics;
 
 package ClientServerStream is
 
@@ -126,7 +126,7 @@ package ClientServerStream is
 
    function NetworkAccept
      (T             : in out ServerCallBack_Interface;
-      ClientAddress : Unbounded_String)
+      ClientAddress : String_Ref)
       return ConnectionCallBack_ClassAccess is abstract;
 
    type Server_Interface is new RefCount.Ref_Interface with

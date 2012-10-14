@@ -38,12 +38,12 @@ package ClientServerStream.SMPipe is
 
    procedure CreateServerConfig
      (Configuration : in out Config.ConfigNode_Type;
-      Address       : Unbounded_String;
+      Address       : String_Ref;
       BufferSize    : Streams.StreamSize_Type:=1024);
 
    procedure CreateClientConfig
      (Configuration : in out Config.ConfigNode_Type;
-      ClientAddress : Unbounded_String;
-      ServerAddress : Unbounded_String);
+      ClientAddress : String_Ref;
+      ServerAddress : String_Ref);
 
 end ClientServerStream.SMPipe;

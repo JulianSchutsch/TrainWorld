@@ -1,5 +1,4 @@
 with TestFrameWork; use TestFrameWork;
-with Basics; use Basics;
 
 package Config.Test is
 
@@ -19,12 +18,16 @@ package Config.Test is
    -- 1. Pass Config to separate implementations
    procedure PassConfigTest;
 
+   StrConfigPath   : aliased constant String:="Config.Path";
+   StrConfigConfig : aliased constant String:="Config.Config";
+   StrPassConfig   : aliased constant String:="PassConfig";
+
    Tests : constant Test_Array:=
-     ((Name => U("Config.Path"),
+     ((Name => RefConstStr(StrConfigPath'Access),
        Test => PathTest'Access),
-      (Name => U("Config.Config"),
+      (Name => RefConstStr(StrConfigConfig'Access),
        Test => ConfigTest'Access),
-      (Name => U("PassConfig"),
+      (Name => RefConstStr(StrPassConfig'Access),
        Test => PassConfigTest'Access));
 
 end Config.Test;

@@ -72,7 +72,6 @@ pragma Ada_2012;
 with Bytes;
 with System;
 with Ada.Unchecked_Deallocation;
-with Basics; use Basics;
 with GlobalLoop;
 with ProtectedBasics;
 with Ada.Finalization;
@@ -87,7 +86,7 @@ package body ClientServerStream.SMPipe is
       ClientStateDisconnected);
 
    BlockSize          : constant:=1024*256;
-   ImplementationName : constant Unbounded_String:=U("Pipe");
+   ImplementationName : aliased constant String:="Pipe";
 
    type Block_Type;
    type Block_Access is access all Block_Type;
@@ -120,15 +119,15 @@ package body ClientServerStream.SMPipe is
    type Server_Config is new Config.Config_Type with
       record
          BufferSize  : Streams.StreamSize_Type;
-         Address     : Unbounded_String;
+         Address     : String_Ref;
       end record;
    type Server_ConfigAccess is access all Server_Config;
    ---------------------------------------------------------------------------
 
    type Client_Config is new Config.Config_Type with
       record
-         ClientAddress : Unbounded_String;
-         ServerAddress : Unbounded_String;
+         ClientAddress : String_Ref;
+         ServerAddress : String_Ref;
       end record;
    type Client_ConfigAccess is access all Client_Config;
    ---------------------------------------------------------------------------
@@ -559,7 +558,7 @@ package body ClientServerStream.SMPipe is
    type ServerConnection_Type is
       record
          BlockPipes    : BlockPipes_Access:=null;
-         ClientAddress : Unbounded_String;
+         ClientAddress : String_Ref;
          ReceiveState  : StateCallBack_ClassAccess:=null;
          ReadStreamP   : PipeReadStream_Access:=null;
          ReadStream    : Streams.ReadStream_Ref;
@@ -589,7 +588,7 @@ package body ClientServerStream.SMPipe is
 
    type Server_Type is new Server_Interface with
       record
-         Address        : Unbounded_String;
+         Address        : String_Ref;
          Connections    : ServerConnection_Access:=null;
          -- Connections which require an "accept" call to the user
          NewConnections : ServerConnection_Access:=null;
@@ -644,8 +643,8 @@ package body ClientServerStream.SMPipe is
         (Server : Server_Access);
       procedure Connect
         (Client        : Client_Access;
-         ClientAddress : Unbounded_String;
-         ServerAddress : Unbounded_String;
+         ClientAddress : String_Ref;
+         ServerAddress : String_Ref;
          Success       : out Boolean);
       procedure ProcessConnect
         (Server : Server_Access);
@@ -657,7 +656,7 @@ package body ClientServerStream.SMPipe is
    protected body ServerList_Type is
 
       function Exists
-        (Address : Unbounded_String)
+        (Address : String_Ref)
          return Boolean is
 
          Server : Server_Access:=First;
@@ -713,8 +712,8 @@ package body ClientServerStream.SMPipe is
       -- Called only by clients!
       procedure Connect
         (Client        : Client_Access;
-         ClientAddress : Unbounded_String;
-         ServerAddress : Unbounded_String;
+         ClientAddress : String_Ref;
+         ServerAddress : String_Ref;
          Success       : out Boolean) is
 
          Server : Server_Access:=First;
@@ -1058,13 +1057,13 @@ package body ClientServerStream.SMPipe is
 
    procedure CreateServerConfig
      (Configuration : in out Config.ConfigNode_Type;
-      Address       : Unbounded_String;
+      Address       : String_Ref;
       BufferSize    : Streams.StreamSize_Type:=1024) is
    begin
 
       Configuration.SetImplConfig
-        (ImplementationName,
-         new Server_Config'(
+        (RefConstStr(ImplementationName'Access),
+         new Server_Config'(Config.Config_Type with
            BufferSize => BufferSize,
            Address    => Address));
 
@@ -1073,14 +1072,14 @@ package body ClientServerStream.SMPipe is
 
    procedure CreateClientConfig
      (Configuration : in out Config.ConfigNode_Type;
-      ClientAddress : Unbounded_String;
-      ServerAddress : Unbounded_String) is
+      ClientAddress : String_Ref;
+      ServerAddress : String_ref) is
 
    begin
 
       Configuration.SetImplConfig
-        (ImplementationName,
-         new Client_Config'(
+        (RefConstStr(ImplementationName'Access),
+         new Client_Config'(Config.Config_Type with
            ClientAddress => ClientAddress,
            ServerAddress => ServerAddress));
 
@@ -1100,8 +1099,8 @@ package body ClientServerStream.SMPipe is
 
    procedure Register is
    begin
-      ServerImplementations.Register(ImplementationName,Compatible'Access,ServerConstructor'Access);
-      ClientImplementations.Register(ImplementationName,Compatible'Access,ClientConstructor'Access);
+      ServerImplementations.Register(RefConstStr(ImplementationName'Access),Compatible'Access,ServerConstructor'Access);
+      ClientImplementations.Register(RefConstStr(ImplementationName'Access),Compatible'Access,ClientConstructor'Access);
    end Register;
    ---------------------------------------------------------------------------
 

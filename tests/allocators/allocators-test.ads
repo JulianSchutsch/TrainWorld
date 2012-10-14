@@ -6,12 +6,16 @@ package Allocators.Test is
    procedure TestFirstFitLinearValidSizeRequest;
    procedure TestFirstFitLinearMonteCarloAndTaggedMemory;
 
+   StrFFLInvalidSizeRequest : aliased constant String:="FirstFitLinear.InvalidSizeRequest";
+   StrFFLValidSizeRequest   : aliased constant String:="FirstFitLinear.ValidSizeRequest";
+   StrFFLMonteCarloAndTaggedMemory : aliased constant String:="FirstFitLinear.MonteCarloAndTaggedMemory";
+
    Tests : Test_Array:=
-     ((Name => U("FirstFitLinear.InvalidSizeRequest"),
+     ((Name => RefConstStr(StrFFLInvalidSizeRequest'Access),
        Test => TestFirstFitLinearInvalidSizeRequest'Access),
-      (Name => U("FirstFitLinear.ValidSizeRequest"),
+      (Name => RefConstStr(StrFFLValidSizeRequest'Access),
        Test => TestFirstFitLinearValidSizeRequest'Access),
-      (Name => U("FirstFitLinear.MonteCarloAndTaggedMemory"),
+      (Name => RefConstStr(StrFFLMonteCarloAndTaggedMemory'Access),
        Test => TestFirstFitLinearMonteCarloAndTaggedMemory'Access));
 
 end Allocators.Test;

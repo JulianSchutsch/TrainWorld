@@ -1,11 +1,10 @@
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body Implementations is
 
    type List_Entry is
       record
-         Name           : Unbounded_String;
+         Name           : String_Ref;
          Compatible     : Implementation_Compatible;
          Constructor    : Implementation_Constructor;
       end record;
@@ -24,7 +23,7 @@ package body Implementations is
       use type List_Pack.Cursor;
 
       Cursor         : List_Pack.Cursor;
-      Implementation : constant Unbounded_String:=ConfigNode.GetImplementation;
+      Implementation : constant String_Ref:=ConfigNode.GetImplementation;
 
    begin
 
@@ -39,7 +38,6 @@ package body Implementations is
             declare
                Element : constant List_Entry:=List_Pack.Element(Cursor);
             begin
-               Put_Line("Test");
                if Element.Compatible
                  (ConfigNode.GetConfig,
                   ConfigNode.GetImplConfig(Element.Name),
@@ -79,7 +77,7 @@ package body Implementations is
    ---------------------------------------------------------------------------
 
    function Has
-     (Name : Unbounded_String)
+     (Name : String_Ref)
       return Boolean is
 
       use type List_Pack.Cursor;
@@ -101,7 +99,7 @@ package body Implementations is
    ---------------------------------------------------------------------------
 
    procedure Register
-     (Name        : Unbounded_String;
+     (Name        : String_Ref;
       Compatible  : Implementation_Compatible;
       Constructor : Implementation_Constructor) is
    begin

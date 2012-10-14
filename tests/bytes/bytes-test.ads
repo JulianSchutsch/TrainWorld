@@ -29,10 +29,13 @@ package Bytes.Test is
    procedure AccessTest;
    procedure AccessArithmeticTest;
 
+   StrCoreBytesAccess           : aliased constant String:="Core.Bytes.Access";
+   StrCoreBytesAccessArithmetic : aliased constant String:="Core.Bytes.AccessArithmetic";
+
    Tests : constant Test_Array:=
-     ((Name => U("Core.Bytes.Access"),
+     ((Name => RefConstStr(StrCoreBytesAccess'Access),
        Test => AccessTest'Access),
-      (Name => U("Core.Bytes.AccessArithmetic"),
+      (Name => RefConstStr(StrCoreBytesAccessArithmetic'Access),
        Test=> AccessArithmeticTest'Access));
 
 end Bytes.Test;

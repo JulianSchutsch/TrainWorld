@@ -6,6 +6,7 @@ with Basics; use Basics;
 with Ada.Text_IO; use Ada.Text_IO;
 with GUIImplInterface_Window;
 with OpenGL3ObjectImplementation.Window;
+with OpenGL; use OpenGL;
 
 package body OpenGL3ObjectImplementation is
 
@@ -24,6 +25,30 @@ package body OpenGL3ObjectImplementation is
    procedure DestroyWindowImpl
      (ObjectImplementation : in out OpenGL3OI_Type;
       WindowImpl           : in out GUIImplInterface_Window.WindowImpl_ClassAccess);
+
+   overriding
+   procedure StartPainting
+     (ObjectImplementation : in out OpenGL3OI_Type);
+
+   overriding
+   procedure StopPainting
+     (ObjectImplementation : in out OpenGL3OI_Type);
+   ---------------------------------------------------------------------------
+
+   procedure StartPainting
+     (ObjectImplementation : in out OpenGL3OI_Type) is
+      pragma Unreferenced(ObjectImplementation);
+   begin
+      glClearColor(0.0,1.0,0.0,1.0);
+      glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+   end StartPainting;
+   ---------------------------------------------------------------------------
+
+   procedure StopPainting
+     (ObjectImplementation : in out OpenGL3OI_Type) is
+   begin
+      null;
+   end StopPainting;
    ---------------------------------------------------------------------------
 
    function CreateWindowImpl
@@ -56,9 +81,15 @@ package body OpenGL3ObjectImplementation is
       Config       : aliased OGL3ImplConfig_Type;
 
    begin
+      Put_Line("Constructor called");
       if ImplConfig/=null then
          Config:=OGL3ImplConfig_Type(ImplConfig.all);
       end if;
+      -- TODO: use an amount validated by OGL itself
+      NewOpenGL3OI.Buffers.SetBufferBlockSize(1024*1024);
+      NewOpeNGL3OI.WindowData.Setup
+        (Impl          => NewOpeNGL3OI,
+         Configuration => Config);
       return GUI.GUIObjectImplementationRef.MakeInitialRef(GUI.GUIObjectImplementation_ClassAccess(NewOpenGL3OI));
    end Constructor;
    ---------------------------------------------------------------------------
@@ -82,7 +113,7 @@ package body OpenGL3ObjectImplementation is
    procedure Register is
    begin
       Put_Line("Register");
-      GUI.ObjectImplementations.Register(U("OpenGL3 Object Implementation"),Compatible'Access,Constructor'access);
+      GUI.ObjectImplementations.Register(RefStr("OpenGL3 Object Implementation"),Compatible'Access,Constructor'access);
    end Register;
    ---------------------------------------------------------------------------
 

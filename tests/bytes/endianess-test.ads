@@ -29,8 +29,13 @@ package Endianess.Test is
    procedure LittleEndian32Test;
    procedure BigEndian32Test;
 
+   StrCoreLittleEndian32 : aliased constant String:="Core.LittleEndian.32";
+   StrCoreBigEndian32    : aliased constant String:="Core.BigEndian.32";
+
    Tests : constant Test_Array:=
-     ((Name => U("Core.LittleEndian.32"),Test => LittleEndian32Test'Access),
-      (Name => U("Core.BigEndian.32"),Test    => BigEndian32Test'Access));
+     ((Name => RefConstStr(StrCoreLittleEndian32'Access),
+       Test => LittleEndian32Test'Access),
+      (Name => RefConstStr(StrCoreBigEndian32'Access),
+       Test => BigEndian32Test'Access));
 
 end Endianess.Test;

@@ -117,16 +117,16 @@ package body OpenGL.LinearBuffer is
    ---------------------------------------------------------------------------
 
    procedure Allocate
-     (Buffers : in out LinearBuffers_Type;
-      Size           : PtrInt_Type;
-      BufferRange    : in out LinearRange_Ref) is
+     (Buffers     : in out LinearBuffers_Type;
+      Amount      : PtrInt_Type;
+      BufferRange : in out LinearRange_Ref) is
 
       use type Allocators.Block_ClassAccess;
 
    begin
 
-      pragma Assert(Size/=0,"Buffer range size too small");
-      pragma Assert(Size<=Buffers.BufferSize,"Buffer range size too large");
+      pragma Assert(Amount/=0,"Buffer range size too small");
+      pragma Assert(Amount<=Buffers.BufferSize,"Buffer range size too large");
 
       declare
          Buffer      : LinearBuffer_Access:=Buffers.FirstBuffer;
@@ -134,7 +134,7 @@ package body OpenGL.LinearBuffer is
       begin
 
          while Buffer/=null loop
-            BufferBlock:=Buffer.Allocator.Allocate(Size);
+            BufferBlock:=Buffer.Allocator.Allocate(Amount);
             if BufferBlock/=null then
                exit;
             end if;
@@ -165,7 +165,7 @@ package body OpenGL.LinearBuffer is
             BindTextureBuffer(Buffer.BufferID);
             glBufferData
               (target => GL_TEXTURE_BUFFER,
-               size   => GLsizeiptr_Type(size),
+               size   => GLsizeiptr_Type(Amount),
                data   => System.Null_Address,
                usage  => GL_DYNAMIC_DRAW);
             -- TODO: Check if OpenGL could allocate enough memory for this at all
@@ -194,7 +194,7 @@ package body OpenGL.LinearBuffer is
             AssertError("Initialize TexBuffer Object");
 
             Buffer.Allocator.Init(Buffers.BufferSize);
-            BufferBlock:=Buffer.Allocator.Allocate(Size);
+            BufferBlock:=Buffer.Allocator.Allocate(Amount);
             pragma Assert(BufferBlock/=null);
          end if;
 
@@ -219,6 +219,20 @@ package body OpenGL.LinearBuffer is
       end;
 
    end Allocate;
+   ---------------------------------------------------------------------------
+
+   procedure AllocateConst
+     (Buffers     : in out LinearBuffers_Type;
+      Amount      : PtrInt_Type;
+      BufferRange : access LinearRange_Type'Class) is
+
+      BufferRef : LinearRange_Ref:=LinearRangeRef.MakeAdditionalRef(BufferRange);
+
+   begin
+      Buffers.Allocate
+        (Amount      => Amount,
+         BufferRange => BufferRef);
+   end AllocateConst;
    ---------------------------------------------------------------------------
 
    procedure Finalize

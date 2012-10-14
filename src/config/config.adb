@@ -47,7 +47,7 @@ package body Config is
          next : ConfigNode_Access:=Node.ChildNodes;
 
       begin
-         Put_Line(Prefix&To_String(Node.Name));
+         Put_Line(Prefix&Node.Name.Get);
          while p/=null loop
             next := p.Next;
             if next/=null then
@@ -66,7 +66,7 @@ package body Config is
 
    procedure SetImplementation
      (ConfigNode     : in out ConfigNode_Type;
-      Implementation : Unbounded_String) is
+      Implementation : String_Ref) is
    begin
       ConfigNode.Implementation:=Implementation;
    end SetImplementation;
@@ -82,7 +82,7 @@ package body Config is
 
    function GetImplementation
      (ConfigNode : ConfigNode_Type)
-      return Unbounded_String is
+      return String_Ref is
    begin
       return ConfigNode.Implementation;
    end GetImplementation;
@@ -90,7 +90,7 @@ package body Config is
 
    function GetImplConfig
      (ConfigNode     : ConfigNode_Type;
-      Implementation : Unbounded_String)
+      Implementation : String_Ref)
       return Config_ClassAccess is
 
       p : ImplConfig_Access:=ConfigNode.ImplConfig;
@@ -114,7 +114,7 @@ package body Config is
 
    function GetName
      (ConfigNode : ConfigNode_Type)
-      return Unbounded_String is
+      return String_Ref is
    begin
       return ConfigNode.Name;
    end GetName;
@@ -207,9 +207,11 @@ package body Config is
          p:=ConfigNode.ChildNodes;
          while p/=null loop
             next:=p.Next;
-            p.Count:=p.Count-1;
-            if p.Count=0 then
+            if p.Count<=1 then
                Free(p);
+            else
+               -- TODO: Remove this dirty hack, create proper separation !!!
+               p.Count:=p.Count-1;
             end if;
             p:=next;
          end loop;
@@ -224,6 +226,7 @@ package body Config is
    procedure Adjust
      (ConfigNode : in out ConfigNode_Type) is
    begin
+
       if ConfigNode.Config/=null then
          ConfigNode.Config.Count:=ConfigNode.Config.Count+1;
       end if;
@@ -254,6 +257,7 @@ package body Config is
          end loop;
       end;
 
+      -- TODO: Total separation!?
       declare
          p : ConfigNode_Access;
       begin
@@ -285,9 +289,12 @@ package body Config is
 
    procedure SetImplConfig
      (ConfigNode     : in out ConfigNode_Type;
-      Implementation : Unbounded_String;
+      Implementation : String_Ref;
       Config         : Config_ClassAccess) is
    begin
+
+      pragma Assert(ConfigNode.Count>=1);
+
       -- Check if there is allready an entry for this implementation
       -- If so, replace the entry.
       declare
@@ -321,6 +328,7 @@ package body Config is
          n.Implementation      := Implementation;
          n.Config              := Config;
          ConfigNode.ImplConfig := n;
+         pragma Assert(n.Config.Count=1);
       end;
 
    end SetImplConfig;
@@ -334,6 +342,8 @@ package body Config is
       p : ConfigNode_Access;
 
    begin
+
+      pragma Assert(ConfigNode.Count>=1);
 
       if Path'Length=0 then
          return ConfigNode'Unrestricted_Access;
@@ -364,6 +374,8 @@ package body Config is
 
    begin
 
+      pragma Assert(ConfigNode.Count>=1);
+
       if Path'Length=0 then
          return ConfigNode'Unrestricted_Access;
       end if;
@@ -374,6 +386,7 @@ package body Config is
          First.Name := Path(Path'First);
          First.Next := ConfigNode.ChildNodes;
          ConfigNode.ChildNodes:=First;
+         pragma Assert(ConfigNode.ChildNodes.Count=1);
       end if;
 
       return First.CreatePath(Path(Path'First+1..Path'Last));

@@ -19,6 +19,16 @@ package body ClientServerStream.Test is
    subtype Server_Range is Integer range 0..4;
    subtype Client_Range is Integer range 0..15;
 
+   AddressImage : array(0..15) of String_Ref;
+
+   procedure InitAddressImage is
+   begin
+      for i in AddressImage'Range loop
+         AddressImage(i):=RefStr(Integer'Image(i));
+      end loop;
+   end InitAddressImage;
+   ---------------------------------------------------------------------------
+
    type Connected_Array is array(Client_Range) of Boolean;
 
    type ServerControl_Type;
@@ -83,7 +93,7 @@ package body ClientServerStream.Test is
    overriding
    function NetworkAccept
      (ServerControl : in out ServerControl_Type;
-      ClientAddress : Unbounded_String)
+      ClientAddress : String_Ref)
       return ConnectionCallBack_ClassAccess;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -182,10 +192,10 @@ package body ClientServerStream.Test is
 
    function NetworkAccept
      (ServerControl : in out ServerControl_Type;
-      ClientAddress : Unbounded_String)
+      ClientAddress : String_Ref)
       return ConnectionCallBack_ClassAccess is
 
-      ClientInt  : constant Integer:=Integer'Value(To_String(ClientAddress));
+      ClientInt  : constant Integer:=Integer'Value(ClientAddress.Get);
       Connection : constant Connection_Access:=new Connection_Type;
    begin
 
@@ -211,7 +221,7 @@ package body ClientServerStream.Test is
       return Config.ConfigNode_Type is
    begin
       return C:Config.ConfigNode_Type do
-         ClientServerStream.SMPipe.CreateServerConfig(C,U(Integer'Image(Address)));
+         ClientServerStream.SMPipe.CreateServerConfig(C,AddressImage(Address));
       end return;
    end CreateServerConfigSMPipe;
    ---------------------------------------------------------------------------
@@ -224,8 +234,8 @@ package body ClientServerStream.Test is
       return C:Config.ConfigNode_Type do
          ClientServerStream.SMPipe.CreateClientConfig
            (Configuration => C,
-            ClientAddress => U(Integer'Image(ClientAddress)),
-            ServerAddress => U(Integer'Image(ServerAddress)));
+            ClientAddress => AddressImage(ClientAddress),
+            ServerAddress => AddressImage(ServerAddress));
       end return;
    end CreateClientConfigSMPipe;
    ---------------------------------------------------------------------------
@@ -598,6 +608,7 @@ package body ClientServerStream.Test is
 
    procedure ConnectionMonteCarloSMPipe is
    begin
+      InitAddressImage;
       ConnectionMonteCarlo
         (CreateClientConfig => CreateClientConfigSMPipe'Access,
          CreateServerConfig => CreateServerConfigSMPipe'Access);
@@ -606,6 +617,7 @@ package body ClientServerStream.Test is
 
    procedure TransferMonteCarloSMPipe is
    begin
+      InitAddressImage;
       TransferMonteCarlo
         (CreateClientConfig => CreateClientConfigSMPipe'Access,
          CreateServerConfig => CreateServerConfigSMpipe'Access);

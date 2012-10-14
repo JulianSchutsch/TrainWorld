@@ -21,14 +21,25 @@ package GUI is
    procedure DestroyWindowImpl
      (ObjectImplementation : in out GUIObjectImplementation_Interface;
       WindowImpl           : in out GUIImplInterface_Window.WindowImpl_ClassAccess) is abstract;
+
+   not overriding
+   procedure StartPainting
+     (ObjectImplementation : in out GUIObjectImplementation_Interface) is abstract;
+
+   not overriding
+   procedure StopPainting
+     (ObjectImplementation : in out GUIObjectImplementation_Interface) is abstract;
    ---------------------------------------------------------------------------
 
    package GUIObjectImplementationRef is new RefCount.Ref(GUIObjectImplementation_Interface,GUIObjectImplementation_ClassAccess);
 
    subtype GUIObjectImplementation_Ref is GUIObjectImplementationRef.Ref_Type;
 
-   type GUICallBack_Interface is interface;
+   type GUICallBack_Interface is limited interface;
    type GUICallBack_ClassAccess is access all GUICallBack_Interface'Class;
+
+   procedure GUICreate
+     (T : in out GUICallBack_Interface) is null;
 
    procedure GUIClose
      (T : in out GUICallBack_Interface) is null;
@@ -56,11 +67,12 @@ package GUI is
    not overriding
    procedure SetObjectImplementation
      (Object               : in out GUIObject_Type;
-      ObjectImplementation : GUIObjectImplementation_Ref);
+      ObjectImplementation : GUIObjectImplementation_Ref) is null;
 
    not overriding
    procedure ResetObjectImplementation
-     (Object : in out GUIObject_Type);
+     (Object               : in out GUIObject_Type;
+      ObjectImplementation : GUIObjectImplementation_Ref) is null;
 
    ---------------------------------------------------------------------------
 
@@ -75,6 +87,11 @@ package GUI is
      (GUI     : in out GUI_Interface;
       Context : Graphics.Context_Ref;
       Theme   : Config.ConfigNode_Type) is abstract;
+
+   not overriding
+   function GetBaseLayer
+     (GUI : in out GUI_Interface)
+      return GUIObject_ClassAccess is abstract;
    ---------------------------------------------------------------------------
 
    package ObjectImplementations is new Implementations(GUIObjectImplementation_Ref,Graphics.Context_Info);
@@ -94,6 +111,11 @@ package GUI is
       Theme   : Config.ConfigNode_Type);
 
    overriding
+   function GetBaseLayer
+     (GUI : in out GUI_Type)
+      return GUIObject_ClassAccess;
+
+   overriding
    procedure Finalize
      (GUI : in out GUI_Type);
    ---------------------------------------------------------------------------
@@ -102,8 +124,9 @@ private
 
    type GUIObject_Type is new RefCount.Ref_Interface with
       record
-         Bounds : Bounds_Type;
+         Bounds     : Bounds_Type;
          Previous   : GUIObject_ClassAccess:=null;
+         GUI        : GUI_Ref;
          Next       : GUIObject_ClassAccess:=null;
          Parent     : GUIObject_ClassAccess:=null;
          FirstChild : GUIObject_ClassAccess:=null;
@@ -138,14 +161,15 @@ private
 
    type GUI_Type is new GUI_Interface with
       record
-         ContextLayer          : GUIObject_Type;
-         ModalLayer            : GUIObject_Type;
-         FrontLayer            : GUIObject_Type;
-         BaseLayer             : GUIObject_Type;
-         Context               : Graphics.Context_Ref;
+         ContextLayer          : aliased GUIObject_Type;
+         ModalLayer            : aliased GUIObject_Type;
+         FrontLayer            : aliased GUIObject_Type;
+         BaseLayer             : aliased GUIObject_Type;
+         Context               : aliased Graphics.Context_Ref;
          ObjectImplementations : GUIObjectImplementation_Ref;
          GraphicsCallBack      : aliased GUIGraphicsCallBack_Type;
          ThemeConfig           : Config.ConfigNode_Type;
+         CreatePending         : Boolean:=True;
       end record;
 
 end GUI;

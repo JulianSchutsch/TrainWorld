@@ -79,10 +79,13 @@ package OpenGL.Test is
 
    procedure TestTexture;
 
+   StrOpenGLBindTextureBuffer : aliased constant String:="OpenGL.BindTextureBuffer";
+   StrOpenGLTextures : aliased constant String:="OpenGL.Texture";
+
    Tests : Test_Array:=
-     ((Name => U("OpenGL.BindTextureBuffer"),
+     ((Name => RefConstStr(StrOpenGLBindTextureBuffer'Access),
        Test => TestTextureBuffer'Access),
-      (Name => U("OpenGL.Texture"),
+      (Name => RefConstStr(StrOpenGLTextures'Access),
        Test => TestTexture'Access));
 
 end OpenGL.Test;

@@ -20,7 +20,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Command_Line;
 with Ada.Containers.Vectors;
-with Basics; use Basics;
 
 package body TestFrameWork is
 
@@ -35,19 +34,19 @@ package body TestFrameWork is
 
    package TestVector is new Ada.Containers.Vectors
      (Index_Type   => Natural,
-      Element_Type => Unbounded_String);
+      Element_Type => String_Ref);
 
    ActiveTests : TestVector.Vector;
 
    procedure AddTest
-     (Test : Unbounded_String) is
+     (Test : String_Ref) is
    begin
       ActiveTests.Append(Test);
    end AddTest;
    ---------------------------------------------------------------------------
 
    function HasTest
-     (Test : Unbounded_String)
+     (Test : String_Ref)
       return Boolean is
       use type Ada.Containers.Count_Type;
    begin
@@ -65,12 +64,12 @@ package body TestFrameWork is
    begin
 
       for i in 1..Ada.Command_Line.Argument_Count loop
-         AddTest(U(Ada.Command_Line.Argument(i)));
+         AddTest(RefStr(Ada.Command_Line.Argument(i)));
       end loop;
 
       for i in Tests'Range loop
          if HasTest(Tests(i).Name) then
-            Put_Line(To_String(Tests(i).Name));
+            Put_Line("["&Tests(i).Name.Get&"]");
             Tests(i).Test.all;
          end if;
       end loop;

@@ -24,13 +24,13 @@
 pragma Ada_2012;
 
 with Ada.Finalization;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Basics; use Basics;
 
 package Config is
 
    MissingConfig : Exception;
 
-   type ConfigPath_Type is array (Integer range <>) of Unbounded_String;
+   type ConfigPath_Type is array (Integer range <>) of String_Ref;
 
    type Config_Type is tagged private;
    type Config_ClassAccess is access all Config_Type'Class;
@@ -41,12 +41,12 @@ package Config is
    not overriding
    function GetImplementation
      (ConfigNode : ConfigNode_Type)
-      return Unbounded_String;
+      return String_Ref;
 
    not overriding
    procedure SetImplementation
      (ConfigNode     : in out ConfigNode_Type;
-      Implementation : Unbounded_String);
+      Implementation : String_Ref);
 
    not overriding
    function GetConfig
@@ -56,13 +56,13 @@ package Config is
    not overriding
    function GetImplConfig
      (ConfigNode     : ConfigNode_Type;
-      Implementation : Unbounded_String)
+      Implementation : String_Ref)
       return Config_ClassAccess;
 
    not overriding
    function GetName
      (ConfigNode : ConfigNode_Type)
-      return Unbounded_String;
+      return String_Ref;
 
    not overriding
    function GetChildNodeCount
@@ -96,7 +96,7 @@ package Config is
    not overriding
    procedure SetImplConfig
      (ConfigNode     : in out ConfigNode_Type;
-      Implementation : Unbounded_String;
+      Implementation : String_Ref;
       Config         : Config_ClassAccess)
    with Post => ConfigNode.GetImplConfig(Implementation)=Config;
 
@@ -139,7 +139,7 @@ private
    type ImplConfig_Access is access all ImplConfig_Type;
    type ImplConfig_Type is
       record
-         Implementation : Unbounded_String;
+         Implementation : String_Ref;
          Config         : Config_ClassAccess:=null;
          Next           : ImplConfig_Access;
       end record;
@@ -147,8 +147,8 @@ private
    type ConfigNode_Type is new Ada.Finalization.Controlled with
       record
          Count          : Natural:=1;
-         Name           : Unbounded_String;
-         Implementation : Unbounded_String;
+         Name           : String_Ref;
+         Implementation : String_Ref;
          Config         : Config_ClassAccess:=null;
          ImplConfig     : ImplConfig_Access:=null;
          ChildNodes     : ConfigNode_Access:=null;

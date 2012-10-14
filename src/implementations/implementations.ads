@@ -1,5 +1,5 @@
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Config;
+with Basics; use Basics;
 
 generic
    type Implementation_Type is private;
@@ -24,7 +24,7 @@ package Implementations is
    ImplementationNotFound        : Exception;
 
    function Has
-     (Name : Unbounded_String)
+     (Name : String_Ref)
       return Boolean;
 
    function Utilize
@@ -33,7 +33,7 @@ package Implementations is
       return Implementation_Type;
 
    procedure Register
-     (Name           : Unbounded_String;
+     (Name           : String_Ref;
       Compatible     : Implementation_Compatible;
       Constructor    : Implementation_Constructor);
 

@@ -30,7 +30,10 @@ with Basics; use Basics;
 with GlobalLoop;
 with Interfaces.C;
 with GUI;
+with GUI.Window;
 with OpenGL3ObjectImplementation;
+with Ada.Text_IO; use Ada.Text_IO;
+pragma Warnings(Off,Ada.Text_IO);
 
 procedure GUITest is
 
@@ -39,11 +42,27 @@ procedure GUITest is
    Terminated    : Boolean:=False;
    pragma Warnings(Off,Terminated);
 
-   type GUICallBack_Type is new GUI.GUICallBack_Interface with null record;
+   type GUICallBack_Type is limited new GUI.GUICallBack_Interface with
+      record
+         TGUI   : GUI.GUI_Ref;
+         Window : GUI.Window.Window_Type;
+      end record;
 
    overriding
    procedure GUIClose
      (T : in out GUICallBack_Type);
+
+   overriding
+   procedure GUICreate
+     (T : in out GUICallBack_Type);
+   ---------------------------------------------------------------------------
+
+   procedure GUICreate
+     (T : in out GUICallBack_Type) is
+   begin
+      Put_Line("GUICreate");
+      T.Window.SetParent(T.TGUI.I.GetBaseLayer);
+   end GUICreate;
    ---------------------------------------------------------------------------
 
    procedure GUIClose
@@ -59,7 +78,7 @@ begin
    Graphics.Impl.Register;
    OpenGL3ObjectImplementation.Register;
 
-   Configuration.SetImplementation( U("OpenGL"));
+   Configuration.SetImplementation(RefStr("OpenGL"));
    Graphics.CreateConfig
      (Configuration => Configuration,
       WindowType    => Graphics.WindowTypeWindow,
@@ -67,7 +86,7 @@ begin
 
    declare
       Context     : constant Graphics.Context_Ref:=Graphics.Implementations.Utilize(Configuration,(others => <>));
-      TGUI        : GUI.GUI_Type;
+      TGUI        : aliased GUI.GUI_Type;
       ThemeConfig : Config.ConfigNode_Type;
       GUICB       : GUICallBack_Type;
    begin
@@ -75,6 +94,7 @@ begin
       TGUI.Setup
         (Context => Context,
          Theme   => ThemeConfig);
+      GUICB.TGUI:=GUI.GUIRef.MakeAdditionalRef(TGUI'Unrestricted_Access);
       TGUI.CallBack := GUICB'Unrestricted_Access;
 
       while not Terminated loop

@@ -735,7 +735,7 @@ null;
    procedure Register is
    begin
       Graphics.Implementations.Register
-        (Name        => U("OpenGL"),
+        (Name        => RefStr("OpenGL"),
          Compatible  => ContextCompatible'Access,
          Constructor => ContextConstructor'Access);
    end Register;
