@@ -160,7 +160,7 @@ package body OpenGL3ObjectImplementation is
       Impl.RectPos.Height     := Types.Cardinal32(BufferRange.AssocHeight);
       Impl.RectPos.Width      := Types.Cardinal32(BufferRange.AssocWidth);
       Impl.RectPos.Vertx      := Types.Cardinal32(Vertx);
-      Impl.RectPos.Vertx      := Types.Cardinal32(Verty);
+      Impl.RectPos.Verty      := Types.Cardinal32(Verty);
       Impl.RectPos.VertHeight := Types.Cardinal32(VertHeight);
       Impl.RectPos.VertWidth  := Types.Cardinal32(VertWidth);
       Impl.RectPos.Texx       := Types.Cardinal32(Texx);

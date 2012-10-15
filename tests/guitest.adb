@@ -64,8 +64,8 @@ procedure GUITest is
       T.Window.SetParent(T.TGUI.I.GetBaseLayer);
       T.TGUI.I.PrintTree;
       T.Window.SetBounds
-        ((Top     => 0,
-          Left    => 0,
+        ((Top     => 10,
+          Left    => 10,
           Height  => 100,
           Width   => 100,
           Visible => True));
