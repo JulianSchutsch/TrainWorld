@@ -238,7 +238,7 @@ package body OpenGL.LinearBuffer is
       Amount      : PtrInt_Type;
       BufferRange : access LinearRange_Type'Class) is
 
-      BufferRef : LinearRange_Ref:=LinearRangeRef.MakeAdditionalRef(BufferRange);
+      BufferRef : LinearRange_Ref:=LinearRangeRef.MakeAdditionalRef(LinearRange_ClassAccess(BufferRange));
 
    begin
       Buffers.Allocate
