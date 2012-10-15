@@ -62,6 +62,13 @@ procedure GUITest is
    begin
       Put_Line("GUICreate");
       T.Window.SetParent(T.TGUI.I.GetBaseLayer);
+      T.TGUI.I.PrintTree;
+      T.Window.SetBounds
+        ((Top     => 0,
+          Left    => 0,
+          Height  => 100,
+          Width   => 100,
+          Visible => True));
    end GUICreate;
    ---------------------------------------------------------------------------
 
@@ -69,6 +76,7 @@ procedure GUITest is
      (T : in out GUICallBack_Type) is
       pragma Unreferenced(T);
    begin
+      Put_Line("GUIClose");
       Terminated:=True;
    end GUIClose;
    ---------------------------------------------------------------------------
@@ -91,15 +99,20 @@ begin
       GUICB       : GUICallBack_Type;
    begin
 
+      GUICB.TGUI    := GUI.GUIRef.MakeAdditionalRef(TGUI'Unrestricted_Access);
+      Put_Line("Setup");
       TGUI.Setup
         (Context => Context,
          Theme   => ThemeConfig);
-      GUICB.TGUI:=GUI.GUIRef.MakeAdditionalRef(TGUI'Unrestricted_Access);
+      Put_Line("Post Setup");
       TGUI.CallBack := GUICB'Unrestricted_Access;
+      Put_Line("CallBack Set//");
 
       while not Terminated loop
          GlobalLoop.Process;
       end loop;
+
+      Put_Line("end of loop");
 
    end;
 

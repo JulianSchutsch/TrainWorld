@@ -51,6 +51,14 @@ package Basics is
       Right : String)
       return Boolean;
 
+   generic
+      type Data_Type is private;
+      type Data_Access is access all Data_Type;
+   function Add
+     (Left  : Data_Access;
+      Right : PtrInt_Type)
+      return Data_Access;
+
 private
 
    type String_Cont(Len : Natural) is

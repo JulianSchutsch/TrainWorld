@@ -4,6 +4,65 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body GUI is
 
+   procedure TreePrint
+     (Object : in GUIObject_Type'Class;
+      Left   : String) is
+
+      p : GUIObject_ClassAccess:=Object.FirstChild;
+
+   begin
+
+      while p/=null loop
+
+         Put_Line(Left&"Object");
+         if p.Next/=null then
+            TreePrint(p.all,Left&" | ");
+         else
+            TreePrint(p.all,Left&"   ");
+         end if;
+         p:=p.Next;
+
+      end loop;
+
+   end TreePrint;
+   ---------------------------------------------------------------------------
+
+   procedure PrintTree
+     (GUI : GUI_Type) is
+   begin
+      Put_Line("GUI Tree:");
+      TreePrint(GUI.BaseLayer,"");
+      TreePrint(GUI.FrontLayer,"");
+      TreePrint(GUI.ModalLayer,"");
+      TreePrint(GUI.ContextLayer,"");
+   end PrintTree;
+   ---------------------------------------------------------------------------
+
+   procedure TreePaint
+     (Object : in out GUIObject_Type) is
+      p : GUIObject_ClassAccess:=Object'Unrestricted_Access;
+
+   begin
+
+      while p/=null loop
+
+         p.Paint;
+         if p.FirstChild/=null then
+            p:=p.FirstChild;
+         else
+            while (p/=null) and then (p.Next=null) loop
+               p:=p.Parent;
+            end loop;
+            if p/=null then
+               p:=p.Next;
+            end if;
+         end if;
+
+      end loop;
+
+   end TreePaint;
+   ---------------------------------------------------------------------------
+
    procedure TreeSetObjectImplementation
      (Object               : in out GUIObject_Type;
       ObjectImplementation : GUIObjectImplementation_Ref) is
@@ -130,6 +189,7 @@ package body GUI is
          else
             Parent.LastChild:=Object'Unrestricted_Access;
          end if;
+         Parent.FirstChild:=Object'Unrestricted_Access;
       else
          Object.Next     := null;
          Object.Previous := null;
@@ -137,12 +197,45 @@ package body GUI is
 
       if OldGUI.I/=NewGUI.I then
          -- The ObjectImplementations stay valid as long as OldGUI and NewGUI are in scope
+         -- Cast is always correct since there is no other GUI type
          TreeResetObjectImplementation(Object,GUI_Access(OldGUI.I).ObjectImplementations);
          TreeSetGUI(Object,NewGUI);
          TreeSetObjectImplementation(Object,GUI_Access(NewGUI.I).ObjectImplementations);
       end if;
 
    end SetParent;
+   ---------------------------------------------------------------------------
+
+   -- This method is used to reset the current ObjectImplementations
+   procedure ResetObjectImplementations
+     (GUI : in out GUI_Type) is
+   begin
+
+      if GUI.ObjectImplementations.I/=null then
+         TreeResetObjectImplementation(GUI.BaseLayer,GUI.ObjectImplementations);
+         TreeResetObjectImplementation(GUI.FrontLayer,GUI.ObjectImplementations);
+         TreeResetObjectImplementation(GUI.ModalLayer,GUI.ObjectImplementations);
+         TreeResetObjectImplementation(GUI.ContextLayer,GUI.ObjectImplementations);
+         Put_Line("Set Null ObjectImplementations");
+         GUI.ObjectImplementations.SetNull;
+         Put_Line("///////");
+      end if;
+
+   end ResetObjectImplementations;
+   ---------------------------------------------------------------------------
+
+   -- This method is used to apply the current (new) ObjectImplementation to
+   -- all objects associated with this GUI.
+   procedure SetObjectImplementations
+     (GUI : in out GUI_Type) is
+   begin
+
+      TreeSetObjectImplementation(GUI.BaseLayer,GUI.ObjectImplementations);
+      TreeSetObjectImplementation(GUI.FrontLayer,GUI.ObjectImplementations);
+      TreeSetObjectImplementation(GUI.ModalLayer,GUI.ObjectImplementations);
+      TreeSetObjectImplementation(GUI.ContextLayer,GUI.ObjectImplementations);
+
+   end SetObjectImplementations;
    ---------------------------------------------------------------------------
 
    function GetBounds
@@ -178,10 +271,13 @@ package body GUI is
       GUI : GUI_Type renames T.GUI.all;
 
    begin
+      Put_Line("ContextCreate");
       CheckCreatePending(GUI);
       GUI.ObjectImplementations := ObjectImplementations.Utilize(GUI.ThemeConfig,GUI.Context.I.GetInfo);
       -- TODO: Catch exception and report the failure to bind a theme to the callback
-      -- TODO: Run ObjectsImpl initialize
+      Put_Line("ContextCreate.2");
+      SetObjectImplementations(GUI);
+      -- TODO: Call resize
    end ContextCreate;
    ---------------------------------------------------------------------------
 
@@ -191,8 +287,10 @@ package body GUI is
       GUI : GUI_Type renames T.GUI.all;
 
    begin
+      Put_Line("ContextClose.1");
       CheckCreatePending(GUI);
       Put_Line("ContextClose");
+      ResetObjectImplementations(GUI);
       -- TODO: Cleanup current Objects Implementation
       if GUI.CallBack/=null then
          GUI.CallBack.GUIClose;
@@ -206,8 +304,16 @@ package body GUI is
       GUI : GUI_Type renames T.GUI.all;
 
    begin
-      GUI.ObjectImplementations.I.StartPainting;
-      GUI.ObjectImplementations.I.StopPainting;
+
+      if GUI.ObjectImplementations.I/=null then
+         GUI.ObjectImplementations.I.StartPainting;
+         TreePaint(GUI.BaseLayer);
+         TreePaint(GUI.FrontLayer);
+         TreePaint(GUI.ModalLayer);
+         TreePaint(GUI.ContextLayer);
+         GUI.ObjectImplementations.I.StopPainting;
+      end if;
+
    end ContextPaint;
    ---------------------------------------------------------------------------
 
@@ -216,10 +322,14 @@ package body GUI is
       Height : Natural;
       Width  : Natural) is
 
-      pragma Unreferenced(Height,Width);
-
       GUI : GUI_Type renames T.GUI.all;
+
    begin
+      if GUI.ObjectImplementations.I/=null then
+         GUI.ObjectImplementations.I.Resize
+           (Height => Height,
+            Width  => Width);
+      end if;
       CheckCreatePending(GUI);
    end ContextResize;
    ---------------------------------------------------------------------------
@@ -237,19 +347,25 @@ package body GUI is
       Context : Graphics.Context_Ref;
       Theme   : Config.ConfigNode_Type) is
    begin
-      -- TODO:Cleanup current Objects Implementation
-      GUI.ObjectImplementations.SetNull;
+
+      Put_Line("Setup.1");
+      ResetObjectImplementations(GUI);
       -- Set new context
-      GUI.ObjectImplementations.SetNull;
+      Put_Line("Setup.2");
       GUI.Context:=Context;
+      Put_Line("Setup.3");
+      Context.I.CallBack:=GUI.GraphicsCallBack'Unrestricted_Access;
+      Put_Line("Setup.4");
       GUI.GraphicsCallBack.GUI:=GUI'Unrestricted_Access;
       -- TODO:Reinitialize current Objects Implementation
       GUI.ThemeConfig:=Theme;
       if Context.I.IsInitialized then
+         -- TODO:Cleanup current Objects Implementation
+         Put_Line("::::");
          GUI.GraphicsCallBack.ContextCreate;
+         Put_Line("....//");
       end if;
-
-      Context.I.CallBack:=GUI.GraphicsCallBack'Unrestricted_Access;
+      Put_Line("//Setup");
 
    end Setup;
    ---------------------------------------------------------------------------
@@ -257,8 +373,10 @@ package body GUI is
    procedure Finalize
      (GUI : in out GUI_Type) is
    begin
+      Put_Line("Finalize GUI");
       -- Ensure correct order of finalization
-      GUI.ObjectImplementations.SetNull;
+      ResetObjectImplementations(GUI);
+      Put_Line("Set Null Context");
       GUI.Context.SetNull;
    end Finalize;
    ---------------------------------------------------------------------------

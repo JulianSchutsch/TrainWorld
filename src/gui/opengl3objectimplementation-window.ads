@@ -21,9 +21,10 @@ private package OpenGL3ObjectImplementation.Window is
    ---------------------------------------------------------------------------
 
    type WindowImpl_Type is new GUIImplInterface_Window.WindowImpl_Interface with private;
+   type WindowImpl_DataAccess is access all WindowImpl_Data;
 
    overriding
-   procedure Draw
+   procedure Paint
      (Window : in out WindowImpl_Type);
 
    overriding
@@ -53,8 +54,12 @@ private package OpenGL3ObjectImplementation.Window is
    ---------------------------------------------------------------------------
 
    function Create
-     (Data : WindowImpl_Data)
+     (Impl : OGL3Impl_ClassAccess;
+      Data : WindowImpl_DataAccess)
       return GUIImplInterface_Window.WindowImpl_ClassAccess;
+
+   procedure Destroy
+     (Impl : WindowImpl_ClassAccess);
 
 private
 
@@ -65,7 +70,9 @@ private
 
    type WindowImpl_Type is new GUIImplInterface_Window.WindowImpl_Interface with
       record
-         null;
+         Impl   : OGL3Impl_ClassAccess  := null;
+         Data   : WindowImpl_DataAccess := null;
+         Bounds : Bounds_Type;
       end record;
 
 end OpenGL3ObjectImplementation.Window;

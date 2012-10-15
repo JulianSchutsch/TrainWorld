@@ -43,6 +43,7 @@ package body OpenGL is
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexImage2D_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glTexSubImage2D_Access);
    function Conv is new Ada.Unchecked_Conversion(System.Address,glActiveTexture_Access);
+   function Conv is new Ada.Unchecked_Conversion(System.Address,glDrawArraysInstanced_Access);
 
    -- Buffer Objects
    function Conv is new Ada.Unchecked_Conversion(System.Address,glGenBuffers_Access);
@@ -474,6 +475,11 @@ package body OpenGL is
          glUniform1i          := Conv(GetProc("glUniform1i"));
          glUniformMatrix4fv   := Conv(GetProc("glUniformMatrix4fv"));
       end if;
+
+      if (Version.Major>=4) or ((Version.Major=3) and (Version.Minor>=1)) then
+         glDrawArraysInstanced:=Conv(GetProc("glDrawArraysInstanced"));
+      end if;
+
       AssertError("Load Program");
 
    end LoadFunctions;

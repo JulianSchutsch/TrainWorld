@@ -140,9 +140,10 @@ package OpenGL is
    GL_MAX_TEXTURE_BUFFER_SIZE : constant GLenum_Type := 16#8C2B#;
 
 
-   GL_RGBA8   : constant GLenum_Type:=16#8058#;
-   GL_RGBA8I  : constant GLenum_Type:=16#8D8E#;
-   GL_RGBA32F : constant GLenum_Type:=16#8814#;
+   GL_RGBA8    : constant GLenum_Type:=16#8058#;
+   GL_RGBA8I   : constant GLenum_Type:=16#8D8E#;
+   GL_RGBA32F  : constant GLenum_Type:=16#8814#;
+   GL_RGBA32UI : constant GLenum_Type:=16#8D70#;
 
    GL_DYNAMIC_DRAW : constant GLenum_Type:=16#88E8#;
 
@@ -216,6 +217,14 @@ package OpenGL is
         count : GLsizei_Type);
    pragma Convention(StdCall,glDrawArrays_Access);
 
+   type glDrawArraysInstanced_Access is
+     access procedure
+       (mode      : GLenum_Type;
+        first     : GLint_Type;
+        count     : GLint_Type;
+        primcount : GLint_Type);
+   pragma Convention(StdCall,glDrawArraysInstanced_Access);
+
    type glFinish_Access is
      access procedure;
    pragma Convention(StdCall,glFinish_Access);
@@ -280,20 +289,21 @@ package OpenGL is
      access procedure
        (texture : GLenum_Type);
 
-   glClearColor     : glClearColor_Access:=null;
-   glClear          : glClear_Access:=null;
-   glViewport       : glViewport_Access:=null;
-   glDrawArrays     : glDrawArrays_Access:=null;
-   glFinish         : glFinish_Access:=null;
-   glGetIntegerv    : glGetIntegerv_Access:=null;
-   glGetError       : glGetError_Access:=null;
-   glGenTextures    : glGenTextures_Access:=null;
-   glBindTexture    : glBindTexture_Access:=null;
-   glTexParameteri  : glTexParameteri_Access:=null;
-   glDeleteTextures : glDeleteTextures_Access:=null;
-   glTexImage2D     : glTexImage2D_Access:=null;
-   glTexSubImage2D  : glTexSubImage2D_Access:=null;
-   glActiveTexture  : glActiveTexture_Access:=null;
+   glClearColor          : glClearColor_Access:=null;
+   glClear               : glClear_Access:=null;
+   glViewport            : glViewport_Access:=null;
+   glDrawArrays          : glDrawArrays_Access:=null;
+   glFinish              : glFinish_Access:=null;
+   glGetIntegerv         : glGetIntegerv_Access:=null;
+   glGetError            : glGetError_Access:=null;
+   glGenTextures         : glGenTextures_Access:=null;
+   glBindTexture         : glBindTexture_Access:=null;
+   glTexParameteri       : glTexParameteri_Access:=null;
+   glDeleteTextures      : glDeleteTextures_Access:=null;
+   glTexImage2D          : glTexImage2D_Access:=null;
+   glTexSubImage2D       : glTexSubImage2D_Access:=null;
+   glActiveTexture       : glActiveTexture_Access:=null;
+   glDrawArraysInstanced : glDrawArraysInstanced_Access:=null;
    ---------------------------------------------------------------------------
 
    -- Buffer Objects

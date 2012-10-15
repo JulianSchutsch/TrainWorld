@@ -1,8 +1,28 @@
 with System.Address_Image;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
 
 package body Basics is
+
+   function Add
+     (Left  : Data_Access;
+      Right : PtrInt_Type)
+      return Data_Access is
+
+      function AccessToPtrInt is new Ada.Unchecked_Conversion
+        (Source => Data_Access,
+         Target => PtrInt_Type);
+
+      function PtrIntToAccess is new Ada.Unchecked_Conversion
+        (Source => PtrInt_Type,
+         Target => Data_Access);
+
+   begin
+      -- TODO: Replace 8 by element size
+      return PtrIntToAccess(AccessToPtrInt(Left)+Right*Data_Type'Size/8);
+   end Add;
+   ---------------------------------------------------------------------------
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Object => String_Cont,

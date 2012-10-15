@@ -20,12 +20,23 @@ package body OpenGL.LinearBuffer is
    end Finalize;
    ---------------------------------------------------------------------------
 
+   function BindCompatible
+     (BufferRange1 : in out LinearRange_Type;
+      BufferRange2 : in out LinearRange_Interface'Class)
+      return Boolean is
+   begin
+      return BufferRange2'Tag=LinearRange_Type'Tag and then
+        BufferRange1.Buffer.TextureID=LinearRange_Type(BufferRange2).Buffer.TextureID;
+   end BindCompatible;
+   ---------------------------------------------------------------------------
+
    procedure Bind
-     (BufferRange : in out LinearRange_Type) is
+     (BufferRange : in out LinearRange_Type;
+      Unit        : Natural) is
    begin
       BindTexture
         (target  => GL_TEXTURE_BUFFER,
-         unit    => 0,
+         unit    => Unit,
          texture => BufferRange.Buffer.TextureID);
    end Bind;
    ---------------------------------------------------------------------------
@@ -210,9 +221,10 @@ package body OpenGL.LinearBuffer is
          begin
 
             Buffers.IncrementRefCount;
-            BufferRangeI.Buffer  := Buffer;
-            BufferRangeI.Buffers := Buffers'Unrestricted_Access;
-            BufferRangeI.Block   := Bufferblock;
+            BufferRangeI.Buffer      := Buffer;
+            BufferRangeI.Buffers     := Buffers'Unrestricted_Access;
+            BufferRangeI.Block       := Bufferblock;
+            BufferRangeI.AssocOffset := BufferBlock.Start;
 
          end;
 

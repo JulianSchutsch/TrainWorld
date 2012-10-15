@@ -9,9 +9,14 @@ package OpenGL.LinearBuffer is
 
    FailedMap           : Exception;
    FailedUnmap         : Exception;
-   FailedAllocate       : Exception;
+   FailedAllocate      : Exception;
 
-   type LinearRange_Interface is abstract new RefCount.Ref_Interface with null record;
+   type LinearRange_Interface is abstract new RefCount.Ref_Interface with
+      record
+         AssocHeight : Integer;
+         AssocWidth  : Integer;
+         AssocOffset : PtrInt_Type;
+      end record;
    type LinearRange_ClassAccess is access all LinearRange_Interface'Class;
 
    not overriding
@@ -24,8 +29,15 @@ package OpenGL.LinearBuffer is
      (BufferRange : in out LinearRange_Interface) is abstract;
 
    not overriding
+   function BindCompatible
+     (BufferRange1 : in out LinearRange_Interface;
+      BufferRange2 : in out LinearRange_Interface'Class)
+      return Boolean is abstract;
+
+   not overriding
    procedure Bind
-     (BufferRange : in out LinearRange_Interface) is abstract;
+     (BufferRange : in out LinearRange_Interface;
+      Unit        : Natural) is abstract;
 
    package LinearRangeRef is new RefCount.Ref(LinearRange_Interface,LinearRange_ClassAccess);
 
@@ -119,7 +131,14 @@ private
 
    overriding
    procedure Bind
-     (BufferRange : in out LinearRange_Type);
+     (BufferRange : in out LinearRange_Type;
+      Unit        : Natural);
+
+   overriding
+   function BindCompatible
+     (BufferRange1 : in out LinearRange_Type;
+      BufferRange2 : in out LinearRange_Interface'Class)
+      return Boolean;
 
    overriding
    procedure Finalize

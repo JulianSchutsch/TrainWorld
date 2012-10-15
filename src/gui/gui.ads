@@ -29,6 +29,12 @@ package GUI is
    not overriding
    procedure StopPainting
      (ObjectImplementation : in out GUIObjectImplementation_Interface) is abstract;
+
+   not overriding
+   procedure Resize
+     (ObjectImplementation : in out GUIObjectImplementation_Interface;
+      Height               : Natural;
+      Width                : Natural) is abstract;
    ---------------------------------------------------------------------------
 
    package GUIObjectImplementationRef is new RefCount.Ref(GUIObjectImplementation_Interface,GUIObjectImplementation_ClassAccess);
@@ -63,6 +69,10 @@ package GUI is
      (Object : in out GUIObject_Type;
       Parent : access GUIObject_Type'Class);
 
+   not overriding
+   procedure Paint
+     (Object : in out GUIObject_Type) is null;
+
    -- Only called by GUI
    not overriding
    procedure SetObjectImplementation
@@ -92,6 +102,10 @@ package GUI is
    function GetBaseLayer
      (GUI : in out GUI_Interface)
       return GUIObject_ClassAccess is abstract;
+
+   not overriding
+   procedure PrintTree
+     (GUI : GUI_Interface) is abstract;
    ---------------------------------------------------------------------------
 
    package ObjectImplementations is new Implementations(GUIObjectImplementation_Ref,Graphics.Context_Info);
@@ -118,6 +132,10 @@ package GUI is
    overriding
    procedure Finalize
      (GUI : in out GUI_Type);
+
+   overriding
+   procedure PrintTree
+     (GUI : GUI_Type);
    ---------------------------------------------------------------------------
 
 private

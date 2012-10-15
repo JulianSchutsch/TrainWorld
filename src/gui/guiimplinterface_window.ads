@@ -19,7 +19,7 @@ package GUIImplInterface_Window is
    type WindowImpl_Interface is interface;
    type WindowImpl_ClassAccess is access all WindowImpl_Interface'Class;
 
-   procedure Draw
+   procedure Paint
      (Window : in out WindowImpl_Interface) is abstract;
 
    procedure SetBounds
