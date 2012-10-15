@@ -1,0 +1,23 @@
+with "core";
+with "config";
+with "switches";
+with "graphics";
+
+project GUI is
+
+  Dir:=GUI'Project_Dir & "/";
+  Linker_Switches:=();
+
+  Sources:=
+     (Dir & "../src/gui");
+
+   Languages:=("Ada");
+
+   package Compiler is
+      for Default_Switches("Ada") use Switches.Compiler_Switches;
+   end Compiler;
+
+   for Source_Dirs use Sources;
+   for Languages use Languages;
+
+end GUI;
