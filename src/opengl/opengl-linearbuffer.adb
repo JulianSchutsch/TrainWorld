@@ -236,9 +236,9 @@ package body OpenGL.LinearBuffer is
    procedure AllocateConst
      (Buffers     : in out LinearBuffers_Type;
       Amount      : PtrInt_Type;
-      BufferRange : access LinearRange_Type'Class) is
+      BufferRange : LinearRange_ClassAccess) is
 
-      BufferRef : LinearRange_Ref:=LinearRangeRef.MakeAdditionalRef(LinearRange_ClassAccess(BufferRange));
+      BufferRef : LinearRange_Ref:=LinearRangeRef.MakeAdditionalRef(BufferRange);
 
    begin
       Buffers.Allocate

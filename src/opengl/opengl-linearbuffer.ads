@@ -71,7 +71,7 @@ package OpenGL.LinearBuffer is
    procedure AllocateConst
      (Buffers     : in out LinearBuffers_Interface;
       Amount      : PtrInt_Type;
-      BufferRange : access LinearRange_Type'Class) is abstract;
+      BufferRange : LinearRange_ClassAccess) is abstract;
 
    package LinearBuffersRef is new RefCount.Ref(LinearBuffers_Interface,LinearBuffers_ClassAccess);
    ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ package OpenGL.LinearBuffer is
    procedure AllocateConst
      (Buffers     : in out LinearBuffers_Type;
       Amount      : PtrInt_Type;
-      BufferRange : access LinearRange_Type'Class);
+      BufferRange : LinearRange_ClassAccess);
 
    overriding
    procedure Finalize

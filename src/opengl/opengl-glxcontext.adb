@@ -1,3 +1,5 @@
+pragma Ada_2012;
+
 with Interfaces;
 with Interfaces.C;
 with Ada.Unchecked_Conversion;
@@ -10,7 +12,6 @@ with GlobalLoop;
 with Config;
 with Basics; use Basics;
 with Ada.Exceptions;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body OpenGL.GLXContext is
 
@@ -111,9 +112,47 @@ package body OpenGL.GLXContext is
       end record;
 
    overriding
+   function IsInitialized
+     (Context : Context_Type)
+      return Boolean;
+
+   overriding
+   function GetInfo
+     (Context : Context_Type)
+      return Graphics.Context_Info;
+
+   overriding
    procedure Finalize
      (Context : in out Context_Type);
    ---------------------------------------------------------------------------
+
+   function IsInitialized
+     (Context : Context_Type)
+      return Boolean is
+   begin
+      return Context.OpenGLLoaded and not Context.CreatePending;
+   end IsInitialized;
+   ---------------------------------------------------------------------------
+
+   function GetInfo
+     (Context : Context_Type)
+      return Graphics.Context_Info is
+   begin
+
+      if Context.OpenGLLoaded then
+         return I:Graphics.Context_Info do
+            I.InterfaceType := U("OpenGL");
+            I.VersionMajor  := Integer(OpenGL.Version.Major);
+            I.VersionMinor  := Integer(OpenGL.Version.Minor);
+         end return;
+      else
+         return I:Graphics.Context_Info do
+            I.InterfaceType := U("Uninitialized OpenGL");
+         end return;
+      end if;
+    
+   end GetInfo;
+   ----------------------------------------------------------------------
 
    procedure Process
      (P : in out Context_Process) is
@@ -433,10 +472,11 @@ null;
 
    function ContextConstructor
      (GenConfig  : Config.Config_ClassAccess;
-      ImplConfig : Config.Config_ClassAccess)
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Graphics.Parameter_Type)
       return Graphics.Context_Ref is
 
-      pragma Unreferenced(ImplConfig);
+      pragma Unreferenced(ImplConfig,Parameters);
 
       use type Config.Config_ClassAccess;
       use type Interfaces.C.int;
@@ -809,9 +849,20 @@ null;
    end ContextConstructor;
    ---------------------------------------------------------------------------
 
+   function ContextCompatible
+     (GenConfig  : Config.Config_ClassAccess;
+      ImplConfig : Config.Config_ClassAccess;
+      Parameters : Graphics.Parameter_Type)
+      return Boolean is
+      pragma Unreferenced(GenConfig,ImplConfig,Parameters);
+   begin
+      return True;
+   end ContextCompatible;
+   ---------------------------------------------------------------------------
+
    procedure Register is
    begin
-      Graphics.Implementations.Register(U("OpenGL"),ContextConstructor'Access);
+      Graphics.Implementations.Register(RefStr("OpenGL"),ContextCompatible'Access,ContextConstructor'Access);
    end Register;
    ---------------------------------------------------------------------------
 

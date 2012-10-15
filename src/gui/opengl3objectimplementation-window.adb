@@ -23,7 +23,7 @@ package body OpenGL3ObjectImplementation.Window is
 
       Impl.TexBuffers.AllocateConst
         (Amount      => 20*20,
-         BufferRange => Data.TopLeftTex'Access);
+         BufferRange => Data.TopLeftTex'Unrestricted_Access);
 
       Tex.Create
         (Height => 20,
