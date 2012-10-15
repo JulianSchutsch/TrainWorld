@@ -109,6 +109,8 @@ package body OpenGL.GLXContext is
          LoopProcess         : Context_Process;
          CreatePending       : Boolean:=False;
          OpenGLLoaded        : Boolean:=False;
+         Height              : Integer;
+         Width               : Integer;
       end record;
 
    overriding
@@ -184,6 +186,9 @@ package body OpenGL.GLXContext is
          if P.Context.CallBack/=null then
             P.Context.CallBack.ContextCreate;
             P.Context.CreatePending:=False;
+            P.Context.CallBack.ContextResize
+              (Height => P.Context.Height,
+               Width  => P.Context.Width);
          end if;
       end if;
 
@@ -365,10 +370,16 @@ null;
                null;
 
             when ConfigureNotify =>
---               PropagateContextResize
---                 (Context => Context_ClassAccess(Context),
---                  Height  => Integer(Event.Configure.height),
---                  Width   => Integer(Event.Configure.width));
+
+               Put("Resize");
+               New_Line;
+               P.Context.Height := Integer(Event.Configure.height);
+               P.Context.Width  := Integer(Event.Configure.width);
+               if P.Context.CallBack/=null then
+                  P.Context.CallBack.ContextResize
+                    (Height => P.Context.Height,
+                     Width  => P.Context.Width);
+               end if;
 null;
                -- TODO: Send update signal
 
@@ -376,12 +387,13 @@ null;
 
                Put("Resize");
                New_Line;
---               Context.Bounds:=
---                 (Top     => 0,
---                  Left    => 0,
---                  Height  => Integer(Event.ResizeRequest.height),
---                  Width   => Integer(Event.ResizeRequest.width),
---                  Visible => True);
+               P.Context.Height := Integer(Event.ResizeRequest.height);
+               P.Context.Width  := Integer(Event.ResizeRequest.width);
+               if P.Context.CallBack/=null then
+                  P.Context.CallBack.ContextResize
+                    (Height => P.Context.Height,
+                     Width  => P.Context.Width);
+               end if;
 null;
                -- TODO: Send update signal
 
@@ -706,7 +718,7 @@ null;
 
             -- TODO: Get actual ogl version somehow... or set this to max somehow
             Push(Attribs,GLX.GLX_CONTEXT_MAJOR_VERSION_ARB); Push(Attribs,Interfaces.C.int(3));
-            Push(Attribs,GLX.GLX_CONTEXT_MINOR_VERSION_ARB); Push(Attribs,Interfaces.C.int(2));
+            Push(Attribs,GLX.GLX_CONTEXT_MINOR_VERSION_ARB); Push(Attribs,Interfaces.C.int(3));
             Push(Attribs,GLX.GLX_CONTEXT_FLAGS_ARB); Push(Attribs,GLX.GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
             Push(Attribs,0);
             Context.GLXContext:=glXCreateContextAttribsARB
