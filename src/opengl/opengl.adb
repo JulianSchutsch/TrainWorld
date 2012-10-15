@@ -488,6 +488,7 @@ package body OpenGL is
    procedure UnloadFunctions is
    begin
 
+      Put_Line("UnloadFunctions(OpenGL)");
 
       ActiveContexts:=ActiveContexts-1;
 

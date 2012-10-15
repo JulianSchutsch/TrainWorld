@@ -13,6 +13,8 @@ package body OpenGL3ObjectImplementation.Window is
       Configuration : OGL3ImplConfig_Type) is
       pragma Unreferenced(Configuration);
 
+      use type System.Address;
+
       Tex  : Textures.RGBATexture_Type;
       Addr : System.Address;
 
@@ -22,15 +24,21 @@ package body OpenGL3ObjectImplementation.Window is
       -- DANGER : Texture size must be correct, or otherwise it is possible to have a bufferoverflow in copytoraw
 
       Impl.TexBuffers.AllocateConst
-        (Amount      => 20*20,
+        (Amount      => 20*20*4,
          BufferRange => Data.TopLeftTex'Unrestricted_Access);
 
       Tex.Create
         (Height => 20,
          Width  => 20);
       Tex.Clear((Red => 0,Green=>0,Blue=>255,Alpha=>255));
+      Put_Line("Map");
       Addr:=Data.TopLeftTex.Map;
+      if Addr=System.Null_Address then
+         Put_Line("NULLMAP");
+      end if;
+      Put_Line("Copy");
       Tex.CopyToRawData(Addr);
+      Put_Line("unmap");
       Data.TopLeftTex.Unmap;
       Data.TopLeftTex.AssocHeight := 20;
       Data.TopLeftTex.AssocWidth  := 20;
