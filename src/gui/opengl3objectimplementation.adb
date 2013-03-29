@@ -60,7 +60,6 @@ package body OpenGL3ObjectImplementation is
      "  int Texx = int((ex_Texx-floor(ex_Texx))*ex_TexWidth);"&
      "  int Texy = int((ex_Texy-floor(ex_Texy))*ex_TexHeight);"&
      "  out_Color=texelFetch(tex,int(ex_Offset)+Texx+Texy*int(ex_Width));"&
---     "  out_Color=vec4(1.0,1.0,1.0,1.0);"&
      "}"&Character'Val(0);
 
    VertData : GLfloat_Array(0..7):=

@@ -456,7 +456,7 @@ package body ClientServerStream.SMPipe is
          -- Read as much as possible
          ReadAmount:=Streams.StreamSize_Type'Min(RemainingAmount,Stream.Buffer.Amount-Stream.Position);
          for i in 0..ReadAmount-1 loop
-            Pointer.all:=Stream.Buffer.Data(Integer(Stream.Position));
+            Pointer.all:=Stream.Buffer.Data(PtrInt_Type(Stream.Position));
             Stream.Position := Stream.Position+1;
             Pointer         := Pointer+1;
          end loop;
@@ -536,7 +536,7 @@ package body ClientServerStream.SMPipe is
          exit when RemainingAmount=0;
          WriteAmount:=Streams.StreamSize_Type'Min(RemainingAmount,Stream.Buffer.Data'Length-Stream.Buffer.Amount);
          for i in 0..WriteAmount-1 loop
-            Stream.Buffer.Data(Integer(Stream.Buffer.Amount)):=Pointer.all;
+            Stream.Buffer.Data(PtrInt_Type(Stream.Buffer.Amount)):=Pointer.all;
             Stream.Buffer.Amount:=Stream.Buffer.Amount+1;
             Pointer:=Pointer+1;
          end loop;

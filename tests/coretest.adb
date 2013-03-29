@@ -32,8 +32,7 @@ with GlobalLoop.Test;
 with InterfaceTest;
 with ProtectedBasics.Test;
 with Allocators.Test;
-pragma Warnings(Off);
-with ThreadLocalStorage;
+with Streams.Test;
 
 procedure CoreTest is
    Tests : constant TestFrameWork.Test_Array:=
@@ -45,7 +44,8 @@ procedure CoreTest is
      GlobalLoop.Test.Tests&
      InterfaceTest.Tests&
      ProtectedBasics.Test.Tests&
-     Allocators.Test.Tests;
+     Allocators.Test.Tests&
+     Streams.Test.Tests;
 begin
    TestFrameWork.Run(Tests);
 end CoreTest;

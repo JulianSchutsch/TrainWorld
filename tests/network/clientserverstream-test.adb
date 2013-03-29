@@ -61,7 +61,7 @@ package body ClientServerStream.Test is
          Disconnected    : Boolean:=False;
          State           : State_Type;
          ReceiveBuffer   : Bytes.Byte_ArrayAccess:=null;
-         ReceiveFilled   : Natural:=0;
+         ReceiveFilled   : PtrInt_Type:=0;
       end record;
 
    overriding
@@ -110,15 +110,15 @@ package body ClientServerStream.Test is
       Connection : Connection_Access renames State.Connection;
 
       Rnd        : Ada.Numerics.Float_Random.Generator;
-      MaxAmount  : constant Natural:=Connection.ReceiveBuffer'Last-Connection.ReceiveFilled+1;
-      ReadAmount : Natural;
+      MaxAmount  : constant PtrInt_Type:=Connection.ReceiveBuffer'Last-Connection.ReceiveFilled+1;
+      ReadAmount : PtrInt_Type;
 
       use Ada.Numerics.Float_Random;
 
    begin
 
       Reset(Rnd);
-      ReadAmount:=Integer(Float'Rounding(Random(Rnd)*Float(MaxAmount)));
+      ReadAmount:=PtrInt_Type(Float'Rounding(Random(Rnd)*Float(MaxAmount)));
       if ReadAmount=0 then
          return State'Unrestricted_Access;
       end if;
@@ -460,12 +460,12 @@ package body ClientServerStream.Test is
       begin
          Reset(RndGen);
          declare
-            Remaining  : Integer:=RandomData'Length;
-            SendLength : Integer;
-            Position   : Integer:=RandomData'First;
+            Remaining  : PtrInt_Type:=RandomData'Length;
+            SendLength : PtrInt_Type;
+            Position   : PtrInt_Type:=RandomData'First;
          begin
             while Remaining/=0 loop
-               SendLength:= Integer(Float'Rounding(Random(RndGen)*Float(Remaining)));
+               SendLength:= PtrInt_Type(Float'Rounding(Random(RndGen)*Float(Remaining)));
                Stream.I.WriteBuffer
                  (Buffer     => RandomData(Position)'Address,
                   BufferSize => Streams.StreamSize_Type(SendLength));
@@ -490,7 +490,7 @@ package body ClientServerStream.Test is
       begin
          for i in RandomData'Range loop
             if Connection.ReceiveBuffer(i)/=RandomData(i) then
-               ReportIssue("Difference at "&Integer'Image(i));
+               ReportIssue("Difference at "&PtrInt_Type'Image(i));
             end if;
          end loop;
       end CompareReceiveBuffer;
@@ -521,7 +521,7 @@ package body ClientServerStream.Test is
 
                -- Generate large chunk of data
                declare
-                  Length : constant Integer:=Integer(Float'Rounding(Random(RndGen)*MaxDataAmount));
+                  Length : constant PtrInt_Type:=PtrInt_Type(Float'Rounding(Random(RndGen)*MaxDataAmount));
                begin
                   RandomData:=new Bytes.Byte_Array(0..Length-1);
                   for i in RandomData'Range loop

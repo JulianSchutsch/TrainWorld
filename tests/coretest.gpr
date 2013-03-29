@@ -28,6 +28,7 @@ project CoreTest is
      Dir & "globalloop",
      Dir & "interfaces",
      Dir & "protectedbasics",
-     Dir & "allocators");
+     Dir & "allocators",
+     Dir & "streams");
 
 end CoreTest;

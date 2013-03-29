@@ -142,6 +142,7 @@ private
 
    type GUIObject_Type is new RefCount.Ref_Interface with
       record
+         AbsBounds  : AbsBounds_Type;
          Bounds     : Bounds_Type;
          Previous   : GUIObject_ClassAccess:=null;
          GUI        : GUI_Ref;

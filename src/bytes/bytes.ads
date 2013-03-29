@@ -28,6 +28,8 @@ with Ada.Unchecked_Deallocation;
 with System;
 with Endianess;
 with Interfaces.C;
+with Basics; use Basics;
+with Ada.Streams;
 
 package Bytes is
 
@@ -36,9 +38,11 @@ package Bytes is
    type Int_Array is array(Integer range <>) of aliased Int_Type;
    pragma Convention(C,Int_Array);
 
-   type Byte_Type is mod 2**8;
+   -- Carefull, there may be rare systems where this is not a Byte.
+   -- TODO: Check
+   type Byte_Type is new Ada.Streams.Stream_Element;
    type Byte_Access is access all Byte_Type;
-   type Byte_Array is array(Integer range <>) of aliased Byte_Type;
+   type Byte_Array is array(PtrInt_Type range <>) of aliased Byte_Type;
    type Byte_ArrayAccess is access all Byte_Array;
    pragma Convention(C,Byte_Array);
 

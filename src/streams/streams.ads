@@ -2,6 +2,7 @@ pragma Ada_2012;
 
 with System;
 with RefCount;
+with Basics; use Basics;
 
 package Streams is
 
@@ -9,11 +10,12 @@ package Streams is
    -- or no more data can be written to a limited length stream
    StreamOverflow : Exception;
 
-   type StreamSize_Type is new Natural;
+   type StreamSize_Type is new PtrInt_Type;
 
    type ReadStream_Interface is abstract new RefCount.Ref_Interface with null record;
    type ReadStream_ClassAccess is access all ReadStream_Interface'Class;
 
+   not overriding
    procedure ReadBuffer
      (ReadStream : in out ReadStream_Interface;
       Buffer     : System.Address;
@@ -27,6 +29,7 @@ package Streams is
    type WriteStream_Interface is abstract new RefCount.Ref_Interface with null record;
    type WriteStream_ClassAccess is access all WriteStream_Interface'Class;
 
+   not overriding
    procedure WriteBuffer
      (WriteStream : in out WriteStream_Interface;
       Buffer      : System.Address;

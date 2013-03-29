@@ -149,7 +149,7 @@ package body Allocators.Test is
       Memory : array(PtrInt_Type range 0..TaggedMemorySize-1) of Natural         := (others=>0);
       Blocks : array(Natural range 1..TaggedBlockCount) of Block_ClassAccess := (others=>null);
 
-      Gen : Ada.Numerics.Float_Random.Generator;
+      Gen          : Ada.Numerics.Float_Random.Generator;
       CurrentBlock : Natural;
       Amount       : PtrInt_Type;
 

@@ -48,7 +48,7 @@ package body Bytes.Test is
       -- Forward test
       for i in Buffer'Range loop
          if Buffer(i)/=Current.all then
-            ReportIssue("Access Arithmetic failes with forward increment at index "&Integer'Image(i));
+            ReportIssue("Access Arithmetic failes with forward increment at index "&PtrInt_Type'Image(i));
          end if;
          Current:=Current+1;
       end loop;
@@ -57,7 +57,7 @@ package body Bytes.Test is
       for i in reverse Buffer'Range loop
          Current:=Current-1;
          if Buffer(i)/=Current.all then
-            ReportIssue("Access arithmetic failes with backward decrement at index "&Integer'Image(i));
+            ReportIssue("Access arithmetic failes with backward decrement at index "&PtrInt_Type'Image(i));
          end if;
       end loop;
 
